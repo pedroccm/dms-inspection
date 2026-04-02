@@ -61,7 +61,7 @@ export async function getProductivityReport(
   for (const inspection of data ?? []) {
     const id = inspection.inspector_id;
     const name =
-      (inspection.inspector as { full_name: string } | null)?.full_name ??
+      (inspection.inspector as unknown as { full_name: string } | null)?.full_name ??
       "Desconhecido";
 
     if (!map.has(id)) {

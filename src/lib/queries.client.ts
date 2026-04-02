@@ -101,13 +101,13 @@ export async function getEquipment(filters?: EquipmentFilters) {
   let query = supabase
     .from("equipment")
     .select("*")
-    .order("name", { ascending: true });
+    .order("created_at", { ascending: false });
 
-  if (filters?.active !== undefined) {
-    query = query.eq("active", filters.active);
+  if (filters?.search) {
+    query = query.ilike("copel_ra_code", `%${filters.search}%`);
   }
-  if (filters?.type) {
-    query = query.eq("type", filters.type);
+  if (filters?.manufacturer) {
+    query = query.eq("manufacturer", filters.manufacturer);
   }
 
   const { data, error } = await query;
