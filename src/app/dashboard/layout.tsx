@@ -37,6 +37,12 @@ const allNavItems = [
     icon: "users",
     adminOnly: true,
   },
+  {
+    label: "Configuracoes",
+    href: "/dashboard/configuracoes",
+    icon: "settings",
+    adminOnly: true,
+  },
 ];
 
 function Sidebar({

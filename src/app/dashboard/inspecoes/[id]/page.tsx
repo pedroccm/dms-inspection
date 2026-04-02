@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getProfile } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
+import { getInspectionAuditLogs } from "@/lib/audit";
 import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
 import { ExportButton } from "./export-button";
 import { TransferButton } from "./transfer-button";
+import { AuditLog } from "./audit-log";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -27,6 +29,7 @@ export default async function InspecaoDetailPage({
   params,
 }: InspecaoDetailPageProps) {
   await requireAuth();
+  const profile = await getProfile();
 
   const { id } = await params;
 
@@ -39,6 +42,16 @@ export default async function InspecaoDetailPage({
 
   if (!inspection) {
     notFound();
+  }
+
+  const isAdmin = profile?.role === "admin";
+  let auditEntries: Awaited<ReturnType<typeof getInspectionAuditLogs>> = [];
+  if (isAdmin) {
+    try {
+      auditEntries = await getInspectionAuditLogs(id);
+    } catch {
+      // Audit logs are non-critical, fail silently
+    }
   }
 
   const checklistItems = inspection.checklist_items ?? [];
@@ -90,6 +103,13 @@ export default async function InspecaoDetailPage({
         photos={photos}
         isEditable={isEditable}
       />
+
+      {/* Audit log - admin only */}
+      {isAdmin && (
+        <div className="mt-8">
+          <AuditLog entries={auditEntries} />
+        </div>
+      )}
     </div>
   );
 }

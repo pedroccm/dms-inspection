@@ -1,0 +1,205 @@
+"use client";
+
+import { useState, useEffect, useTransition } from "react";
+import { AdminOnly } from "@/components/admin-only";
+import {
+  getRetentionSetting,
+  updateRetentionPeriod,
+  executeCleanup,
+} from "./actions";
+
+const RETENTION_OPTIONS = [
+  { value: 7, label: "7 dias" },
+  { value: 15, label: "15 dias" },
+  { value: 30, label: "30 dias" },
+  { value: 60, label: "60 dias" },
+  { value: 90, label: "90 dias" },
+];
+
+function SettingsContent() {
+  const [retentionDays, setRetentionDays] = useState(30);
+  const [saving, startSaving] = useTransition();
+  const [cleaning, startCleaning] = useTransition();
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [cleanupResult, setCleanupResult] = useState<{
+    inspections: number;
+    photos: number;
+  } | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRetentionSetting().then((days) => {
+      setRetentionDays(days);
+      setLoading(false);
+    });
+  }, []);
+
+  function handleSave() {
+    setMessage(null);
+    startSaving(async () => {
+      const result = await updateRetentionPeriod(retentionDays);
+      if (result.success) {
+        setMessage({ type: "success", text: "Configuracao salva com sucesso." });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error ?? "Erro ao salvar configuracao.",
+        });
+      }
+    });
+  }
+
+  function handleCleanup() {
+    setMessage(null);
+    setCleanupResult(null);
+    setShowConfirm(false);
+    startCleaning(async () => {
+      const result = await executeCleanup();
+      if (result.success && result.summary) {
+        setCleanupResult(result.summary);
+        setMessage({
+          type: "success",
+          text: `Limpeza concluida: ${result.summary.inspections} inspecao(oes) e ${result.summary.photos} foto(s) removidas.`,
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error ?? "Erro ao executar limpeza.",
+        });
+      }
+    });
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Configuracoes</h1>
+
+      {/* Retention Policy */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          Politica de Retencao de Dados
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Inspecoes com status &quot;Transferida&quot; serao elegíveis para
+          limpeza automatica apos o periodo configurado. Apenas inspecoes
+          transferidas sao afetadas.
+        </p>
+
+        <div className="flex items-end gap-4">
+          <div>
+            <label
+              htmlFor="retention-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Periodo de retencao
+            </label>
+            <select
+              id="retention-select"
+              value={retentionDays}
+              onChange={(e) => setRetentionDays(Number(e.target.value))}
+              className="block w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            >
+              {RETENTION_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors min-h-[44px]"
+          >
+            {saving ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
+      </div>
+
+      {/* Manual Cleanup */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          Limpeza Manual
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Remove inspecoes transferidas que ultrapassaram o periodo de retencao
+          configurado ({retentionDays} dias). Esta acao e irreversivel.
+        </p>
+
+        {!showConfirm ? (
+          <button
+            onClick={() => setShowConfirm(true)}
+            className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors min-h-[44px]"
+          >
+            Executar Limpeza
+          </button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-red-600 font-medium">
+              Tem certeza? Esta acao nao pode ser desfeita.
+            </p>
+            <button
+              onClick={handleCleanup}
+              disabled={cleaning}
+              className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors min-h-[44px]"
+            >
+              {cleaning ? "Executando..." : "Confirmar Limpeza"}
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+
+        {cleanupResult && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+            <strong>Resultado:</strong> {cleanupResult.inspections}{" "}
+            inspecao(oes) e {cleanupResult.photos} foto(s) removidas.
+          </div>
+        )}
+      </div>
+
+      {/* Messages */}
+      {message && (
+        <div
+          className={`p-4 rounded-lg text-sm ${
+            message.type === "success"
+              ? "bg-green-50 border border-green-200 text-green-800"
+              : "bg-red-50 border border-red-200 text-red-800"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ConfiguracoesPage() {
+  return (
+    <AdminOnly
+      fallback={
+        <div className="text-center py-12 text-gray-500">
+          Acesso restrito a administradores.
+        </div>
+      }
+    >
+      <SettingsContent />
+    </AdminOnly>
+  );
+}

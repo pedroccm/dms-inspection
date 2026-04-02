@@ -152,3 +152,37 @@ export interface PaginatedResult<T> {
   data: T[];
   count: number;
 }
+
+// ─── Audit Log ─────────────────────────────────────────────────
+
+export type AuditAction = "insert" | "update" | "delete";
+
+export interface AuditLog {
+  id: string;
+  table_name: string;
+  record_id: string;
+  action: AuditAction;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  user_id: string | null;
+  created_at: string;
+  // Joined
+  user?: Pick<Profile, "id" | "full_name" | "role"> | null;
+}
+
+export interface FormattedAuditEntry {
+  id: string;
+  date: string;
+  userName: string;
+  description: string;
+  action: AuditAction;
+  tableName: string;
+}
+
+// ─── Settings ──────────────────────────────────────────────────
+
+export interface Setting {
+  key: string;
+  value: unknown;
+  updated_at: string;
+}
