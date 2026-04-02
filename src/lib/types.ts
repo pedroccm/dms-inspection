@@ -11,11 +11,11 @@ export interface Profile {
 
 // Inspection status flow
 export type InspectionStatus =
-  | "pending"
+  | "draft"
   | "in_progress"
-  | "completed"
-  | "reviewed"
-  | "rejected";
+  | "ready_for_review"
+  | "submitted"
+  | "transferred";
 
 export interface Inspection {
   id: string;

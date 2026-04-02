@@ -44,6 +44,7 @@ export async function getInspectionById(id: string) {
       "*, equipment(*), checklist_items(*), photos(*), inspector:profiles!inspector_id(*)"
     )
     .eq("id", id)
+    .order("order", { referencedTable: "checklist_items", ascending: true })
     .single();
 
   if (error) throw error;
@@ -150,6 +151,20 @@ export async function getEquipmentById(id: string) {
   return data as Equipment;
 }
 
+// ─── Equipment (all, for dropdowns) ────────────────────────
+
+export async function getAllEquipment() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("id, copel_ra_code, manufacturer")
+    .order("copel_ra_code", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as Pick<Equipment, "id" | "copel_ra_code" | "manufacturer">[];
+}
+
 // ─── Dashboard Counts ───────────────────────────────────────
 
 export async function getDashboardCounts() {
@@ -175,7 +190,7 @@ export async function getDashboardCounts() {
       supabase
         .from("inspections")
         .select("id", { count: "exact", head: true })
-        .eq("status", "completed"),
+        .eq("status", "ready_for_review"),
     ]);
 
   return {
