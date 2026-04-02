@@ -96,13 +96,10 @@ export async function getEquipment(filters?: EquipmentFilters) {
   let query = supabase
     .from("equipment")
     .select("*")
-    .order("name", { ascending: true });
+    .order("created_at", { ascending: false });
 
-  if (filters?.active !== undefined) {
-    query = query.eq("active", filters.active);
-  }
-  if (filters?.type) {
-    query = query.eq("type", filters.type);
+  if (filters?.search) {
+    query = query.ilike("copel_ra_code", `%${filters.search}%`);
   }
 
   const { data, error } = await query;
@@ -145,8 +142,7 @@ export async function getDashboardCounts() {
         .gte("created_at", todayISO),
       supabase
         .from("equipment")
-        .select("id", { count: "exact", head: true })
-        .eq("active", true),
+        .select("id", { count: "exact", head: true }),
       supabase
         .from("inspections")
         .select("id", { count: "exact", head: true })

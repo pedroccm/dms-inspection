@@ -72,11 +72,13 @@ export interface ServiceOrder {
 
 export interface Equipment {
   id: string;
-  tag: string;
-  name: string;
-  type: string | null;
-  location: string | null;
-  active: boolean;
+  copel_ra_code: string;
+  copel_control_code: string;
+  mechanism_serial: string;
+  control_box_serial: string;
+  protection_relay_serial: string;
+  manufacturer: string;
+  created_by: string;
   created_at: string;
   updated_at: string;
   // Joined relations (optional)
@@ -97,6 +99,5 @@ export interface ServiceOrderFilters {
 }
 
 export interface EquipmentFilters {
-  active?: boolean;
-  type?: string;
+  search?: string;
 }

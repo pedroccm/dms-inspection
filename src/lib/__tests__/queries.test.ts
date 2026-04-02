@@ -7,6 +7,7 @@ function createMockQueryBuilder(resolvedData: unknown[] | null = []) {
 
   builder.select = vi.fn().mockImplementation(returnSelf);
   builder.eq = vi.fn().mockImplementation(returnSelf);
+  builder.ilike = vi.fn().mockImplementation(returnSelf);
   builder.in = vi.fn().mockImplementation(returnSelf);
   builder.gte = vi.fn().mockImplementation(returnSelf);
   builder.order = vi.fn().mockImplementation(returnSelf);
@@ -122,17 +123,17 @@ describe("Server-side queries (queries.ts)", () => {
     await getEquipment();
 
     expect(mockFrom).toHaveBeenCalledWith("equipment");
-    expect(qb.order).toHaveBeenCalledWith("name", { ascending: true });
+    expect(qb.order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
-  it("getEquipment applies active filter", async () => {
+  it("getEquipment applies search filter", async () => {
     const qb = createMockQueryBuilder([]);
     mockFrom.mockReturnValue(qb);
 
     const { getEquipment } = await import("@/lib/queries");
-    await getEquipment({ active: true });
+    await getEquipment({ search: "ABC" });
 
-    expect(qb.eq).toHaveBeenCalledWith("active", true);
+    expect(qb.ilike).toHaveBeenCalledWith("copel_ra_code", "%ABC%");
   });
 
   it("getEquipmentById includes inspections relation", async () => {
