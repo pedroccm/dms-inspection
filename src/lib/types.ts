@@ -35,14 +35,19 @@ export interface Inspection {
   inspector?: Profile;
 }
 
+export type ChecklistItemStatus = "approved" | "rejected" | "na" | "pending";
+
 export interface ChecklistItem {
   id: string;
   inspection_id: string;
   label: string;
   checked: boolean;
+  status: ChecklistItemStatus;
+  rejection_reason: string | null;
   notes: string | null;
   order: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Photo {
