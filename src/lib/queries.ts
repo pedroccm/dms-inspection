@@ -45,10 +45,15 @@ export async function getInspectionById(id: string) {
       "*, equipment(*), checklist_items(*), photos(*)"
     )
     .eq("id", id)
-    .order("sort_order", { referencedTable: "checklist_items", ascending: true })
     .single();
 
   if (error) throw error;
+
+  // Sort checklist items client-side (PostgREST can't order on one-to-many)
+  if (data?.checklist_items) {
+    data.checklist_items.sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
+  }
+
   return data as Inspection;
 }
 
