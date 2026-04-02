@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdminOnly } from "@/components/admin-only";
 import { AddEquipmentSection } from "./add-equipment-section";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
+import { ExportOrderButton } from "./export-order-button";
 import type { ServiceOrderStatus, EquipmentInspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -56,17 +57,25 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
 
   const equipmentList = order.service_order_equipment ?? [];
   const isCompleted = order.status === "completed" || order.status === "cancelled";
+  const allInspectionsCompleted =
+    equipmentList.length > 0 &&
+    equipmentList.every((soe) => soe.inspection_status === "completed");
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">{order.title}</h1>
-        <Link
-          href="/dashboard/ordens"
-          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
-        >
-          Voltar
-        </Link>
+        <div className="flex items-center gap-3">
+          {allInspectionsCompleted && (
+            <ExportOrderButton orderId={order.id} />
+          )}
+          <Link
+            href="/dashboard/ordens"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
+          >
+            Voltar
+          </Link>
+        </div>
       </div>
 
       {/* Order details */}

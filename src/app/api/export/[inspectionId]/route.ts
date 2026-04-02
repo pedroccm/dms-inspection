@@ -1,0 +1,126 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
+import { getInspectionById } from "@/lib/queries";
+
+function escapeCSV(value: string | null | undefined): string {
+  if (value == null) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("pt-BR");
+}
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ inspectionId: string }> }
+) {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+  }
+
+  const { inspectionId } = await params;
+
+  let inspection;
+  try {
+    inspection = await getInspectionById(inspectionId);
+  } catch {
+    return NextResponse.json(
+      { error: "Inspecao nao encontrada" },
+      { status: 404 }
+    );
+  }
+
+  if (!inspection) {
+    return NextResponse.json(
+      { error: "Inspecao nao encontrada" },
+      { status: 404 }
+    );
+  }
+
+  const equipment = inspection.equipment;
+  const checklistItems = inspection.checklist_items ?? [];
+  const inspectorName =
+    (inspection.inspector as { full_name?: string } | undefined)?.full_name ??
+    "";
+  const dateStr = formatDate(inspection.completed_at ?? inspection.created_at);
+
+  // Build CSV content
+  const lines: string[] = [];
+
+  // Equipment header
+  lines.push(
+    "Codigo Copel RA,Codigo Copel Controle,No Serie Mecanismo,No Serie Caixa Controle,No Serie Rele Protecao,Fabricante"
+  );
+  lines.push(
+    [
+      escapeCSV(equipment?.copel_ra_code),
+      escapeCSV(equipment?.copel_control_code),
+      escapeCSV(equipment?.mechanism_serial),
+      escapeCSV(equipment?.control_box_serial),
+      escapeCSV(equipment?.protection_relay_serial),
+      escapeCSV(equipment?.manufacturer),
+    ].join(",")
+  );
+
+  // Blank line separator
+  lines.push("");
+
+  // Checklist items header
+  lines.push("Item de Inspecao,Resultado,Motivo da Reprovacao");
+
+  const statusLabels: Record<string, string> = {
+    approved: "Aprovado",
+    rejected: "Reprovado",
+    na: "N/A",
+    pending: "Pendente",
+  };
+
+  for (const item of checklistItems) {
+    lines.push(
+      [
+        escapeCSV(item.label),
+        escapeCSV(statusLabels[item.status] ?? item.status),
+        escapeCSV(item.rejection_reason),
+      ].join(",")
+    );
+  }
+
+  // Blank line separator
+  lines.push("");
+
+  // Observations
+  lines.push("Observacoes");
+  lines.push(escapeCSV(inspection.notes));
+
+  // Blank line separator
+  lines.push("");
+
+  // Inspector and date
+  lines.push(`Inspetor,${escapeCSV(inspectorName)}`);
+  lines.push(`Data,${escapeCSV(dateStr)}`);
+
+  const csv = lines.join("\n");
+  const copelCode = equipment?.copel_ra_code ?? "sem-codigo";
+  const fileDate = (inspection.completed_at ?? inspection.created_at)
+    ? new Date(
+        inspection.completed_at ?? inspection.created_at
+      ).toISOString().split("T")[0]
+    : new Date().toISOString().split("T")[0];
+  const filename = `inspecao_${copelCode}_${fileDate}.csv`;
+
+  return new NextResponse(csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+}

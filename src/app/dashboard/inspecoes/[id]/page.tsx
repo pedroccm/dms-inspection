@@ -4,6 +4,8 @@ import { requireAuth } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
+import { ExportButton } from "./export-button";
+import { TransferButton } from "./transfer-button";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -62,6 +64,13 @@ export default async function InspecaoDetailPage({
           )}
         </div>
         <div className="flex items-center gap-3">
+          {(inspection.status === "submitted" ||
+            inspection.status === "transferred") && (
+            <ExportButton inspectionId={inspection.id} />
+          )}
+          {inspection.status === "submitted" && (
+            <TransferButton inspectionId={inspection.id} />
+          )}
           <Badge variant={config.variant}>{config.label}</Badge>
           <Link
             href="/dashboard/inspecoes"

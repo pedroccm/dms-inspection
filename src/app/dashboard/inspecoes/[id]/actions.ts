@@ -205,3 +205,55 @@ export async function completeInspectionEvaluation(inspectionId: string) {
 
   return { success: true };
 }
+
+export async function markAsTransferred(inspectionId: string) {
+  await requireAuth();
+  const supabase = await createClient();
+
+  // Verify the user is admin
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Nao autenticado." };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "admin") {
+    return { success: false, error: "Apenas administradores podem marcar como transferida." };
+  }
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspecao nao encontrada." };
+  }
+
+  if (inspection.status !== "submitted") {
+    return { success: false, error: "Apenas inspecoes enviadas podem ser marcadas como transferidas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status: "transferred",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
