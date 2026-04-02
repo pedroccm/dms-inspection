@@ -52,7 +52,7 @@ export function InspectionDetailClient({
       {/* Checklist Summary (US-304) */}
       <ChecklistSummary items={checklistItems} />
 
-      {/* Interactive Checklist Form (US-302 + US-303) */}
+      {/* Interactive Checklist Form (US-302 + US-303 + US-306) */}
       <ChecklistForm
         checklistItems={checklistItems}
         inspectionId={inspectionId}
@@ -60,6 +60,7 @@ export function InspectionDetailClient({
           effectiveEditable ? inspectionStatus : "submitted"
         }
         inspectionNotes={inspectionNotes}
+        photoCount={photos.length}
       />
 
       {/* Photo Capture Section (US-401 + US-402) */}

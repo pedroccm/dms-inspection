@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type { ChecklistItem, ChecklistItemStatus, InspectionStatus } from "@/lib/types";
 import { updateChecklistItem, updateInspectionObservations, updateInspectionStatus, completeInspectionEvaluation } from "./actions";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { useRouter } from "next/navigation";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { SaveIndicator } from "@/components/save-indicator";
@@ -15,6 +16,7 @@ interface ChecklistFormProps {
   inspectionId: string;
   inspectionStatus: InspectionStatus;
   inspectionNotes: string | null;
+  photoCount?: number;
 }
 
 interface ItemSaveState {
@@ -97,6 +99,7 @@ export function ChecklistForm({
   inspectionId,
   inspectionStatus,
   inspectionNotes,
+  photoCount = 0,
 }: ChecklistFormProps) {
   const router = useRouter();
   const editable = isEditable(inspectionStatus);
@@ -131,6 +134,12 @@ export function ChecklistForm({
   // Complete evaluation state
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
+
+  // Validation modal state (US-306)
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [showPendingWarning, setShowPendingWarning] = useState(false);
+  const [pendingItemLabels, setPendingItemLabels] = useState<string[]>([]);
 
   // Progress calculation
   const evaluatedCount = items.filter((i) => i.status !== "pending").length;
@@ -280,20 +289,60 @@ export function ChecklistForm({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [autoSave.hasUnsavedChanges, saveStates]);
 
-  const handleComplete = useCallback(async () => {
+  const handleCompleteClick = useCallback(() => {
+    setCompleteError(null);
+    setValidationError(null);
+
+    // Check if photos < 6
+    if (photoCount < 6) {
+      setValidationError("Envie pelo menos 6 fotos antes de concluir.");
+      return;
+    }
+
+    // Check if any rejected items have empty rejection_reason
+    const rejectedWithoutReason = items.filter(
+      (i) =>
+        i.status === "rejected" &&
+        !(rejectionReasons[i.id]?.trim())
+    );
+    if (rejectedWithoutReason.length > 0) {
+      setValidationError("Preencha o motivo da reprovação para todos os itens reprovados.");
+      return;
+    }
+
+    // Check if any items are still pending
+    const pending = items.filter((i) => i.status === "pending");
+    if (pending.length > 0) {
+      setPendingItemLabels(pending.map((i) => getItemLabel(i)));
+      setShowPendingWarning(true);
+      return;
+    }
+
+    // All validations passed - show confirmation modal
+    setShowConfirmModal(true);
+  }, [items, photoCount, rejectionReasons]);
+
+  const handleConfirmComplete = useCallback(async () => {
     setCompleting(true);
     setCompleteError(null);
+    setShowConfirmModal(false);
+    setShowPendingWarning(false);
 
     const result = await completeInspectionEvaluation(inspectionId);
 
     if (result.success) {
       router.refresh();
     } else {
-      setCompleteError(result.error ?? "Erro ao concluir avaliacao.");
+      setCompleteError(result.error ?? "Erro ao concluir avaliação.");
     }
 
     setCompleting(false);
   }, [inspectionId, router]);
+
+  const handlePendingConfirm = useCallback(() => {
+    setShowPendingWarning(false);
+    setShowConfirmModal(true);
+  }, []);
 
   // ─── Render ────────────────────────────────────────────
 
@@ -477,18 +526,22 @@ export function ChecklistForm({
       {editable && (
         <div className="flex flex-col items-center gap-3">
           <Button
-            onClick={handleComplete}
+            onClick={handleCompleteClick}
             loading={completing}
             disabled={!allEvaluated || completing}
             size="lg"
             fullWidth
-            className={!allEvaluated ? "opacity-50 cursor-not-allowed" : ""}
           >
-            Concluir Avaliacao
+            Concluir Avaliação
           </Button>
           {!allEvaluated && (
             <p className="text-sm text-gray-500">
               Avalie todos os {totalCount - evaluatedCount} itens pendentes para concluir.
+            </p>
+          )}
+          {validationError && (
+            <p className="text-sm text-red-600" role="alert">
+              {validationError}
             </p>
           )}
           {completeError && (
@@ -498,6 +551,44 @@ export function ChecklistForm({
           )}
         </div>
       )}
+
+      {/* Pending items warning modal */}
+      <Modal
+        open={showPendingWarning}
+        onClose={() => setShowPendingWarning(false)}
+        title="Itens não avaliados"
+        confirmLabel="Continuar mesmo assim"
+        cancelLabel="Voltar e avaliar"
+        onConfirm={handlePendingConfirm}
+      >
+        <p className="mb-2">
+          Os seguintes itens ainda não foram avaliados:
+        </p>
+        <ul className="list-disc pl-5 space-y-1">
+          {pendingItemLabels.map((label, i) => (
+            <li key={i} className="text-gray-600">{label}</li>
+          ))}
+        </ul>
+        <p className="mt-3 text-gray-500">
+          Deseja concluir a avaliação mesmo assim?
+        </p>
+      </Modal>
+
+      {/* Confirmation modal */}
+      <Modal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Concluir avaliação"
+        confirmLabel="Sim, concluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmComplete}
+        loading={completing}
+      >
+        <p>
+          Tem certeza que deseja concluir esta avaliação? Após a conclusão,
+          os itens não poderão mais ser editados.
+        </p>
+      </Modal>
     </>
   );
 }

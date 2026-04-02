@@ -262,7 +262,7 @@ describe("ChecklistForm - Read-only Mode", () => {
   it("does not show Concluir Avaliacao button when submitted", async () => {
     await renderChecklist(makeItems(), "submitted");
 
-    expect(screen.queryByText("Concluir Avaliacao")).not.toBeInTheDocument();
+    expect(screen.queryByText("Concluir Avaliação")).not.toBeInTheDocument();
   });
 });
 
@@ -270,7 +270,7 @@ describe("ChecklistForm - Complete Evaluation", () => {
   it("disables Concluir Avaliacao when not all items evaluated", async () => {
     await renderChecklist();
 
-    const button = screen.getByText("Concluir Avaliacao");
+    const button = screen.getByText("Concluir Avaliação");
     expect(button).toBeDisabled();
   });
 
