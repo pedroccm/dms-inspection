@@ -36,7 +36,8 @@ export default async function InspecaoDetailPage({
   let inspection;
   try {
     inspection = await getInspectionById(id);
-  } catch {
+  } catch (err) {
+    console.error("getInspectionById error:", err);
     notFound();
   }
 

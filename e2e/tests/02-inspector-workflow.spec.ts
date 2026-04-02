@@ -111,20 +111,28 @@ test.describe.serial('Inspector Workflow', () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
-      // Select equipment from native <select> with id="equipamento"
-      // Options have format: "copel_ra_code — manufacturer"
+      // Select equipment
       await page.selectOption('#equipamento', { label: `${EQUIPMENT_1.copelRa} — ${EQUIPMENT_1.manufacturer}` });
       await page.waitForTimeout(500);
 
-      // Select order from native <select> with id="ordem-de-servico"
+      // Select order
       await page.selectOption('#ordem-de-servico', { label: ORDER_1.title });
       await page.waitForTimeout(500);
 
-      // Click "Iniciar Inspecao" and wait for redirect to detail page (UUID in URL)
+      // Click "Iniciar Inspecao"
       await page.getByRole('button', { name: /Iniciar Inspecao/i }).click();
+      await page.waitForTimeout(3000);
 
-      // Wait for redirect to inspection detail (URL with UUID, not /nova)
-      await page.waitForURL(/\/inspecoes\/[0-9a-f-]{36}/, { timeout: 30000 });
+      // Handle "already exists" case: click "Retomar inspecao existente" link if visible
+      const resumeLink = page.getByRole('link', { name: /Retomar inspecao existente/i });
+      if (await resumeLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await resumeLink.click();
+        await page.waitForURL(/\/inspecoes\/[0-9a-f-]{36}/, { timeout: 15000 });
+      } else {
+        // New inspection created - wait for redirect
+        await page.waitForURL(/\/inspecoes\/[0-9a-f-]{36}/, { timeout: 15000 });
+      }
+
       await page.waitForTimeout(2000);
 
       // Verify we're on the detail page (checklist should be visible)
@@ -134,51 +142,37 @@ test.describe.serial('Inspector Workflow', () => {
     });
 
     await test.step('Fill checklist items', async () => {
-      // We're already on the inspection detail page from the previous step.
-      // Each checklist item has buttons with aria-label="Aprovado - ItemName",
-      // "Reprovado - ItemName", "NA - ItemName".
+      // The 19 checklist items from the DB
+      const ITEMS = [
+        'Alimentação VCA e Tomada', 'Alimentação VCC / Bateria', 'Arquivo de Ajustes',
+        'Operação Bateria', 'Operação VCA', 'Alavanca Amarela',
+        'Medição MT', 'Medição BT Fonte', 'Medição BT Carga', 'Medição PRI Corrente',
+        'Op. Mecânica - 25 Op.', 'Resist. de Contato', 'Resist. de Isolamento',
+        'Visual de Mont./Pint.', 'Proteção de Fase', 'Proteção de N/SEF',
+        'Comunic. Frontal', 'Comunic. Traseira', 'Linha 19',
+      ];
 
-      // First, click all "Aprovado" buttons to approve all items
-      const approveButtons = page.getByRole('button', { name: /^Aprovado - / });
-      const totalButtons = await approveButtons.count();
-      expect(totalButtons).toBeGreaterThan(0);
-
-      for (let i = 0; i < totalButtons; i++) {
-        await approveButtons.nth(i).click();
-        await page.waitForTimeout(300);
+      // Approve all items first
+      for (const itemName of ITEMS) {
+        const btn = page.locator(`button[aria-label="Aprovado - ${itemName}"]`);
+        if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await btn.click();
+          await page.waitForTimeout(200);
+        }
       }
 
-      // Override "Alavanca Amarela" to Reprovado:
-      // First toggle off its approved state, then click Reprovado
-      const alavancaApproveBtn = page.getByRole('button', { name: /Aprovado - .*Alavanca Amarela/i });
-      await alavancaApproveBtn.click(); // Toggle off (back to pending)
-      await page.waitForTimeout(300);
-
-      const alavancaRejectBtn = page.getByRole('button', { name: /Reprovado - .*Alavanca Amarela/i });
-      await alavancaRejectBtn.click();
+      // Override "Alavanca Amarela" to Reprovado
+      await page.locator('button[aria-label="Reprovado - Alavanca Amarela"]').click();
       await page.waitForTimeout(500);
 
-      // Override last 2 items to NA:
-      // Get all NA buttons and toggle the last 2 from approved to NA
-      const naButtons = page.getByRole('button', { name: /^NA - / });
-      const naCount = await naButtons.count();
+      // Override last 2 items to NA
+      await page.locator('button[aria-label="NA - Comunic. Traseira"]').click();
+      await page.waitForTimeout(300);
+      await page.locator('button[aria-label="NA - Linha 19"]').click();
+      await page.waitForTimeout(300);
 
-      for (let i = naCount - 2; i < naCount; i++) {
-        // Get the item name from the NA button's aria-label
-        const naButtonText = await naButtons.nth(i).getAttribute('aria-label');
-        if (naButtonText) {
-          const itemName = naButtonText.replace('NA - ', '');
-          // Click the approve button for this item to toggle it off
-          await page.getByRole('button', { name: `Aprovado - ${itemName}` }).click();
-          await page.waitForTimeout(300);
-        }
-        // Now click NA
-        await naButtons.nth(i).click();
-        await page.waitForTimeout(300);
-      }
-
-      // Verify progress shows all items evaluated
-      await expect(page.getByText(/\d+ de \d+ itens avaliados/)).toContainText(`${totalButtons} de ${totalButtons}`);
+      // Verify progress (use .first() since summary + checklist both show progress)
+      await expect(page.getByText(/19 de 19 itens avaliados/).first()).toBeVisible({ timeout: 10000 });
 
       await page.screenshot({ path: 'e2e/results/02-inspector-checklist-filled.png' });
     });
