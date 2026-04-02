@@ -90,24 +90,24 @@ export async function GET(
       full_name?: string;
     } | null;
     const checklistItems = (inspection.checklist_items ?? []) as {
-      label: string;
+      item_name: string;
       status: string;
       rejection_reason: string | null;
-      order: number;
+      sort_order: number;
     }[];
     const dateStr = formatDate(
-      inspection.completed_at ?? inspection.created_at
+      inspection.submitted_at ?? inspection.created_at
     );
 
-    // Sort by order
-    checklistItems.sort((a, b) => a.order - b.order);
+    // Sort by sort_order
+    checklistItems.sort((a, b) => a.sort_order - b.sort_order);
 
     for (const item of checklistItems) {
       lines.push(
         [
           escapeCSV(equipment?.copel_ra_code),
           escapeCSV(equipment?.manufacturer),
-          escapeCSV(item.label),
+          escapeCSV(item.item_name),
           escapeCSV(STATUS_LABELS[item.status] ?? item.status),
           escapeCSV(item.rejection_reason),
           escapeCSV(inspector?.full_name),

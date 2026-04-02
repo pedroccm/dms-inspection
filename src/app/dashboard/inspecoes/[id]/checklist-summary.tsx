@@ -7,8 +7,7 @@ interface ChecklistSummaryProps {
 }
 
 function getItemLabel(item: ChecklistItem) {
-  const dashIndex = item.label.indexOf(" - ");
-  return dashIndex > 0 ? item.label.substring(dashIndex + 3) : item.label;
+  return item.item_name;
 }
 
 export function ChecklistSummary({ items }: ChecklistSummaryProps) {

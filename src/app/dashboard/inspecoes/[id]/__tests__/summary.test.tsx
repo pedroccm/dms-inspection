@@ -7,13 +7,11 @@ function makeItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
   return {
     id: `item-${Math.random().toString(36).slice(2)}`,
     inspection_id: "insp-1",
-    label: "Mecanismo - Verificar estado geral",
-    checked: false,
+    item_name: "Verificar estado geral",
+    category: "Mecanismo",
     status: "pending",
     rejection_reason: null,
-    notes: null,
-    order: 1,
-    created_at: "2026-01-01T00:00:00Z",
+    sort_order: 1,
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
@@ -80,13 +78,15 @@ describe("ChecklistSummary", () => {
     const items = [
       makeItem({
         id: "1",
-        label: "Mecanismo - Verificar estado geral",
+        item_name: "Verificar estado geral",
+        category: "Mecanismo",
         status: "rejected",
         rejection_reason: "Oxidacao presente",
       }),
       makeItem({
         id: "2",
-        label: "Controle - Verificar display",
+        item_name: "Verificar display",
+        category: "Controle",
         status: "rejected",
         rejection_reason: "Display quebrado",
       }),
@@ -98,7 +98,7 @@ describe("ChecklistSummary", () => {
     expect(screen.getByText("Itens reprovados:")).toBeDefined();
     expect(screen.getByText("Verificar estado geral")).toBeDefined();
     expect(screen.getByText(/Oxidacao presente/)).toBeDefined();
-    expect(screen.getByText("Verificar display")).toBeDefined();
+    expect(screen.getByText("Verificar display")).toBeInTheDocument();
     expect(screen.getByText(/Display quebrado/)).toBeDefined();
   });
 

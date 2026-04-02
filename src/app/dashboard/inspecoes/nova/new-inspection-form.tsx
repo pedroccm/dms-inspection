@@ -11,7 +11,6 @@ interface NewInspectionFormProps {
   serviceOrderOptions: {
     value: string;
     label: string;
-    equipmentId: string | null;
   }[];
   preselectedEquipmentId?: string;
 }

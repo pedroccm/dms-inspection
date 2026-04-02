@@ -50,7 +50,7 @@ export async function GET(
   const inspectorName =
     (inspection.inspector as { full_name?: string } | undefined)?.full_name ??
     "";
-  const dateStr = formatDate(inspection.completed_at ?? inspection.created_at);
+  const dateStr = formatDate(inspection.submitted_at ?? inspection.created_at);
 
   // Build CSV content
   const lines: string[] = [];
@@ -86,7 +86,7 @@ export async function GET(
   for (const item of checklistItems) {
     lines.push(
       [
-        escapeCSV(item.label),
+        escapeCSV(item.item_name),
         escapeCSV(statusLabels[item.status] ?? item.status),
         escapeCSV(item.rejection_reason),
       ].join(",")
@@ -98,7 +98,7 @@ export async function GET(
 
   // Observations
   lines.push("Observacoes");
-  lines.push(escapeCSV(inspection.notes));
+  lines.push(escapeCSV(inspection.observations));
 
   // Blank line separator
   lines.push("");
@@ -109,9 +109,9 @@ export async function GET(
 
   const csv = lines.join("\n");
   const copelCode = equipment?.copel_ra_code ?? "sem-codigo";
-  const fileDate = (inspection.completed_at ?? inspection.created_at)
+  const fileDate = (inspection.submitted_at ?? inspection.created_at)
     ? new Date(
-        inspection.completed_at ?? inspection.created_at
+        inspection.submitted_at ?? inspection.created_at
       ).toISOString().split("T")[0]
     : new Date().toISOString().split("T")[0];
   const filename = `inspecao_${copelCode}_${fileDate}.csv`;

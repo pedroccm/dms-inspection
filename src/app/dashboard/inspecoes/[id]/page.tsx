@@ -98,7 +98,7 @@ export default async function InspecaoDetailPage({
       <InspectionDetailClient
         inspectionId={inspection.id}
         inspectionStatus={inspection.status}
-        inspectionNotes={inspection.notes}
+        inspectionNotes={inspection.observations}
         checklistItems={checklistItems}
         photos={photos}
         isEditable={isEditable}

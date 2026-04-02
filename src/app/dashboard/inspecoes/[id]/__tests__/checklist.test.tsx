@@ -41,13 +41,11 @@ function makeItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
   return {
     id: "item-1",
     inspection_id: "insp-1",
-    label: "Mecanismo - Verificar estado geral",
-    checked: false,
+    item_name: "Verificar estado geral",
+    category: "Mecanismo",
     status: "pending",
     rejection_reason: null,
-    notes: null,
-    order: 1,
-    created_at: "2026-01-01T00:00:00Z",
+    sort_order: 1,
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
@@ -55,11 +53,11 @@ function makeItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
 
 function makeItems(): ChecklistItem[] {
   return [
-    makeItem({ id: "item-1", label: "Mecanismo - Verificar estado geral", order: 1 }),
-    makeItem({ id: "item-2", label: "Mecanismo - Verificar vedacao", order: 2 }),
-    makeItem({ id: "item-3", label: "Controle - Verificar terminais", order: 3 }),
-    makeItem({ id: "item-4", label: "Controle - Verificar conexoes", order: 4 }),
-    makeItem({ id: "item-5", label: "Rele - Verificar firmware", order: 5 }),
+    makeItem({ id: "item-1", item_name: "Verificar estado geral", category: "Mecanismo", sort_order: 1 }),
+    makeItem({ id: "item-2", item_name: "Verificar vedacao", category: "Mecanismo", sort_order: 2 }),
+    makeItem({ id: "item-3", item_name: "Verificar terminais", category: "Controle", sort_order: 3 }),
+    makeItem({ id: "item-4", item_name: "Verificar conexoes", category: "Controle", sort_order: 4 }),
+    makeItem({ id: "item-5", item_name: "Verificar firmware", category: "Rele", sort_order: 5 }),
   ];
 }
 

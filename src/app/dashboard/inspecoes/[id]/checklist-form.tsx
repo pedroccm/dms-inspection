@@ -62,17 +62,11 @@ const STATUS_OPTIONS: StatusOption[] = [
 function groupItemsByCategory(items: ChecklistItem[]) {
   const groups: Record<string, ChecklistItem[]> = {};
   for (const item of items) {
-    const dashIndex = item.label.indexOf(" - ");
-    const category = dashIndex > 0 ? item.label.substring(0, dashIndex) : "Geral";
+    const category = item.category || "Geral";
     if (!groups[category]) groups[category] = [];
     groups[category].push(item);
   }
   return groups;
-}
-
-function getItemLabel(item: ChecklistItem) {
-  const dashIndex = item.label.indexOf(" - ");
-  return dashIndex > 0 ? item.label.substring(dashIndex + 3) : item.label;
 }
 
 function isEditable(status: InspectionStatus) {
@@ -309,7 +303,7 @@ export function ChecklistForm({
         (!rejectionReasons[i.id]?.trim() || rejectionReasons[i.id].trim().length < 10)
     );
     if (rejectedWithoutReason.length > 0) {
-      const labels = rejectedWithoutReason.map((i) => getItemLabel(i));
+      const labels = rejectedWithoutReason.map((i) => i.item_name);
       setRejectedMissingReasons(labels);
       setValidationError(
         "Preencha o motivo da reprovação (mínimo 10 caracteres) para os seguintes itens:"
@@ -320,7 +314,7 @@ export function ChecklistForm({
     // Check if any items are still pending
     const pending = items.filter((i) => i.status === "pending");
     if (pending.length > 0) {
-      setPendingItemLabels(pending.map((i) => getItemLabel(i)));
+      setPendingItemLabels(pending.map((i) => i.item_name));
       setShowPendingWarning(true);
       return;
     }
@@ -397,7 +391,7 @@ export function ChecklistForm({
                     <li key={item.id} className="px-6 py-4">
                       <div className="flex items-center justify-between gap-4">
                         <span className="text-sm text-gray-900 flex-1 min-w-0">
-                          {getItemLabel(item)}
+                          {item.item_name}
                         </span>
 
                         {editable ? (
@@ -417,7 +411,7 @@ export function ChecklistForm({
                                   ${currentItem.status === option.value ? option.selectedClass : option.unselectedClass}
                                 `}
                                 title={option.label}
-                                aria-label={`${option.label} - ${getItemLabel(item)}`}
+                                aria-label={`${option.label} - ${item.item_name}`}
                                 aria-pressed={currentItem.status === option.value}
                               >
                                 <span aria-hidden="true">{option.icon}</span>

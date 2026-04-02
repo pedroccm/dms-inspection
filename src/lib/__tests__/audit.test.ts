@@ -55,8 +55,8 @@ describe("formatAuditEntry", () => {
       makeLog({
         action: "update",
         table_name: "checklist_items",
-        old_data: { status: "pending", label: "Alimentacao VCA e Tomada" },
-        new_data: { status: "approved", label: "Alimentacao VCA e Tomada" },
+        old_data: { status: "pending", item_name: "Alimentacao VCA e Tomada" },
+        new_data: { status: "approved", item_name: "Alimentacao VCA e Tomada" },
       })
     );
     expect(entry.description).toContain("Pendente");
@@ -69,8 +69,8 @@ describe("formatAuditEntry", () => {
       makeLog({
         action: "update",
         table_name: "inspections",
-        old_data: { notes: "old note", status: "in_progress" },
-        new_data: { notes: "new note", status: "in_progress" },
+        old_data: { observations: "old note", status: "in_progress" },
+        new_data: { observations: "new note", status: "in_progress" },
       })
     );
     expect(entry.description).toContain("observacoes");
@@ -89,8 +89,8 @@ describe("formatAuditEntry", () => {
       makeLog({
         action: "update",
         table_name: "inspections",
-        old_data: { status: "draft", notes: "a" },
-        new_data: { status: "draft", notes: "a" },
+        old_data: { status: "draft", observations: "a" },
+        new_data: { status: "draft", observations: "a" },
       })
     );
     expect(entry.description).toContain("alterou");

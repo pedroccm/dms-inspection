@@ -46,9 +46,7 @@ function makePhoto(overrides: Partial<Photo> = {}): Photo {
     photo_type: "mechanism_front",
     storage_path: "inspections/insp-1/mechanism_front_123.jpg",
     file_size: 1024000,
-    caption: null,
     uploaded_at: "2026-01-01T00:00:00Z",
-    created_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
 }

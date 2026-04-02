@@ -34,8 +34,8 @@ describe("NewInspectionForm", () => {
   ];
 
   const serviceOrderOptions = [
-    { value: "so-1", label: "OS Manutencao 001", equipmentId: "eq-1" },
-    { value: "so-2", label: "OS Manutencao 002", equipmentId: "eq-2" },
+    { value: "so-1", label: "OS Manutencao 001" },
+    { value: "so-2", label: "OS Manutencao 002" },
   ];
 
   it("renders equipment and service order selects", async () => {
@@ -108,38 +108,30 @@ describe("InspectionDetail - checklist display", () => {
       {
         id: "1",
         inspection_id: "insp-1",
-        label: "Mecanismo - Verificar estado",
-        checked: true,
-        notes: null,
-        order: 1,
-        created_at: "2026-01-01",
+        item_name: "Verificar estado",
+        category: "Mecanismo",
+        sort_order: 1,
       },
       {
         id: "2",
         inspection_id: "insp-1",
-        label: "Mecanismo - Verificar vedacao",
-        checked: false,
-        notes: null,
-        order: 2,
-        created_at: "2026-01-01",
+        item_name: "Verificar vedacao",
+        category: "Mecanismo",
+        sort_order: 2,
       },
       {
         id: "3",
         inspection_id: "insp-1",
-        label: "Controle - Verificar terminais",
-        checked: false,
-        notes: null,
-        order: 3,
-        created_at: "2026-01-01",
+        item_name: "Verificar terminais",
+        category: "Controle",
+        sort_order: 3,
       },
     ];
 
-    // Group items
+    // Group items by category
     const groups: Record<string, typeof items> = {};
     for (const item of items) {
-      const dashIndex = item.label.indexOf(" - ");
-      const category =
-        dashIndex > 0 ? item.label.substring(0, dashIndex) : "Geral";
+      const category = item.category || "Geral";
       if (!groups[category]) groups[category] = [];
       groups[category].push(item);
     }
@@ -151,14 +143,14 @@ describe("InspectionDetail - checklist display", () => {
 
   it("calculates progress bar percentage correctly", () => {
     const items = [
-      { checked: true },
-      { checked: true },
-      { checked: false },
-      { checked: false },
-      { checked: false },
+      { status: "approved" },
+      { status: "rejected" },
+      { status: "pending" },
+      { status: "pending" },
+      { status: "pending" },
     ];
 
-    const evaluated = items.filter((i) => i.checked).length;
+    const evaluated = items.filter((i) => i.status !== "pending").length;
     const total = items.length;
     const percent = Math.round((evaluated / total) * 100);
 
@@ -168,8 +160,8 @@ describe("InspectionDetail - checklist display", () => {
   });
 
   it("handles empty checklist items", () => {
-    const items: { checked: boolean }[] = [];
-    const evaluated = items.filter((i) => i.checked).length;
+    const items: { status: string }[] = [];
+    const evaluated = items.filter((i) => i.status !== "pending").length;
     const total = items.length;
     const percent = total > 0 ? Math.round((evaluated / total) * 100) : 0;
 

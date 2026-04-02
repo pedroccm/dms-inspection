@@ -7,7 +7,7 @@ import { AdminOnly } from "@/components/admin-only";
 import { AddEquipmentSection } from "./add-equipment-section";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
 import { ExportOrderButton } from "./export-order-button";
-import type { ServiceOrderStatus, EquipmentInspectionStatus } from "@/lib/types";
+import type { ServiceOrderStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
@@ -23,17 +23,6 @@ const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success"
   cancelled: "neutral",
 };
 
-const INSPECTION_STATUS_LABELS: Record<EquipmentInspectionStatus, string> = {
-  not_started: "Nao Iniciada",
-  in_progress: "Em Andamento",
-  completed: "Concluida",
-};
-
-const INSPECTION_STATUS_VARIANTS: Record<EquipmentInspectionStatus, "neutral" | "warning" | "success"> = {
-  not_started: "neutral",
-  in_progress: "warning",
-  completed: "success",
-};
 
 interface OrdemDetailPageProps {
   params: Promise<{ id: string }>;

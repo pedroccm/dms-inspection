@@ -33,11 +33,11 @@ function buildInspectionCSV(inspection: {
     manufacturer: string;
   };
   checklist_items: {
-    label: string;
+    item_name: string;
     status: string;
     rejection_reason: string | null;
   }[];
-  notes: string | null;
+  observations: string | null;
   inspector_name: string;
   date: string;
 }): string {
@@ -63,7 +63,7 @@ function buildInspectionCSV(inspection: {
   for (const item of inspection.checklist_items) {
     lines.push(
       [
-        escapeCSV(item.label),
+        escapeCSV(item.item_name),
         escapeCSV(STATUS_LABELS[item.status] ?? item.status),
         escapeCSV(item.rejection_reason),
       ].join(",")
@@ -72,7 +72,7 @@ function buildInspectionCSV(inspection: {
 
   lines.push("");
   lines.push("Observacoes");
-  lines.push(escapeCSV(inspection.notes));
+  lines.push(escapeCSV(inspection.observations));
 
   lines.push("");
   lines.push(`Inspetor,${escapeCSV(inspection.inspector_name)}`);
@@ -88,7 +88,7 @@ function buildOrderCSV(
     inspector_name: string;
     date: string;
     checklist_items: {
-      label: string;
+      item_name: string;
       status: string;
       rejection_reason: string | null;
     }[];
@@ -105,7 +105,7 @@ function buildOrderCSV(
         [
           escapeCSV(insp.copel_ra_code),
           escapeCSV(insp.manufacturer),
-          escapeCSV(item.label),
+          escapeCSV(item.item_name),
           escapeCSV(STATUS_LABELS[item.status] ?? item.status),
           escapeCSV(item.rejection_reason),
           escapeCSV(insp.inspector_name),
@@ -168,7 +168,7 @@ describe("CSV Export", () => {
           manufacturer: "ABB",
         },
         checklist_items: [],
-        notes: null,
+        observations: null,
         inspector_name: "Joao",
         date: "15/03/2026",
       });
@@ -190,7 +190,7 @@ describe("CSV Export", () => {
           manufacturer: "ABB",
         },
         checklist_items: [],
-        notes: null,
+        observations: null,
         inspector_name: "Joao",
         date: "15/03/2026",
       });
@@ -213,12 +213,12 @@ describe("CSV Export", () => {
         },
         checklist_items: [
           {
-            label: "Alimentacao VCA e Tomada",
+            item_name: "Alimentacao VCA e Tomada",
             status: "approved",
             rejection_reason: null,
           },
         ],
-        notes: null,
+        observations: null,
         inspector_name: "Joao",
         date: "15/03/2026",
       });
@@ -240,12 +240,12 @@ describe("CSV Export", () => {
         },
         checklist_items: [
           {
-            label: "Operacao Bateria",
+            item_name: "Operacao Bateria",
             status: "rejected",
             rejection_reason: "Bateria com carga insuficiente",
           },
         ],
-        notes: null,
+        observations: null,
         inspector_name: "Joao",
         date: "15/03/2026",
       });
@@ -268,12 +268,12 @@ describe("CSV Export", () => {
         },
         checklist_items: [
           {
-            label: "Item teste",
+            item_name: "Item teste",
             status: "rejected",
             rejection_reason: "Problema A, Problema B",
           },
         ],
-        notes: null,
+        observations: null,
         inspector_name: "Joao",
         date: "15/03/2026",
       });
@@ -318,7 +318,7 @@ describe("CSV Export", () => {
           manufacturer: "ABB",
         },
         checklist_items: [],
-        notes: "Observacao de teste",
+        observations: "Observacao de teste",
         inspector_name: "Maria Silva",
         date: "15/03/2026",
       });
@@ -336,7 +336,7 @@ describe("CSV Export", () => {
           inspector_name: "Joao",
           date: "15/03/2026",
           checklist_items: [
-            { label: "Item A", status: "approved", rejection_reason: null },
+            { item_name: "Item A", status: "approved", rejection_reason: null },
           ],
         },
         {
@@ -346,7 +346,7 @@ describe("CSV Export", () => {
           date: "16/03/2026",
           checklist_items: [
             {
-              label: "Item B",
+              item_name: "Item B",
               status: "rejected",
               rejection_reason: "Defeito",
             },

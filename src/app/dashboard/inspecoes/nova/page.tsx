@@ -33,7 +33,6 @@ export default async function NovaInspecaoPage({
   const serviceOrderOptions = serviceOrders.map((so) => ({
     value: so.id,
     label: so.title,
-    equipmentId: so.equipment_id,
   }));
 
   return (

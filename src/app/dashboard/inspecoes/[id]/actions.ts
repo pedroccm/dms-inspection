@@ -98,7 +98,7 @@ export async function updateInspectionObservations(
 
   const { error: updateError } = await supabase
     .from("inspections")
-    .update({ notes: observations.trim(), updated_at: new Date().toISOString() })
+    .update({ observations: observations.trim(), updated_at: new Date().toISOString() })
     .eq("id", inspectionId);
 
   if (updateError) {
@@ -138,7 +138,6 @@ export async function updateInspectionStatus(
     .from("inspections")
     .update({
       status,
-      started_at: status === "in_progress" ? new Date().toISOString() : undefined,
       updated_at: new Date().toISOString(),
     })
     .eq("id", inspectionId);
@@ -194,7 +193,6 @@ export async function completeInspectionEvaluation(inspectionId: string) {
     .from("inspections")
     .update({
       status: "ready_for_review",
-      completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", inspectionId);

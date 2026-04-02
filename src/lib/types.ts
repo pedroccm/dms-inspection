@@ -21,18 +21,17 @@ export interface Inspection {
   id: string;
   inspector_id: string;
   equipment_id: string;
-  service_order_id: string | null;
+  service_order_id: string;
   status: InspectionStatus;
-  notes: string | null;
-  started_at: string | null;
-  completed_at: string | null;
+  observations: string | null;
   created_at: string;
   updated_at: string;
+  submitted_at: string | null;
   // Joined relations (optional)
   equipment?: Equipment;
   checklist_items?: ChecklistItem[];
   photos?: Photo[];
-  inspector?: Profile;
+  inspector?: { full_name: string };
 }
 
 export type ChecklistItemStatus = "approved" | "rejected" | "na" | "pending";
@@ -40,13 +39,11 @@ export type ChecklistItemStatus = "approved" | "rejected" | "na" | "pending";
 export interface ChecklistItem {
   id: string;
   inspection_id: string;
-  label: string;
-  checked: boolean;
+  item_name: string;
+  category: string;
+  sort_order: number;
   status: ChecklistItemStatus;
   rejection_reason: string | null;
-  notes: string | null;
-  order: number;
-  created_at: string;
   updated_at: string;
 }
 
@@ -64,9 +61,7 @@ export interface Photo {
   photo_type: PhotoType;
   storage_path: string;
   file_size: number;
-  caption: string | null;
   uploaded_at: string;
-  created_at: string;
 }
 
 export const PHOTO_TYPE_LABELS: Record<PhotoType, string> = {
@@ -85,13 +80,10 @@ export interface ServiceOrder {
   title: string;
   client_name: string;
   location: string | null;
-  description: string | null;
   status: ServiceOrderStatus;
   assigned_to: string;
-  equipment_id: string | null;
   start_date: string | null;
   end_date: string | null;
-  due_date: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -101,14 +93,10 @@ export interface ServiceOrder {
   service_order_equipment?: ServiceOrderEquipment[];
 }
 
-export type EquipmentInspectionStatus = "not_started" | "in_progress" | "completed";
-
 export interface ServiceOrderEquipment {
   id: string;
   service_order_id: string;
   equipment_id: string;
-  inspection_status: EquipmentInspectionStatus;
-  created_at: string;
   // Joined relations (optional)
   equipment?: Equipment;
 }

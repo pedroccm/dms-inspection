@@ -158,14 +158,14 @@ function buildDescription(log: AuditLog, userName: string): string {
     changes.push(`status de '${oldLabel}' para '${newLabel}'`);
   }
 
-  // Inspection notes change
-  if (log.table_name === "inspections" && log.old_data.notes !== log.new_data.notes) {
+  // Inspection observations change
+  if (log.table_name === "inspections" && log.old_data.observations !== log.new_data.observations) {
     changes.push("observacoes");
   }
 
   // Checklist item status change
   if (log.table_name === "checklist_items" && log.old_data.status !== log.new_data.status) {
-    const itemLabel = (log.new_data.label as string) ?? "item";
+    const itemLabel = (log.new_data.item_name as string) ?? "item";
     const oldLabel = CHECKLIST_STATUS_LABELS[log.old_data.status as string] ?? String(log.old_data.status);
     const newLabel = CHECKLIST_STATUS_LABELS[log.new_data.status as string] ?? String(log.new_data.status);
     return `${userName} alterou status de '${oldLabel}' para '${newLabel}' no item '${itemLabel}'`;
@@ -173,7 +173,7 @@ function buildDescription(log: AuditLog, userName: string): string {
 
   // Checklist rejection reason
   if (log.table_name === "checklist_items" && log.old_data.rejection_reason !== log.new_data.rejection_reason) {
-    const itemLabel = (log.new_data.label as string) ?? "item";
+    const itemLabel = (log.new_data.item_name as string) ?? "item";
     changes.push(`motivo de rejeicao no item '${itemLabel}'`);
   }
 
