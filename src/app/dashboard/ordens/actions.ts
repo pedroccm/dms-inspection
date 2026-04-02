@@ -76,10 +76,6 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
     return so && (so.status === "open" || so.status === "in_progress");
   });
 
-  if (inActiveOrder) {
-    return { warning: "Atenção: este equipamento ja esta em outra ordem de servico ativa." };
-  }
-
   const { error } = await supabase
     .from("service_order_equipment")
     .insert({
@@ -92,6 +88,11 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
   }
 
   revalidatePath(`/dashboard/ordens/${orderId}`);
+
+  if (inActiveOrder) {
+    return { warning: "Equipamento adicionado. Atenção: este equipamento ja esta em outra ordem de servico ativa." };
+  }
+
   return { success: true };
 }
 

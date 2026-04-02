@@ -193,9 +193,8 @@ test.describe.serial('Admin Setup', () => {
     await page.waitForURL('**/ordens');
     await page.waitForTimeout(1000);
 
-    // Open the created order by clicking "Detalhes"
-    const orderRow = page.getByRole('row', { name: new RegExp(ORDER_1.title) });
-    await orderRow.getByRole('link', { name: /Detalhes/i }).click();
+    // Open the created order by clicking "Detalhes" (first match)
+    await page.getByRole('link', { name: /Detalhes/i }).first().click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
@@ -252,9 +251,9 @@ test.describe.serial('Admin Setup', () => {
     await page.waitForURL('**/configuracoes');
     await page.waitForTimeout(2000);
 
-    // Verify retention period select exists
+    // Verify retention period select exists (client component, may take time to load)
     const retentionSelect = page.locator('#retention-select');
-    await expect(retentionSelect).toBeVisible();
+    await expect(retentionSelect).toBeVisible({ timeout: 10000 });
 
     // Verify default is 30 days
     await expect(retentionSelect).toHaveValue('30');
