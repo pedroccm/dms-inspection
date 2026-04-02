@@ -14,11 +14,13 @@ vi.mock("next/navigation", () => ({
 // Mock server actions
 const mockUpdateChecklistItem = vi.fn();
 const mockUpdateInspectionObservations = vi.fn();
+const mockUpdateInspectionStatus = vi.fn();
 const mockCompleteInspectionEvaluation = vi.fn();
 
 vi.mock("../actions", () => ({
   updateChecklistItem: (...args: unknown[]) => mockUpdateChecklistItem(...args),
   updateInspectionObservations: (...args: unknown[]) => mockUpdateInspectionObservations(...args),
+  updateInspectionStatus: (...args: unknown[]) => mockUpdateInspectionStatus(...args),
   completeInspectionEvaluation: (...args: unknown[]) => mockCompleteInspectionEvaluation(...args),
 }));
 
@@ -64,7 +66,8 @@ function makeItems(): ChecklistItem[] {
 async function renderChecklist(
   items: ChecklistItem[] = makeItems(),
   status: InspectionStatus = "in_progress",
-  notes: string | null = null
+  notes: string | null = null,
+  photoCount: number = 6
 ) {
   const { ChecklistForm } = await import("../checklist-form");
   return render(
@@ -73,6 +76,7 @@ async function renderChecklist(
       inspectionId="insp-1"
       inspectionStatus={status}
       inspectionNotes={notes}
+      photoCount={photoCount}
     />
   );
 }
@@ -81,6 +85,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUpdateChecklistItem.mockResolvedValue({ success: true });
   mockUpdateInspectionObservations.mockResolvedValue({ success: true });
+  mockUpdateInspectionStatus.mockResolvedValue({ success: true });
   mockCompleteInspectionEvaluation.mockResolvedValue({ success: true });
 });
 
@@ -278,5 +283,118 @@ describe("ChecklistForm - Complete Evaluation", () => {
     await renderChecklist();
 
     expect(screen.getByText(/Avalie todos os 5 itens pendentes/)).toBeInTheDocument();
+  });
+});
+
+describe("ChecklistForm - Checklist Validation (US-306)", () => {
+  it("blocks submission when rejected items have missing rejection reasons", async () => {
+    const items = makeItems();
+    // Set all items as evaluated so button is enabled
+    items[0].status = "approved";
+    items[1].status = "rejected"; // no rejection_reason
+    items[2].status = "approved";
+    items[3].status = "approved";
+    items[4].status = "na";
+
+    await renderChecklist(items);
+
+    const button = screen.getByText("Concluir Avaliação");
+    expect(button).not.toBeDisabled();
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      const errorEl = screen.getByTestId("validation-error");
+      expect(errorEl).toBeInTheDocument();
+      expect(errorEl).toHaveTextContent(
+        "Preencha o motivo da reprovação (mínimo 10 caracteres) para os seguintes itens:"
+      );
+      // Should list the specific item label
+      expect(errorEl).toHaveTextContent("Verificar vedacao");
+    });
+
+    // Confirmation modal should NOT be shown
+    expect(screen.queryByTestId("summary-counts")).not.toBeInTheDocument();
+  });
+
+  it("blocks submission when rejected item reason is too short", async () => {
+    const items = makeItems();
+    items[0].status = "approved";
+    items[1].status = "rejected";
+    items[1].rejection_reason = "short"; // less than 10 chars
+    items[2].status = "approved";
+    items[3].status = "approved";
+    items[4].status = "na";
+
+    await renderChecklist(items);
+
+    // The form initializes rejection reasons from items
+    const button = screen.getByText("Concluir Avaliação");
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("validation-error")).toBeInTheDocument();
+    });
+  });
+
+  it("shows confirmation modal with summary when all validations pass", async () => {
+    const items = makeItems();
+    items[0].status = "approved";
+    items[1].status = "rejected";
+    items[1].rejection_reason = "Equipamento com defeito visivel na vedacao";
+    items[2].status = "approved";
+    items[3].status = "approved";
+    items[4].status = "na";
+
+    await renderChecklist(items);
+
+    const button = screen.getByText("Concluir Avaliação");
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("summary-counts")).toBeInTheDocument();
+      expect(screen.getByText(/Aprovados: 3/)).toBeInTheDocument();
+      expect(screen.getByText(/Reprovados: 1/)).toBeInTheDocument();
+      expect(screen.getByText("N/A: 1")).toBeInTheDocument();
+    });
+  });
+
+  it("shows photo warning in modal when photos < 6", async () => {
+    const items = makeItems();
+    items[0].status = "approved";
+    items[1].status = "approved";
+    items[2].status = "approved";
+    items[3].status = "approved";
+    items[4].status = "na";
+
+    await renderChecklist(items, "in_progress", null, 3);
+
+    const button = screen.getByText("Concluir Avaliação");
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("photo-warning")).toBeInTheDocument();
+      expect(screen.getByText(/apenas 3 de 6 fotos foram enviadas/)).toBeInTheDocument();
+    });
+  });
+
+  it("does not show photo warning when photos >= 6", async () => {
+    const items = makeItems();
+    items[0].status = "approved";
+    items[1].status = "approved";
+    items[2].status = "approved";
+    items[3].status = "approved";
+    items[4].status = "na";
+
+    await renderChecklist(items, "in_progress", null, 8);
+
+    const button = screen.getByText("Concluir Avaliação");
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("summary-counts")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("photo-warning")).not.toBeInTheDocument();
   });
 });

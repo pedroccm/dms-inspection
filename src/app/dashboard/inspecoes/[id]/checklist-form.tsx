@@ -289,24 +289,31 @@ export function ChecklistForm({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [autoSave.hasUnsavedChanges, saveStates]);
 
+  // Summary counts for confirmation modal (US-306)
+  const approvedCount = items.filter((i) => i.status === "approved").length;
+  const rejectedCount = items.filter((i) => i.status === "rejected").length;
+  const naCount = items.filter((i) => i.status === "na").length;
+  const pendingCount = items.filter((i) => i.status === "pending").length;
+
+  const [rejectedMissingReasons, setRejectedMissingReasons] = useState<string[]>([]);
+
   const handleCompleteClick = useCallback(() => {
     setCompleteError(null);
     setValidationError(null);
+    setRejectedMissingReasons([]);
 
-    // Check if photos < 6
-    if (photoCount < 6) {
-      setValidationError("Envie pelo menos 6 fotos antes de concluir.");
-      return;
-    }
-
-    // Check if any rejected items have empty rejection_reason
+    // Check if any rejected items have empty or short rejection_reason (US-306)
     const rejectedWithoutReason = items.filter(
       (i) =>
         i.status === "rejected" &&
-        !(rejectionReasons[i.id]?.trim())
+        (!rejectionReasons[i.id]?.trim() || rejectionReasons[i.id].trim().length < 10)
     );
     if (rejectedWithoutReason.length > 0) {
-      setValidationError("Preencha o motivo da reprovação para todos os itens reprovados.");
+      const labels = rejectedWithoutReason.map((i) => getItemLabel(i));
+      setRejectedMissingReasons(labels);
+      setValidationError(
+        "Preencha o motivo da reprovação (mínimo 10 caracteres) para os seguintes itens:"
+      );
       return;
     }
 
@@ -320,7 +327,7 @@ export function ChecklistForm({
 
     // All validations passed - show confirmation modal
     setShowConfirmModal(true);
-  }, [items, photoCount, rejectionReasons]);
+  }, [items, rejectionReasons]);
 
   const handleConfirmComplete = useCallback(async () => {
     setCompleting(true);
@@ -540,9 +547,16 @@ export function ChecklistForm({
             </p>
           )}
           {validationError && (
-            <p className="text-sm text-red-600" role="alert">
-              {validationError}
-            </p>
+            <div className="text-sm text-red-600" role="alert" data-testid="validation-error">
+              <p>{validationError}</p>
+              {rejectedMissingReasons.length > 0 && (
+                <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                  {rejectedMissingReasons.map((label, i) => (
+                    <li key={i}>{label}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
           {completeError && (
             <p className="text-sm text-red-600" role="alert">
@@ -574,7 +588,7 @@ export function ChecklistForm({
         </p>
       </Modal>
 
-      {/* Confirmation modal */}
+      {/* Confirmation modal (US-306) */}
       <Modal
         open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
@@ -584,10 +598,40 @@ export function ChecklistForm({
         onConfirm={handleConfirmComplete}
         loading={completing}
       >
-        <p>
-          Tem certeza que deseja concluir esta avaliação? Após a conclusão,
-          os itens não poderão mais ser editados.
-        </p>
+        <div className="space-y-3">
+          <p>
+            Tem certeza que deseja concluir esta avaliação? Após a conclusão,
+            os itens não poderão mais ser editados.
+          </p>
+
+          {/* Summary counts */}
+          <div className="bg-gray-50 rounded-lg p-3 space-y-1" data-testid="summary-counts">
+            <p className="font-medium text-gray-900 text-sm">Resumo da avaliação:</p>
+            <ul className="text-sm space-y-0.5">
+              <li className="flex items-center gap-2">
+                <span>✅</span> <span>Aprovados: {approvedCount}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span>❌</span> <span>Reprovados: {rejectedCount}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span>⬜</span> <span>N/A: {naCount}</span>
+              </li>
+              {pendingCount > 0 && (
+                <li className="flex items-center gap-2 text-amber-600">
+                  <span>⏳</span> <span>Pendentes: {pendingCount}</span>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Photo warning (US-306) */}
+          {photoCount < 6 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm" data-testid="photo-warning">
+              <span className="font-medium">Atenção:</span> apenas {photoCount} de 6 fotos foram enviadas
+            </div>
+          )}
+        </div>
       </Modal>
     </>
   );

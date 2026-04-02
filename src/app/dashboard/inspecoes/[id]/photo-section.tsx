@@ -8,6 +8,8 @@ import {
   deleteInspectionPhoto,
   getPhotoUrl,
 } from "@/lib/storage";
+import { PhotoViewer } from "@/components/photo-viewer";
+import type { PhotoViewerItem } from "@/components/photo-viewer";
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -63,10 +65,14 @@ export function PhotoSection({
     open: false,
     currentIndex: 0,
   });
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Build ordered list of photos that exist (for gallery navigation)
   const availablePhotos = PHOTO_TYPES.filter((t) => photos[t] && signedUrls[t]);
+
+  const viewerPhotos: PhotoViewerItem[] = availablePhotos.map((t) => ({
+    url: signedUrls[t],
+    label: PHOTO_TYPE_LABELS[t],
+  }));
 
   const openGallery = useCallback(
     (photoType: PhotoType) => {
@@ -81,66 +87,6 @@ export function PhotoSection({
   const closeGallery = useCallback(() => {
     setGallery({ open: false, currentIndex: 0 });
   }, []);
-
-  const navigateGallery = useCallback(
-    (direction: "prev" | "next") => {
-      setGallery((prev) => {
-        const total = availablePhotos.length;
-        if (total === 0) return prev;
-        const newIndex =
-          direction === "next"
-            ? (prev.currentIndex + 1) % total
-            : (prev.currentIndex - 1 + total) % total;
-        return { ...prev, currentIndex: newIndex };
-      });
-    },
-    [availablePhotos.length]
-  );
-
-  // Gallery keyboard navigation
-  useEffect(() => {
-    if (!gallery.open) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeGallery();
-      if (e.key === "ArrowLeft") navigateGallery("prev");
-      if (e.key === "ArrowRight") navigateGallery("next");
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [gallery.open, closeGallery, navigateGallery]);
-
-  // Touch swipe handlers for gallery
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    };
-  }, []);
-
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (!touchStartRef.current) return;
-      const deltaX =
-        e.changedTouches[0].clientX - touchStartRef.current.x;
-      const deltaY =
-        e.changedTouches[0].clientY - touchStartRef.current.y;
-      touchStartRef.current = null;
-
-      // Only trigger if horizontal swipe is dominant and > 50px
-      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX < 0) navigateGallery("next");
-        else navigateGallery("prev");
-      }
-    },
-    [navigateGallery]
-  );
 
   // Load signed URLs for existing photos
   useEffect(() => {
@@ -408,77 +354,15 @@ export function PhotoSection({
         })}
       </div>
 
-      {/* Full-screen photo gallery (US-403) */}
-      {gallery.open && availablePhotos.length > 0 && (() => {
-        const currentType = availablePhotos[gallery.currentIndex];
-        const currentUrl = signedUrls[currentType];
-        const currentLabel = PHOTO_TYPE_LABELS[currentType];
-        const photoNumber = gallery.currentIndex + 1;
-        const totalPhotos = availablePhotos.length;
-
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-            data-testid="photo-gallery"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={closeGallery}
-              className="absolute top-4 right-4 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors min-h-[44px] min-w-[44px]"
-              aria-label="Fechar galeria"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Photo info header */}
-            <div className="absolute top-4 left-4 z-10 text-white">
-              <p className="text-sm font-medium">{currentLabel}</p>
-              <p className="text-xs text-gray-300">{photoNumber} de {totalPhotos}</p>
-            </div>
-
-            {/* Previous button */}
-            {totalPhotos > 1 && (
-              <button
-                type="button"
-                onClick={() => navigateGallery("prev")}
-                className="absolute left-4 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors min-h-[44px] min-w-[44px]"
-                aria-label="Foto anterior"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>
-              </button>
-            )}
-
-            {/* Image */}
-            <img
-              src={currentUrl}
-              alt={currentLabel}
-              className="max-h-[85vh] max-w-[90vw] object-contain select-none"
-              draggable={false}
-            />
-
-            {/* Next button */}
-            {totalPhotos > 1 && (
-              <button
-                type="button"
-                onClick={() => navigateGallery("next")}
-                className="absolute right-4 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors min-h-[44px] min-w-[44px]"
-                aria-label="Próxima foto"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </button>
-            )}
-          </div>
-        );
-      })()}
+      {/* Full-screen photo viewer (US-403) */}
+      {gallery.open && viewerPhotos.length > 0 && (
+        <PhotoViewer
+          photos={viewerPhotos}
+          currentIndex={gallery.currentIndex}
+          onClose={closeGallery}
+          onNavigate={(index) => setGallery({ open: true, currentIndex: index })}
+        />
+      )}
     </div>
   );
 }
