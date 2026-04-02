@@ -85,7 +85,6 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
     .insert({
       service_order_id: orderId,
       equipment_id: equipmentId,
-      inspection_status: "not_started",
     });
 
   if (error) {

@@ -57,9 +57,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
 
   const equipmentList = order.service_order_equipment ?? [];
   const isCompleted = order.status === "completed" || order.status === "cancelled";
-  const allInspectionsCompleted =
-    equipmentList.length > 0 &&
-    equipmentList.every((soe) => soe.inspection_status === "completed");
+  const allInspectionsCompleted = false; // TODO: check via inspections table
 
   return (
     <div>
@@ -172,12 +170,8 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                       {soe.equipment?.manufacturer ?? "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <Badge
-                        variant={
-                          INSPECTION_STATUS_VARIANTS[soe.inspection_status]
-                        }
-                      >
-                        {INSPECTION_STATUS_LABELS[soe.inspection_status]}
+                      <Badge variant="neutral">
+                        Nao Iniciada
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
