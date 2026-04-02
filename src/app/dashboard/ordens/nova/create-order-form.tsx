@@ -65,7 +65,7 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
             type="date"
             id="start_date"
             name="start_date"
-            className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 transition-colors focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
           />
         </div>
 
@@ -80,7 +80,7 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
             type="date"
             id="end_date"
             name="end_date"
-            className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 transition-colors focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
           />
         </div>
       </div>

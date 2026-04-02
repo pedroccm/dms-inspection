@@ -60,14 +60,14 @@ export default function LoginPage() {
     <div className="w-full max-w-md space-y-8">
       {/* Brand area */}
       <div className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white text-2xl font-bold">
-          DMS
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1B2B5E] text-[#F5A623] text-2xl font-bold">
+          D&gt;
         </div>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900">
+        <h1 className="mt-4 text-3xl font-bold text-[#1B2B5E]">
           DMS Inspection
         </h1>
         <p className="mt-2 text-gray-600">
-          Sistema de inspeção de religadores
+          DIEN Soluções em Engenharia
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
               placeholder="seu@email.com"
             />
           </div>
@@ -118,7 +118,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
               placeholder="••••••••"
             />
           </div>
@@ -127,7 +127,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={!isFormValid || loading}
-          className="w-full rounded-lg bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+          className="w-full rounded-lg bg-[#F5A623] px-4 py-3 text-base font-semibold text-white hover:bg-[#E8941E] focus:ring-2 focus:ring-[#F5A623] focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
@@ -135,7 +135,7 @@ export default function LoginPage() {
         <div className="text-center">
           <Link
             href="/esqueci-senha"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+            className="text-sm font-medium text-[#F5A623] hover:text-[#E8941E]"
           >
             Esqueci minha senha
           </Link>

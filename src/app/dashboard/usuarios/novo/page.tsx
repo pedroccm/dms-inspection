@@ -6,7 +6,7 @@ export default async function NovoUsuarioPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Novo Usuário</h1>
+      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">Novo Usuário</h1>
       <CreateUserForm />
     </div>
   );

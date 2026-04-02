@@ -61,6 +61,6 @@ describe("Pagination", () => {
     );
     const currentLink = screen.getByText("3");
     expect(currentLink).toHaveAttribute("aria-current", "page");
-    expect(currentLink.className).toContain("bg-blue-600");
+    expect(currentLink.className).toContain("bg-[#F5A623]");
   });
 });

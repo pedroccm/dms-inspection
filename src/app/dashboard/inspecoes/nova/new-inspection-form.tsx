@@ -45,7 +45,7 @@ export function NewInspectionForm({
           {state.existingInspectionId && (
             <Link
               href={`/dashboard/inspecoes/${state.existingInspectionId}`}
-              className="ml-2 font-medium text-blue-600 hover:text-blue-700 underline"
+              className="ml-2 font-medium text-[#F5A623] hover:text-[#E8941E] underline"
             >
               Retomar inspecao existente
             </Link>

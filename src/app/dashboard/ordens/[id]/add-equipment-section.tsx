@@ -115,14 +115,14 @@ export function AddEquipmentSection({ orderId }: AddEquipmentSectionProps) {
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-900">
+              <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                <th className="text-left px-4 py-3 text-sm font-semibold text-white">
                   Codigo Copel RA
                 </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-900">
+                <th className="text-left px-4 py-3 text-sm font-semibold text-white">
                   Fabricante
                 </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-900">
+                <th className="text-left px-4 py-3 text-sm font-semibold text-white">
                   Acao
                 </th>
               </tr>

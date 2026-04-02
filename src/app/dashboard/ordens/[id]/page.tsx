@@ -51,7 +51,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{order.title}</h1>
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">{order.title}</h1>
         <div className="flex items-center gap-3">
           {allInspectionsCompleted && (
             <ExportOrderButton orderId={order.id} />
@@ -131,17 +131,17 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Codigo Copel RA
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Fabricante
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status Inspecao
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Acoes
                   </th>
                 </tr>

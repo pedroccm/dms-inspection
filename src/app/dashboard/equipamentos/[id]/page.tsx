@@ -30,7 +30,7 @@ export default async function EquipamentoDetailPage({
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">
           Equipamento: {equipment.copel_ra_code}
         </h1>
         <div className="flex items-center gap-3">
@@ -127,17 +127,17 @@ export default async function EquipamentoDetailPage({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Data
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Inspetor
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Ações
                   </th>
                 </tr>
@@ -162,7 +162,7 @@ export default async function EquipamentoDetailPage({
                     <td className="px-6 py-4">
                       <Link
                         href={`/dashboard/inspecoes/${inspection.id}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                        className="text-sm font-medium text-[#F5A623] hover:text-[#E8941E]"
                       >
                         Ver
                       </Link>

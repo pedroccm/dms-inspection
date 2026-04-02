@@ -37,7 +37,7 @@ export default async function NovaInspecaoPage({
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Nova Inspecao</h1>
+      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">Nova Inspecao</h1>
       <NewInspectionForm
         equipmentOptions={equipmentOptions}
         serviceOrderOptions={serviceOrderOptions}

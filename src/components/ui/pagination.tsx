@@ -86,7 +86,7 @@ export function Pagination({
             href={buildHref(basePath, page, searchParams)}
             className={`${linkClass} ${
               page === currentPage
-                ? "bg-blue-600 text-white"
+                ? "bg-[#F5A623] text-white"
                 : "text-gray-700 hover:bg-gray-100"
             }`}
             aria-current={page === currentPage ? "page" : undefined}

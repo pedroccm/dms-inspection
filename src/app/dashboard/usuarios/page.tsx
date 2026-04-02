@@ -28,12 +28,12 @@ export default async function UsuariosPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">
           Gerenciamento de Usuários
         </h1>
         <Link
           href="/dashboard/usuarios/novo"
-          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
+          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px]"
         >
           Novo Usuário
         </Link>
@@ -43,20 +43,20 @@ export default async function UsuariosPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+              <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Nome
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   E-mail
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Função
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Ações
                 </th>
               </tr>
@@ -101,7 +101,7 @@ export default async function UsuariosPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/dashboard/usuarios/${user.id}/editar`}
-                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors min-h-[44px]"
+                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
                         >
                           Editar
                         </Link>

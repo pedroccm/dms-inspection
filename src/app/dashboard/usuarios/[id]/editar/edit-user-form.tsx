@@ -40,7 +40,7 @@ export function EditUserForm({ profile, email }: EditUserFormProps) {
           name="full_name"
           required
           defaultValue={profile.full_name}
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none"
         />
       </div>
 
@@ -72,7 +72,7 @@ export function EditUserForm({ profile, email }: EditUserFormProps) {
           name="role"
           required
           defaultValue={profile.role}
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none bg-white"
         >
           <option value="admin">Administrador</option>
           <option value="inspector">Inspetor</option>
@@ -83,7 +83,7 @@ export function EditUserForm({ profile, email }: EditUserFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? "Salvando..." : "Salvar"}
         </button>

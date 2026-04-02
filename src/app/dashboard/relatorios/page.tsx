@@ -24,7 +24,7 @@ export default async function RelatoriosPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Relatorios</h1>
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">Relatorios</h1>
         <p className="mt-1 text-sm text-gray-500">
           Selecione um relatorio para visualizar.
         </p>
@@ -48,7 +48,7 @@ export default async function RelatoriosPage() {
               {report.available ? (
                 <Link
                   href={report.href}
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors min-h-[44px]"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
                 >
                   Ver Relatorio
                 </Link>

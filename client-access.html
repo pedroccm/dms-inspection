@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMS Inspection - Acesso para Testes</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 40px 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    .logo { text-align: center; margin-bottom: 32px; }
+    .logo-box { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #2563eb; color: white; border-radius: 14px; font-weight: 700; font-size: 20px; }
+    h1 { text-align: center; font-size: 24px; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 40px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 16px; color: #2563eb; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .link-btn { display: block; text-align: center; background: #2563eb; color: white; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 16px; }
+    .link-btn:hover { background: #1d4ed8; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    td:first-child { font-weight: 600; color: #64748b; width: 100px; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    ol { padding-left: 20px; }
+    ol li { margin-bottom: 10px; font-size: 14px; }
+    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 13px; color: #92400e; margin-top: 16px; }
+    .footer { text-align: center; margin-top: 40px; color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo"><div class="logo-box">DMS</div></div>
+    <h1>DMS Inspection</h1>
+    <p class="subtitle">Sistema de Inspeção de Religadores — Ambiente de Testes</p>
+
+    <!-- Link + QR Code -->
+    <div class="card">
+      <h2>Acesso ao Sistema</h2>
+      <a href="https://dms-inspection.netlify.app" target="_blank" class="link-btn">Abrir DMS Inspection →</a>
+      <p style="text-align:center; font-size:13px; color:#94a3b8; margin-bottom: 20px;">https://dms-inspection.netlify.app</p>
+      <div style="text-align:center;">
+        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">Escaneie para abrir no tablet ou celular:</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://dms-inspection.netlify.app" alt="QR Code" style="border-radius:8px; border: 1px solid #e2e8f0;" width="200" height="200">
+      </div>
+    </div>
+
+    <!-- Credenciais -->
+    <div class="card">
+      <h2>Credenciais de Teste</h2>
+
+      <p style="margin-bottom:12px;"><span class="badge badge-blue">Administrador</span></p>
+      <table>
+        <tr><td>E-mail</td><td>admin@dms.eng.br</td></tr>
+        <tr><td>Senha</td><td>Admin@2026</td></tr>
+      </table>
+
+      <br>
+
+      <p style="margin-bottom:12px;"><span class="badge badge-green">Inspetor de Campo</span></p>
+      <table>
+        <tr><td>E-mail</td><td>inspetor@dms.eng.br</td></tr>
+        <tr><td>Senha</td><td>Inspetor@2026</td></tr>
+      </table>
+    </div>
+
+    <!-- Roteiro Admin -->
+    <div class="card">
+      <h2>Roteiro de Teste — Administrador</h2>
+      <ol>
+        <li>Faça login com as credenciais de <strong>Administrador</strong></li>
+        <li>No menu lateral, acesse <strong>Equipamentos → Novo Equipamento</strong> e cadastre um religador</li>
+        <li>Acesse <strong>Ordens de Serviço → Nova Ordem</strong>, crie uma ordem e atribua ao inspetor</li>
+        <li>Na ordem criada, adicione o equipamento cadastrado</li>
+        <li>Verifique <strong>Usuários</strong> — deve listar admin e inspetor</li>
+        <li>Verifique <strong>Relatórios</strong> e <strong>Configurações</strong></li>
+        <li>Clique em <strong>Sair</strong></li>
+      </ol>
+    </div>
+
+    <!-- Roteiro Inspetor -->
+    <div class="card">
+      <h2>Roteiro de Teste — Inspetor</h2>
+      <ol>
+        <li>Faça login com as credenciais de <strong>Inspetor</strong></li>
+        <li>No painel, verifique que só aparecem seus dados</li>
+        <li>Acesse <strong>Ordens de Serviço</strong> — deve ver a ordem atribuída a você</li>
+        <li>Acesse <strong>Inspeções → Nova Inspeção</strong>, selecione o equipamento e a ordem</li>
+        <li>Preencha o checklist (19 itens): aprovar, reprovar ou marcar como N/A</li>
+        <li>Para itens reprovados, descreva o motivo (mínimo 10 caracteres)</li>
+        <li>Preencha as observações no campo ao final</li>
+        <li>Clique em <strong>Concluir Avaliação</strong> e confirme</li>
+        <li>Verifique que a inspeção ficou somente leitura</li>
+      </ol>
+      <div class="note">
+        <strong>Dica:</strong> O sistema foi feito para tablets Android. Teste também pelo celular para validar a experiência mobile.
+      </div>
+    </div>
+
+    <!-- Verificação Admin -->
+    <div class="card">
+      <h2>Verificação Final — Administrador</h2>
+      <ol>
+        <li>Faça login novamente como <strong>Administrador</strong></li>
+        <li>Acesse <strong>Inspeções</strong> — a inspeção do inspetor deve aparecer</li>
+        <li>Abra a inspeção e verifique os dados preenchidos, fotos e observações</li>
+        <li>Acesse <strong>Relatórios → Produtividade</strong> — o inspetor deve aparecer no relatório</li>
+      </ol>
+    </div>
+
+    <p class="footer">Rhei Tecnologia — Abril 2026</p>
+  </div>
+</body>
+</html>

@@ -43,7 +43,7 @@ export function ChecklistSummary({ items }: ChecklistSummaryProps) {
             style={{
               width: `${completionPercent}%`,
               backgroundColor:
-                completionPercent === 100 ? "#16a34a" : "#2563eb",
+                completionPercent === 100 ? "#16a34a" : "#F5A623",
             }}
           />
         </div>

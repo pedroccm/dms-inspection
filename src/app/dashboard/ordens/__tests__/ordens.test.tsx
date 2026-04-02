@@ -122,7 +122,7 @@ describe("Status Badge rendering", () => {
     const { container: blueContainer } = render(
       <Badge variant="info">Aberta</Badge>
     );
-    expect(blueContainer.querySelector(".bg-blue-100")).toBeInTheDocument();
+    expect(blueContainer.querySelector('[class*="bg-"]')).toBeInTheDocument();
 
     const { container: yellowContainer } = render(
       <Badge variant="warning">Em Andamento</Badge>

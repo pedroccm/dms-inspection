@@ -33,7 +33,7 @@ export function CreateUserForm() {
           id="full_name"
           name="full_name"
           required
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none"
           placeholder="Digite o nome completo"
         />
       </div>
@@ -50,7 +50,7 @@ export function CreateUserForm() {
           id="email"
           name="email"
           required
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none"
           placeholder="usuario@exemplo.com"
         />
       </div>
@@ -68,7 +68,7 @@ export function CreateUserForm() {
           name="password"
           required
           minLength={6}
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none"
           placeholder="Mínimo 6 caracteres"
         />
       </div>
@@ -85,7 +85,7 @@ export function CreateUserForm() {
           name="role"
           required
           defaultValue=""
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none bg-white"
         >
           <option value="" disabled>
             Selecione uma função
@@ -99,7 +99,7 @@ export function CreateUserForm() {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? "Criando..." : "Criar Usuário"}
         </button>

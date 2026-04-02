@@ -46,13 +46,14 @@ export default async function ProdutividadePage({
         <div>
           <Link
             href="/dashboard/relatorios"
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm text-[#F5A623] hover:text-[#E8941E]"
           >
             ← Relatorios
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">
+          <h1 className="text-2xl font-bold text-[#1B2B5E] mt-1">
             Relatorio de Produtividade
           </h1>
+
         </div>
         <ExportCsv rows={report.rows} />
       </div>
@@ -70,23 +71,23 @@ export default async function ProdutividadePage({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+              <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Nome do Inspetor
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-right px-6 py-4 text-sm font-semibold text-white">
                   Total de Inspecoes
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900 hidden sm:table-cell">
+                <th className="text-right px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                   Itens Aprovados
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900 hidden sm:table-cell">
+                <th className="text-right px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                   Itens Reprovados
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900 hidden md:table-cell">
+                <th className="text-right px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
                   Itens NA
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-right px-6 py-4 text-sm font-semibold text-white">
                   Taxa de Aprovacao (%)
                 </th>
               </tr>

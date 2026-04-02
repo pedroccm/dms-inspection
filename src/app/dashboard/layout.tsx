@@ -71,18 +71,18 @@ function Sidebar({
       {/* Sidebar */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col shrink-0
+          fixed inset-y-0 left-0 z-40 w-64 bg-[#1B2B5E] flex flex-col shrink-0
           transform transition-transform duration-200 ease-in-out
           lg:relative lg:translate-x-0 lg:transform-none
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">DMS Inspection</h1>
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-white">DMS Inspection</h1>
           {/* Close button - visible only on mobile/tablet */}
           <button
             onClick={onClose}
-            className="lg:hidden p-2 -mr-2 rounded-lg text-gray-500 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="lg:hidden p-2 -mr-2 rounded-lg text-white/60 hover:bg-white/5 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Fechar menu"
           >
             <svg
@@ -108,8 +108,8 @@ function Sidebar({
                 onClick={onClose}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
                   isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-[rgba(245,166,35,0.1)] text-[#F5A623]"
+                    : "text-white/60 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 {item.label}
@@ -118,18 +118,18 @@ function Sidebar({
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-white/10">
           {!loading && profile && (
             <div className="mb-3 px-4">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {profile.full_name}
               </p>
-              <p className="text-xs text-gray-500 capitalize">{profile.role}</p>
+              <p className="text-xs text-white/50 capitalize">{profile.role}</p>
             </div>
           )}
           <button
             onClick={signOut}
-            className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 text-left min-h-[44px]"
+            className="w-full px-4 py-2 text-sm text-white/60 hover:text-white text-left min-h-[44px]"
           >
             Sair
           </button>
@@ -158,10 +158,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top header bar - visible only on mobile/tablet */}
-        <header className="lg:hidden sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
+        <header className="lg:hidden sticky top-0 z-20 bg-[#1B2B5E] border-b border-white/10 px-4 py-2 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 -ml-2 rounded-lg text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2 -ml-2 rounded-lg text-white/80 hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Abrir menu"
           >
             <svg
@@ -175,7 +175,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h2 className="text-lg font-semibold text-gray-900 truncate">
+          <h2 className="text-lg font-semibold text-white truncate">
             {pageTitle}
           </h2>
         </header>

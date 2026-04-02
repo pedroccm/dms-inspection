@@ -9,7 +9,7 @@ export default async function NovaOrdemPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">
+      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">
         Nova Ordem de Servico
       </h1>
       <CreateOrderForm inspectors={inspectors} />

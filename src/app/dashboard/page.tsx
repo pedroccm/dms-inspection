@@ -42,7 +42,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Painel</h1>
+      <h1 className="text-2xl font-bold text-[#1B2B5E]">Painel</h1>
       <p className="mt-2 text-gray-600">
         {isAdmin
           ? "Visão geral do sistema de inspeção DMS."

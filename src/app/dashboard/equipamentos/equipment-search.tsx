@@ -65,12 +65,12 @@ export function EquipmentSearch({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Buscar por Código Copel RA..."
-        className="flex-1 min-w-[200px] px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+        className="flex-1 min-w-[200px] px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none"
       />
       <select
         value={manufacturer}
         onChange={(e) => handleManufacturerChange(e.target.value)}
-        className="px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white min-w-[180px]"
+        className="px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none bg-white min-w-[180px]"
       >
         <option value="">Todos os fabricantes</option>
         {manufacturers.map((m) => (
@@ -81,7 +81,7 @@ export function EquipmentSearch({
       </select>
       <button
         type="submit"
-        className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
+        className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px]"
       >
         Buscar
       </button>

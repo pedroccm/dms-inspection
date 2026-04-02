@@ -224,7 +224,7 @@ export function PhotoSection({
       {/* Progress bar */}
       <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          className="bg-[#F5A623] h-2 rounded-full transition-all duration-300"
           style={{ width: `${Math.round((capturedCount / 6) * 100)}%` }}
         />
       </div>
@@ -256,7 +256,7 @@ export function PhotoSection({
                         type="button"
                         onClick={() => triggerFileInput(photoType)}
                         disabled={slotState?.uploading}
-                        className="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#F5A623] rounded-md hover:bg-[#E8941E] disabled:opacity-50 transition-colors"
                       >
                         Substituir
                       </button>
@@ -280,7 +280,7 @@ export function PhotoSection({
                   {slotState?.uploading ? (
                     <div className="flex flex-col items-center gap-2 px-4 w-full">
                       <svg
-                        className="animate-spin h-6 w-6 text-blue-600"
+                        className="animate-spin h-6 w-6 text-[#F5A623]"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -290,7 +290,7 @@ export function PhotoSection({
                       </svg>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-[#F5A623] h-2 rounded-full transition-all duration-300"
                           style={{ width: `${slotState.progress}%` }}
                         />
                       </div>
@@ -322,7 +322,7 @@ export function PhotoSection({
                         <button
                           type="button"
                           onClick={() => triggerFileInput(photoType)}
-                          className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors min-h-[44px]"
+                          className="px-4 py-2 text-sm font-medium text-[#F5A623] bg-white border border-[#F5A623] rounded-lg hover:bg-[#FFF4E0] transition-colors min-h-[44px]"
                         >
                           Tirar Foto
                         </button>

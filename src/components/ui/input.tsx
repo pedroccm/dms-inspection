@@ -32,7 +32,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`
             block w-full rounded-lg border px-4 py-3 text-base text-gray-900
             placeholder-gray-400 transition-colors
-            focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+            focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none
             ${error ? "border-red-500" : "border-gray-300"}
             ${className}
           `.trim()}

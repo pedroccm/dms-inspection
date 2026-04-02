@@ -77,14 +77,14 @@ function SettingsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-[#F5A623] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Configuracoes</h1>
+      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">Configuracoes</h1>
 
       {/* Retention Policy */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
@@ -109,7 +109,7 @@ function SettingsContent() {
               id="retention-select"
               value={retentionDays}
               onChange={(e) => setRetentionDays(Number(e.target.value))}
-              className="block w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="block w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623]"
             >
               {RETENTION_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -121,7 +121,7 @@ function SettingsContent() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors min-h-[44px]"
+            className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] disabled:opacity-50 transition-colors min-h-[44px]"
           >
             {saving ? "Salvando..." : "Salvar"}
           </button>

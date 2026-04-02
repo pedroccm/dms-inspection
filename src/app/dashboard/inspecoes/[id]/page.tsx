@@ -68,7 +68,7 @@ export default async function InspecaoDetailPage({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-[#1B2B5E]">
             Inspecao: {inspection.equipment?.copel_ra_code ?? "—"}
           </h1>
           {inspection.equipment?.manufacturer && (

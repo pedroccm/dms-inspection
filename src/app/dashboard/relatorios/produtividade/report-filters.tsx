@@ -55,7 +55,7 @@ export function ReportFilters({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] min-h-[44px]"
           />
         </div>
 
@@ -71,7 +71,7 @@ export function ReportFilters({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] min-h-[44px]"
           />
         </div>
 
@@ -86,7 +86,7 @@ export function ReportFilters({
             id="inspector-filter"
             value={inspectorId}
             onChange={(e) => setInspectorId(e.target.value)}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] min-h-[44px]"
           >
             <option value="">Todos</option>
             {inspectors.map((inspector) => (
@@ -99,7 +99,7 @@ export function ReportFilters({
 
         <button
           onClick={handleFilter}
-          className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
+          className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px]"
         >
           Filtrar
         </button>

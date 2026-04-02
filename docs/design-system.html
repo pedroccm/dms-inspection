@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIEN — Design System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #F8FAFC; color: #334155; line-height: 1.6; }
+
+    /* Nav */
+    .topnav { position: sticky; top: 0; z-index: 50; background: #1B2B5E; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .topnav-logo { display: flex; align-items: center; gap: 12px; color: #FFF; font-weight: 700; font-size: 18px; text-decoration: none; }
+    .topnav-logo .icon { background: #F5A623; color: #1B2B5E; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+    .topnav-links { display: flex; gap: 32px; }
+    .topnav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .topnav-links a:hover { color: #F5A623; }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+    .section { margin-bottom: 64px; }
+    .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #F5A623; margin-bottom: 8px; }
+    .section h2 { font-size: 28px; font-weight: 700; color: #1B2B5E; margin-bottom: 32px; }
+    .section-desc { color: #64748B; margin-top: -24px; margin-bottom: 32px; font-size: 15px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 768px) { .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr 1fr; } }
+
+    /* Color Swatches */
+    .swatch { border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .swatch-color { height: 80px; display: flex; align-items: flex-end; padding: 12px; }
+    .swatch-info { background: #FFF; padding: 12px; }
+    .swatch-name { font-weight: 600; font-size: 14px; color: #1B2B5E; }
+    .swatch-hex { font-size: 12px; color: #94A3B8; font-family: monospace; }
+    .swatch-use { font-size: 11px; color: #64748B; margin-top: 4px; }
+
+    /* Cards */
+    .ds-card { background: #FFF; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    /* Type specimens */
+    .type-row { display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-bottom: 1px solid #E2E8F0; }
+    .type-label { width: 120px; flex-shrink: 0; font-size: 12px; color: #94A3B8; font-weight: 500; }
+    .type-spec { width: 140px; flex-shrink: 0; font-size: 12px; color: #94A3B8; font-family: monospace; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; font-family: inherit; cursor: pointer; border: 2px solid transparent; min-height: 44px; transition: all 0.2s; text-decoration: none; }
+    .btn-primary { background: #F5A623; color: #FFF; border-color: #F5A623; }
+    .btn-primary:hover { background: #E8941E; border-color: #E8941E; }
+    .btn-secondary { background: transparent; color: #1B2B5E; border-color: #1B2B5E; }
+    .btn-secondary:hover { background: #1B2B5E; color: #FFF; }
+    .btn-ghost { background: transparent; color: #64748B; border-color: transparent; }
+    .btn-ghost:hover { background: #F1F5F9; }
+    .btn-danger { background: #DC2626; color: #FFF; border-color: #DC2626; }
+    .btn-danger:hover { background: #B91C1C; border-color: #B91C1C; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; min-height: 36px; }
+    .btn-lg { padding: 14px 32px; font-size: 16px; min-height: 48px; }
+
+    /* Inputs */
+    .input-demo { width: 100%; padding: 12px 16px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 16px; font-family: inherit; color: #334155; background: #FFF; transition: all 0.2s; outline: none; }
+    .input-demo:focus { border-color: #F5A623; box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+    .input-demo.error { border-color: #DC2626; }
+    .input-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .input-label .req { color: #DC2626; margin-left: 2px; }
+    .input-error { font-size: 12px; color: #DC2626; margin-top: 4px; }
+    .input-group { margin-bottom: 20px; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-success { background: #DCFCE7; color: #16A34A; }
+    .badge-danger { background: #FEE2E2; color: #DC2626; }
+    .badge-warning { background: #FFF4E0; color: #E8941E; }
+    .badge-neutral { background: #F1F5F9; color: #64748B; }
+    .badge-info { background: #E0EDFF; color: #1B2B5E; }
+
+    /* Table */
+    .ds-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .ds-table th { background: #1B2B5E; color: #FFF; text-align: left; padding: 12px 16px; font-size: 13px; font-weight: 600; }
+    .ds-table td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #E2E8F0; }
+    .ds-table tr:nth-child(even) { background: #F8FAFC; }
+    .ds-table tr:hover td { background: #FFF4E0; }
+
+    /* Sidebar preview */
+    .sidebar-preview { width: 256px; background: #1B2B5E; border-radius: 12px; overflow: hidden; color: #FFF; }
+    .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+    .sidebar-logo .icon { background: #F5A623; color: #1B2B5E; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+    .sidebar-logo span { font-weight: 700; font-size: 16px; }
+    .sidebar-nav { padding: 16px 12px; }
+    .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer; margin-bottom: 2px; transition: all 0.2s; }
+    .sidebar-item:hover { color: #FFF; background: rgba(255,255,255,0.05); }
+    .sidebar-item.active { color: #F5A623; background: rgba(245,166,35,0.1); }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-footer .name { font-weight: 600; font-size: 14px; }
+    .sidebar-footer .role { font-size: 12px; color: #F5A623; }
+
+    /* Checklist buttons preview */
+    .ck-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 48px; min-height: 48px; padding: 8px 14px; border-radius: 8px; border: 2px solid; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .ck-approved { background: #FFF; color: #16A34A; border-color: #16A34A; }
+    .ck-approved.selected { background: #16A34A; color: #FFF; }
+    .ck-rejected { background: #FFF; color: #DC2626; border-color: #DC2626; }
+    .ck-rejected.selected { background: #DC2626; color: #FFF; }
+    .ck-na { background: #FFF; color: #94A3B8; border-color: #94A3B8; }
+    .ck-na.selected { background: #94A3B8; color: #FFF; }
+
+    /* Spacing reference */
+    .spacing-row { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+    .spacing-bar { background: #F5A623; border-radius: 4px; height: 16px; }
+    .spacing-label { font-size: 12px; color: #94A3B8; font-family: monospace; width: 60px; flex-shrink: 0; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid #E2E8F0; margin: 48px 0; }
+
+    /* Login preview */
+    .login-preview { background: #F8FAFC; border-radius: 12px; padding: 40px; display: flex; justify-content: center; }
+    .login-card { background: #FFF; border-radius: 16px; padding: 40px; width: 400px; box-shadow: 0 4px 20px rgba(27,43,94,0.08); text-align: center; }
+    .login-card .logo-full { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .login-card .logo-full .d-icon { font-size: 32px; font-weight: 800; color: #F5A623; }
+    .login-card .logo-full .d-text { font-size: 32px; font-weight: 700; color: #1B2B5E; }
+    .login-card .tagline { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+  </style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="topnav">
+  <a href="#" class="topnav-logo">
+    <div class="icon">D></div>
+    <span>DIEN Design System</span>
+  </a>
+  <div class="topnav-links">
+    <a href="#cores">Cores</a>
+    <a href="#tipografia">Tipografia</a>
+    <a href="#botoes">Botões</a>
+    <a href="#inputs">Inputs</a>
+    <a href="#componentes">Componentes</a>
+    <a href="#layout">Layout</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div style="text-align:center; margin-bottom:64px; padding-top:24px;">
+    <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="background:#F5A623;color:#1B2B5E;width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;">D></div>
+    </div>
+    <h1 style="font-size:36px;font-weight:700;color:#1B2B5E;margin-bottom:8px;">DIEN Design System</h1>
+    <p style="color:#64748B;font-size:16px;">Guia visual para o sistema DMS Inspection — baseado na identidade DIEN Soluções em Engenharia</p>
+  </div>
+
+  <!-- 1. CORES -->
+  <div class="section" id="cores">
+    <p class="section-title">Fundação</p>
+    <h2>Cores</h2>
+
+    <h3 style="color:#1B2B5E;font-size:16px;margin-bottom:16px;">Primárias da Marca</h3>
+    <div class="grid-4" style="margin-bottom:32px;">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1B2B5E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Navy</div>
+          <div class="swatch-hex">#1B2B5E</div>
+          <div class="swatch-use">Sidebar, headers, texto forte</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1E3A7B;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Blue</div>
+          <div class="swatch-hex">#1E3A7B</div>
+          <div class="swatch-use">Backgrounds escuros, hover</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F5A623;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Orange</div>
+          <div class="swatch-hex">#F5A623</div>
+          <div class="swatch-use">CTAs, botões, acentos</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E8941E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Orange Dark</div>
+          <div class="swatch-hex">#E8941E</div>
+          <div class="swatch-use">Hover do orange</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="color:#1B2B5E;font-size:16px;margin-bottom:16px;">Neutras</h3>
+    <div class="grid-5" style="margin-bottom:32px;">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FFFFFF;border:1px solid #E2E8F0;border-bottom:none;border-radius:12px 12px 0 0;"></div>
+        <div class="swatch-info"><div class="swatch-name">White</div><div class="swatch-hex">#FFFFFF</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F8FAFC;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gray 50</div><div class="swatch-hex">#F8FAFC</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E2E8F0;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gray 200</div><div class="swatch-hex">#E2E8F0</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#64748B;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gray 500</div><div class="swatch-hex">#64748B</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0F172A;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gray 900</div><div class="swatch-hex">#0F172A</div></div>
+      </div>
+    </div>
+
+    <h3 style="color:#1B2B5E;font-size:16px;margin-bottom:16px;">Semânticas</h3>
+    <div class="grid-4">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#16A34A;"></div>
+        <div class="swatch-info"><div class="swatch-name">Success</div><div class="swatch-hex">#16A34A</div><div class="swatch-use">Aprovado, ativo</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#DC2626;"></div>
+        <div class="swatch-info"><div class="swatch-name">Danger</div><div class="swatch-hex">#DC2626</div><div class="swatch-use">Reprovado, erro</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F5A623;"></div>
+        <div class="swatch-info"><div class="swatch-name">Warning</div><div class="swatch-hex">#F5A623</div><div class="swatch-use">Em andamento, atenção</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E0EDFF;"></div>
+        <div class="swatch-info"><div class="swatch-name">Info</div><div class="swatch-hex">#E0EDFF</div><div class="swatch-use">Informativo, neutro ativo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 2. TIPOGRAFIA -->
+  <div class="section" id="tipografia">
+    <p class="section-title">Fundação</p>
+    <h2>Tipografia</h2>
+    <p class="section-desc">Font family: Inter (fallback: system-ui)</p>
+
+    <div class="ds-card">
+      <div class="type-row">
+        <div class="type-label">H1</div>
+        <div class="type-spec">700 · 24px</div>
+        <div style="font-size:24px;font-weight:700;color:#1B2B5E;">Inspeção de Religadores</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">H2</div>
+        <div class="type-spec">600 · 18px</div>
+        <div style="font-size:18px;font-weight:600;color:#1B2B5E;">Checklist de Inspeção</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">H3</div>
+        <div class="type-spec">600 · 16px</div>
+        <div style="font-size:16px;font-weight:600;color:#1B2B5E;">Dados do Equipamento</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Body</div>
+        <div class="type-spec">400 · 14px</div>
+        <div style="font-size:14px;font-weight:400;color:#334155;">Equipamento cadastrado com sucesso no sistema de inspeção.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Body Large</div>
+        <div class="type-spec">400 · 16px</div>
+        <div style="font-size:16px;font-weight:400;color:#334155;">Texto usado em inputs para melhor legibilidade no tablet.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Small / Label</div>
+        <div class="type-spec">500 · 13px</div>
+        <div style="font-size:13px;font-weight:500;color:#64748B;">Código Copel do RA (Mecanismo)</div>
+      </div>
+      <div class="type-row" style="border:none;">
+        <div class="type-label">Tiny / Badge</div>
+        <div class="type-spec">600 · 12px</div>
+        <div style="font-size:12px;font-weight:600;color:#94A3B8;">APROVADO · 14:32</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 3. BOTÕES -->
+  <div class="section" id="botoes">
+    <p class="section-title">Componentes</p>
+    <h2>Botões</h2>
+
+    <div class="ds-card" style="margin-bottom:24px;">
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Variantes</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
+        <button class="btn btn-primary">Primário</button>
+        <button class="btn btn-secondary">Secundário</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-danger">Danger</button>
+      </div>
+
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Tamanhos</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
+        <button class="btn btn-primary btn-sm">Small</button>
+        <button class="btn btn-primary">Default (44px)</button>
+        <button class="btn btn-primary btn-lg">Large (48px)</button>
+      </div>
+
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Estados</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary">Normal</button>
+        <button class="btn btn-primary" style="opacity:0.5;cursor:not-allowed;">Disabled</button>
+        <button class="btn btn-primary" style="position:relative;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
+          Carregando...
+        </button>
+      </div>
+    </div>
+
+    <div class="ds-card">
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Botões do Checklist</h3>
+      <p style="font-size:13px;color:#64748B;margin-bottom:16px;">Min 48×48px — touch-friendly para uso com luvas no campo</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="ck-btn ck-approved">✅ Aprovado</button>
+        <button class="ck-btn ck-rejected">❌ Reprovado</button>
+        <button class="ck-btn ck-na">⬜ NA</button>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:12px;">Selecionados:</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="ck-btn ck-approved selected">✅ Aprovado</button>
+        <button class="ck-btn ck-rejected selected">❌ Reprovado</button>
+        <button class="ck-btn ck-na selected">⬜ NA</button>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 4. INPUTS -->
+  <div class="section" id="inputs">
+    <p class="section-title">Componentes</p>
+    <h2>Campos de Entrada</h2>
+
+    <div class="grid-2">
+      <div class="ds-card">
+        <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Input Padrão</h3>
+        <div class="input-group">
+          <label class="input-label">Código Copel do RA<span class="req">*</span></label>
+          <input class="input-demo" type="text" placeholder="Digite o código Copel do RA">
+        </div>
+        <div class="input-group">
+          <label class="input-label">E-mail</label>
+          <input class="input-demo" type="email" value="inspetor@dien.eng.br">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label class="input-label">Fabricante<span class="req">*</span></label>
+          <input class="input-demo error" type="text" value="">
+          <div class="input-error">Campo obrigatório</div>
+        </div>
+      </div>
+
+      <div class="ds-card">
+        <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Select & Textarea</h3>
+        <div class="input-group">
+          <label class="input-label">Inspetor Responsável</label>
+          <select class="input-demo" style="appearance:auto;">
+            <option>Selecione um inspetor</option>
+            <option>Inspetor Teste</option>
+          </select>
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label class="input-label">Observações</label>
+          <textarea class="input-demo" rows="3" placeholder="Adicione observações sobre a inspeção..." style="resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 5. COMPONENTES -->
+  <div class="section" id="componentes">
+    <p class="section-title">Componentes</p>
+    <h2>Badges, Tabelas & Cards</h2>
+
+    <div class="ds-card" style="margin-bottom:24px;">
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Status Badges</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <span class="badge badge-success">✅ Aprovado</span>
+        <span class="badge badge-danger">❌ Reprovado</span>
+        <span class="badge badge-warning">⏳ Em Andamento</span>
+        <span class="badge badge-neutral">📝 Rascunho</span>
+        <span class="badge badge-info">📋 Aberta</span>
+        <span class="badge badge-success">✓ Ativo</span>
+        <span class="badge badge-danger">✗ Inativo</span>
+      </div>
+    </div>
+
+    <div class="ds-card" style="margin-bottom:24px;">
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Tabela</h3>
+      <table class="ds-table">
+        <thead>
+          <tr>
+            <th>Código Copel RA</th>
+            <th>Fabricante</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">RA-001-2026</td>
+            <td>ABB</td>
+            <td><span class="badge badge-success">Aprovado</span></td>
+            <td><a href="#" style="color:#F5A623;font-weight:600;text-decoration:none;">Ver →</a></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">RA-002-2026</td>
+            <td>Siemens</td>
+            <td><span class="badge badge-warning">Em Andamento</span></td>
+            <td><a href="#" style="color:#F5A623;font-weight:600;text-decoration:none;">Ver →</a></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">RA-003-2026</td>
+            <td>WEG</td>
+            <td><span class="badge badge-neutral">Rascunho</span></td>
+            <td><a href="#" style="color:#F5A623;font-weight:600;text-decoration:none;">Ver →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ds-card">
+      <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:20px;">Metric Cards</h3>
+      <div class="grid-4">
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;background:#FFF;">
+          <p style="font-size:13px;color:#64748B;">Ordens Abertas</p>
+          <p style="font-size:28px;font-weight:700;color:#1B2B5E;margin-top:4px;">12</p>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;background:#FFF;">
+          <p style="font-size:13px;color:#64748B;">Inspeções Hoje</p>
+          <p style="font-size:28px;font-weight:700;color:#F5A623;margin-top:4px;">5</p>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;background:#FFF;">
+          <p style="font-size:13px;color:#64748B;">Equipamentos</p>
+          <p style="font-size:28px;font-weight:700;color:#1B2B5E;margin-top:4px;">47</p>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;background:#FFF;">
+          <p style="font-size:13px;color:#64748B;">Pendentes</p>
+          <p style="font-size:28px;font-weight:700;color:#DC2626;margin-top:4px;">3</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 6. LAYOUT -->
+  <div class="section" id="layout">
+    <p class="section-title">Layout</p>
+    <h2>Sidebar & Login</h2>
+
+    <div class="grid-2">
+      <!-- Sidebar -->
+      <div>
+        <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:16px;">Sidebar (Desktop)</h3>
+        <div class="sidebar-preview">
+          <div class="sidebar-logo">
+            <div class="icon">D></div>
+            <span>DMS Inspection</span>
+          </div>
+          <div class="sidebar-nav">
+            <div class="sidebar-item active">📊 Painel</div>
+            <div class="sidebar-item">📋 Ordens de Serviço</div>
+            <div class="sidebar-item">⚙️ Equipamentos</div>
+            <div class="sidebar-item">🔍 Inspeções</div>
+            <div class="sidebar-item">📈 Relatórios</div>
+            <div class="sidebar-item">👥 Usuários</div>
+            <div class="sidebar-item">🔧 Configurações</div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="name">Inspetor Teste</div>
+            <div class="role">Inspetor</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login -->
+      <div>
+        <h3 style="color:#1B2B5E;font-size:14px;margin-bottom:16px;">Tela de Login</h3>
+        <div class="login-preview">
+          <div class="login-card">
+            <div class="logo-full">
+              <span class="d-icon">D></span>
+              <span class="d-text">IEN</span>
+            </div>
+            <p class="tagline">Sistema de Inspeção de Religadores</p>
+            <div class="input-group" style="text-align:left;">
+              <label class="input-label">E-mail</label>
+              <input class="input-demo" placeholder="seu@email.com">
+            </div>
+            <div class="input-group" style="text-align:left;">
+              <label class="input-label">Senha</label>
+              <input class="input-demo" type="password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%;">Entrar</button>
+            <p style="margin-top:16px;"><a href="#" style="color:#F5A623;font-size:13px;text-decoration:none;">Esqueci minha senha</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 7. SPACING -->
+  <div class="section">
+    <p class="section-title">Fundação</p>
+    <h2>Espaçamento</h2>
+    <div class="ds-card">
+      <div class="spacing-row"><div class="spacing-label">4px</div><div class="spacing-bar" style="width:4px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">8px</div><div class="spacing-bar" style="width:8px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">12px</div><div class="spacing-bar" style="width:12px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">16px</div><div class="spacing-bar" style="width:16px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">24px</div><div class="spacing-bar" style="width:24px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">32px</div><div class="spacing-bar" style="width:32px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">48px</div><div class="spacing-bar" style="width:48px;"></div></div>
+      <div class="spacing-row"><div class="spacing-label">64px</div><div class="spacing-bar" style="width:64px;"></div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:32px;color:#94A3B8;font-size:13px;">
+    DIEN Soluções em Engenharia — Design System v1.0 — Abril 2026
+  </div>
+
+</div>
+
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+</body>
+</html>

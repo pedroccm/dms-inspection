@@ -361,7 +361,7 @@ export function ChecklistForm({
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+            className="bg-[#F5A623] h-3 rounded-full transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -514,7 +514,7 @@ export function ChecklistForm({
             onChange={(e) => setObservations(e.target.value)}
             placeholder="Adicione observacoes sobre a inspecao..."
             rows={4}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
           />
         ) : (
           <div className="rounded-lg border border-gray-300 p-4 min-h-[100px] text-sm text-gray-700 bg-gray-50">

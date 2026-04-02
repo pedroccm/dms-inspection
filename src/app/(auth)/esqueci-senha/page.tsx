@@ -45,10 +45,10 @@ export default function EsqueciSenhaPage() {
     <div className="w-full max-w-md space-y-8">
       {/* Brand area */}
       <div className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white text-2xl font-bold">
-          DMS
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1B2B5E] text-[#F5A623] text-2xl font-bold">
+          D&gt;
         </div>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900">
+        <h1 className="mt-4 text-3xl font-bold text-[#1B2B5E]">
           Esqueci minha senha
         </h1>
         <p className="mt-2 text-gray-600">
@@ -68,7 +68,7 @@ export default function EsqueciSenhaPage() {
           </div>
           <Link
             href="/login"
-            className="block w-full text-center rounded-lg bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700 transition-colors min-h-[44px]"
+            className="block w-full text-center rounded-lg bg-[#F5A623] px-4 py-3 text-base font-semibold text-white hover:bg-[#E8941E] transition-colors min-h-[44px]"
           >
             Voltar para login
           </Link>
@@ -101,7 +101,7 @@ export default function EsqueciSenhaPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
                 placeholder="seu@email.com"
               />
             </div>
@@ -109,7 +109,7 @@ export default function EsqueciSenhaPage() {
             <button
               type="submit"
               disabled={!isFormValid || loading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+              className="w-full rounded-lg bg-[#F5A623] px-4 py-3 text-base font-semibold text-white hover:bg-[#E8941E] focus:ring-2 focus:ring-[#F5A623] focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
             >
               {loading ? "Enviando..." : "Enviar link de recuperação"}
             </button>
@@ -118,7 +118,7 @@ export default function EsqueciSenhaPage() {
           <div className="text-center">
             <Link
               href="/login"
-              className="text-sm font-medium text-blue-600 hover:text-blue-500"
+              className="text-sm font-medium text-[#F5A623] hover:text-[#E8941E]"
             >
               Voltar para login
             </Link>

@@ -39,11 +39,11 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Ordens de Servico</h1>
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">Ordens de Servico</h1>
         <AdminOnly>
           <Link
             href="/dashboard/ordens/nova"
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] w-full sm:w-auto"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px] w-full sm:w-auto"
           >
             Nova Ordem
           </Link>
@@ -58,26 +58,26 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+              <tr className="border-b border-gray-200 bg-[#1B2B5E]">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Titulo
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Cliente
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 hidden md:table-cell">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
                   Local
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 hidden sm:table-cell">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                   Inspetor
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 hidden lg:table-cell">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden lg:table-cell">
                   Periodo
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Acoes
                 </th>
               </tr>
@@ -127,7 +127,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                     <td className="px-6 py-4">
                       <Link
                         href={`/dashboard/ordens/${order.id}`}
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors min-h-[44px]"
+                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
                       >
                         Detalhes
                       </Link>
