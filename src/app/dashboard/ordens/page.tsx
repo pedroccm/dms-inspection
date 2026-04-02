@@ -38,12 +38,12 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Ordens de Servico</h1>
         <AdminOnly>
           <Link
             href="/dashboard/ordens/nova"
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] w-full sm:w-auto"
           >
             Nova Ordem
           </Link>

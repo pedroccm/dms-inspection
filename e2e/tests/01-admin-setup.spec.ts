@@ -153,9 +153,10 @@ test.describe.serial('Admin Setup', () => {
     // Navigate to orders page
     await page.goto('/dashboard/ordens');
     await page.waitForURL('**/ordens');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Click "Nova Ordem"
+    // Wait for AdminOnly to load, then click "Nova Ordem"
+    await expect(page.getByRole('link', { name: /Nova Ordem/i })).toBeVisible({ timeout: 10000 });
     await page.getByRole('link', { name: /Nova Ordem/i }).click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
