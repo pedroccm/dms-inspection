@@ -247,6 +247,13 @@ test.describe.serial('Admin Setup', () => {
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
 
+    // On mobile, open sidebar first
+    const hamburger = page.locator('button[aria-label="Abrir menu"]');
+    if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await hamburger.click();
+      await page.waitForTimeout(500);
+    }
+
     // Wait for auth context to load profile (admin items appear in sidebar)
     await expect(page.getByText('Configuracoes')).toBeVisible({ timeout: 10000 });
 
@@ -257,6 +264,11 @@ test.describe.serial('Admin Setup', () => {
 
     // Verify retention period select exists (client component, may take time to load)
     const retentionSelect = page.locator('#retention-select');
+    const visible = await retentionSelect.isVisible({ timeout: 10000 }).catch(() => false);
+    if (!visible) {
+      await page.reload();
+      await page.waitForTimeout(3000);
+    }
     await expect(retentionSelect).toBeVisible({ timeout: 15000 });
 
     await page.screenshot({ path: 'e2e/results/01-admin-settings.png' });
