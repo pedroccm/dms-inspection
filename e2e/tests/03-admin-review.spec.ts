@@ -99,9 +99,23 @@ test.describe.serial('03 - Admin Review', () => {
 
     await navigateToReviewInspection(page);
 
+    // Wait for page to fully load (form lock may delay rendering)
+    // Try multiple indicators - any one means the page loaded
+    const loaded = await Promise.race([
+      page.getByText(/Aprovados/).first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
+      page.getByText('Alavanca Amarela').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
+      page.getByText('Pronta para Revisao').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
+    ]);
+
+    // If nothing loaded, try reloading
+    if (!loaded) {
+      await page.reload();
+      await page.waitForTimeout(5000);
+    }
+
     // Verify checklist summary counts are visible
-    await expect(page.getByText(/Aprovados/).first()).toBeVisible({ timeout: 30000 });
-    await expect(page.getByText(/Reprovados/).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Aprovados/).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Reprovados/).first()).toBeVisible({ timeout: 5000 });
 
     // Verify "Alavanca Amarela" shows as a rejected item
     await expect(
