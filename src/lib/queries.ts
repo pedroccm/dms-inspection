@@ -17,7 +17,7 @@ export async function getInspections(filters?: InspectionFilters) {
 
   let query = supabase
     .from("inspections")
-    .select("*, equipment(*), inspector:profiles!inspector_id(*)")
+    .select("*, equipment(copel_ra_code, manufacturer), inspector:profiles!inspector_id(full_name)")
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
@@ -42,10 +42,10 @@ export async function getInspectionById(id: string) {
   const { data, error } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(*), checklist_items(*), photos(*), inspector:profiles!inspector_id(*)"
+      "*, equipment(*), checklist_items(*), photos(*), inspector:profiles!inspector_id(full_name)"
     )
     .eq("id", id)
-    .order("order", { referencedTable: "checklist_items", ascending: true })
+    .order("sort_order", { referencedTable: "checklist_items", ascending: true })
     .single();
 
   if (error) throw error;
@@ -80,7 +80,7 @@ export async function getServiceOrders(filters?: ServiceOrderFilters) {
 
   let query = supabase
     .from("service_orders")
-    .select("*, equipment(*), assignee:profiles!assigned_to(*)")
+    .select("*, assignee:profiles!assigned_to(full_name)")
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
@@ -88,9 +88,6 @@ export async function getServiceOrders(filters?: ServiceOrderFilters) {
   }
   if (filters?.assigned_to) {
     query = query.eq("assigned_to", filters.assigned_to);
-  }
-  if (filters?.equipment_id) {
-    query = query.eq("equipment_id", filters.equipment_id);
   }
 
   const { data, error } = await query;
@@ -105,7 +102,7 @@ export async function getServiceOrderById(id: string) {
   const { data, error } = await supabase
     .from("service_orders")
     .select(
-      "*, equipment(*), assignee:profiles!assigned_to(*), service_order_equipment(*, equipment(*))"
+      "*, assignee:profiles!assigned_to(full_name), service_order_equipment(*, equipment(*))"
     )
     .eq("id", id)
     .single();
@@ -195,7 +192,7 @@ export async function getEquipmentById(id: string) {
 
   const { data, error } = await supabase
     .from("equipment")
-    .select("*, inspections(*, inspector:profiles!inspector_id(*))")
+    .select("*, inspections(*, inspector:profiles!inspector_id(full_name))")
     .eq("id", id)
     .single();
 
