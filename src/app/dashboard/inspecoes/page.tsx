@@ -107,8 +107,32 @@ export default async function InspecoesPage({
                         <Badge variant={config.variant}>{config.label}</Badge>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell">
-                        {new Date(inspection.created_at).toLocaleDateString(
-                          "pt-BR"
+                        {inspection.status === "draft" ||
+                        inspection.status === "in_progress" ? (
+                          <div>
+                            <div>
+                              {new Date(
+                                inspection.created_at
+                              ).toLocaleDateString("pt-BR")}
+                            </div>
+                            {inspection.updated_at !== inspection.created_at && (
+                              <div className="text-xs text-gray-400 mt-0.5">
+                                Ultima edicao:{" "}
+                                {new Date(
+                                  inspection.updated_at
+                                ).toLocaleDateString("pt-BR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          new Date(inspection.created_at).toLocaleDateString(
+                            "pt-BR"
+                          )
                         )}
                       </td>
                       <td className="px-6 py-4">

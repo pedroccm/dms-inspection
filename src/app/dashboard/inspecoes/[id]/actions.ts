@@ -108,6 +108,48 @@ export async function updateInspectionObservations(
   return { success: true };
 }
 
+export async function updateInspectionStatus(
+  inspectionId: string,
+  status: "draft" | "in_progress"
+) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, inspector_id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspecao nao encontrada." };
+  }
+
+  if (inspection.inspector_id !== user.id) {
+    return { success: false, error: "Voce nao tem permissao para editar esta inspecao." };
+  }
+
+  // Only allow draft → in_progress transition
+  if (status === "in_progress" && inspection.status !== "draft") {
+    return { success: false, error: "Apenas inspecoes em rascunho podem ser iniciadas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status,
+      started_at: status === "in_progress" ? new Date().toISOString() : undefined,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
+
 export async function completeInspectionEvaluation(inspectionId: string) {
   const user = await requireAuth();
   const supabase = await createClient();

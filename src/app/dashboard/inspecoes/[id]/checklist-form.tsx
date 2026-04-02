@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { ChecklistItem, ChecklistItemStatus, InspectionStatus } from "@/lib/types";
-import { updateChecklistItem, updateInspectionObservations, completeInspectionEvaluation } from "./actions";
+import { updateChecklistItem, updateInspectionObservations, updateInspectionStatus, completeInspectionEvaluation } from "./actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useAutoSave } from "@/hooks/use-auto-save";
+import { SaveIndicator } from "@/components/save-indicator";
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -113,11 +115,18 @@ export function ChecklistForm({
   });
   const [reasonErrors, setReasonErrors] = useState<Record<string, string>>({});
 
-  // Observations state
+  // Observations state with auto-save hook
   const [observations, setObservations] = useState(inspectionNotes ?? "");
-  const [obsSaving, setObsSaving] = useState(false);
-  const [obsSaved, setObsSaved] = useState(false);
-  const obsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSave = useAutoSave({
+    value: observations,
+    onSave: async (value) => updateInspectionObservations(inspectionId, value),
+    delay: 3000,
+    enabled: editable,
+  });
+
+  // Track current inspection status locally for draft → in_progress transition
+  const [currentStatus, setCurrentStatus] = useState<InspectionStatus>(inspectionStatus);
+  const statusTransitioned = useRef(false);
 
   // Complete evaluation state
   const [completing, setCompleting] = useState(false);
@@ -239,33 +248,37 @@ export function ChecklistForm({
     [rejectionReasons, setSaveState]
   );
 
-  // Debounced observations save
-  const handleObservationsChange = useCallback(
-    (value: string) => {
-      setObservations(value);
-      setObsSaved(false);
-
-      if (obsTimerRef.current) clearTimeout(obsTimerRef.current);
-
-      obsTimerRef.current = setTimeout(async () => {
-        setObsSaving(true);
-        const result = await updateInspectionObservations(inspectionId, value);
-        setObsSaving(false);
-        if (result.success) {
-          setObsSaved(true);
-          setTimeout(() => setObsSaved(false), 2000);
-        }
-      }, 1000);
-    },
-    [inspectionId]
-  );
-
-  // Cleanup timer on unmount
+  // Auto-transition draft → in_progress when first item is evaluated
   useEffect(() => {
-    return () => {
-      if (obsTimerRef.current) clearTimeout(obsTimerRef.current);
+    if (statusTransitioned.current) return;
+    if (currentStatus !== "draft") return;
+
+    const hasEvaluated = items.some((i) => i.status !== "pending");
+    if (hasEvaluated) {
+      statusTransitioned.current = true;
+      updateInspectionStatus(inspectionId, "in_progress").then((result) => {
+        if (result.success) {
+          setCurrentStatus("in_progress");
+        }
+      });
+    }
+  }, [items, currentStatus, inspectionId]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const hasUnsaved =
+      autoSave.hasUnsavedChanges ||
+      Object.values(saveStates).some((s) => s.saving);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsaved) {
+        e.preventDefault();
+      }
     };
-  }, []);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [autoSave.hasUnsavedChanges, saveStates]);
 
   const handleComplete = useCallback(async () => {
     setCompleting(true);
@@ -437,16 +450,18 @@ export function ChecklistForm({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Observacoes</h2>
           {editable && (
-            <span className="text-xs text-gray-400">
-              {obsSaving && "Salvando..."}
-              {obsSaved && "Salvo ✓"}
-            </span>
+            <SaveIndicator
+              status={autoSave.status}
+              lastSaved={autoSave.lastSaved}
+              error={autoSave.error}
+              onRetry={autoSave.retry}
+            />
           )}
         </div>
         {editable ? (
           <textarea
             value={observations}
-            onChange={(e) => handleObservationsChange(e.target.value)}
+            onChange={(e) => setObservations(e.target.value)}
             placeholder="Adicione observacoes sobre a inspecao..."
             rows={4}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
