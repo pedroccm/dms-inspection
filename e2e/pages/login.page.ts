@@ -22,6 +22,12 @@ export class LoginPage {
   }
 
   async logout() {
+    // On mobile/tablet, sidebar may be collapsed — open it first
+    const hamburger = this.page.locator('button[aria-label="Abrir menu"]');
+    if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await hamburger.click();
+      await this.page.waitForTimeout(500);
+    }
     await this.page.getByRole('button', { name: 'Sair' }).click();
     await this.page.waitForURL('**/login', { timeout: 15000 });
   }
