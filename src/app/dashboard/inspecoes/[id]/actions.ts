@@ -54,9 +54,7 @@ export async function updateChecklistItem(
   // Build update payload
   const updateData: Record<string, unknown> = {
     status,
-    checked: status === "approved",
     rejection_reason: status === "rejected" ? (rejectionReason?.trim() ?? null) : null,
-    updated_at: new Date().toISOString(),
   };
 
   const { error: updateError } = await supabase
