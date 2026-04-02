@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
@@ -38,54 +39,146 @@ const allNavItems = [
   },
 ];
 
-function Sidebar() {
+function Sidebar({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const pathname = usePathname();
   const { profile, isAdmin, loading, signOut } = useAuth();
 
   const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">DMS Inspection</h1>
-      </div>
+    <>
+      {/* Backdrop - visible only on tablet portrait / mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col shrink-0
+          transform transition-transform duration-200 ease-in-out
+          lg:relative lg:translate-x-0 lg:transform-none
+          ${open ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-gray-900">DMS Inspection</h1>
+          {/* Close button - visible only on mobile/tablet */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 -mr-2 rounded-lg text-gray-500 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Fechar menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="p-4 border-t border-gray-200">
-        {!loading && profile && (
-          <div className="mb-3 px-4">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {profile.full_name}
-            </p>
-            <p className="text-xs text-gray-500 capitalize">{profile.role}</p>
-          </div>
-        )}
-        <button
-          onClick={signOut}
-          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 text-left"
-        >
-          Sair
-        </button>
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-gray-200">
+          {!loading && profile && (
+            <div className="mb-3 px-4">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {profile.full_name}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">{profile.role}</p>
+            </div>
+          )}
+          <button
+            onClick={signOut}
+            className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 text-left min-h-[44px]"
+          >
+            Sair
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close sidebar on route change (for mobile/tablet)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // Find current page title
+  const currentNav = allNavItems.find((item) => item.href === pathname);
+  const pageTitle = currentNav?.label ?? "DMS Inspection";
+
+  return (
+    <div className="min-h-screen flex bg-gray-100">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top header bar - visible only on mobile/tablet */}
+        <header className="lg:hidden sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 -ml-2 rounded-lg text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Abrir menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h2 className="text-lg font-semibold text-gray-900 truncate">
+            {pageTitle}
+          </h2>
+        </header>
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          {children}
+        </main>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -96,10 +189,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-      <div className="min-h-screen flex bg-gray-100">
-        <Sidebar />
-        <main className="flex-1 p-8 overflow-auto">{children}</main>
-      </div>
+      <DashboardContent>{children}</DashboardContent>
     </AuthProvider>
   );
 }
