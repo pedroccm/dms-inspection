@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
-import { ChecklistForm } from "./checklist-form";
-import { PhotoSection } from "./photo-section";
+import { InspectionDetailClient } from "./inspection-detail-client";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -73,18 +72,13 @@ export default async function InspecaoDetailPage({
         </div>
       </div>
 
-      {/* Interactive Checklist Form (US-302 + US-303) */}
-      <ChecklistForm
-        checklistItems={checklistItems}
+      {/* Client-side wrapper with form lock + summary + checklist + photos */}
+      <InspectionDetailClient
         inspectionId={inspection.id}
         inspectionStatus={inspection.status}
         inspectionNotes={inspection.notes}
-      />
-
-      {/* Photo Capture Section (US-401 + US-402) */}
-      <PhotoSection
-        inspectionId={inspection.id}
-        existingPhotos={photos}
+        checklistItems={checklistItems}
+        photos={photos}
         isEditable={isEditable}
       />
     </div>

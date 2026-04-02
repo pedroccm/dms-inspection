@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
-import { getInspections } from "@/lib/queries";
+import { getInspections, getLockedInspectionIds } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
 import type { InspectionStatus } from "@/lib/types";
 import { InspectionStatusFilter } from "./status-filter";
@@ -28,9 +28,10 @@ export default async function InspecoesPage({
   const params = await searchParams;
   const statusFilter = params.status as InspectionStatus | undefined;
 
-  const inspections = await getInspections(
-    statusFilter ? { status: statusFilter } : undefined
-  );
+  const [inspections, lockedIds] = await Promise.all([
+    getInspections(statusFilter ? { status: statusFilter } : undefined),
+    getLockedInspectionIds(),
+  ]);
 
   return (
     <div>
@@ -93,7 +94,12 @@ export default async function InspecoesPage({
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {inspection.equipment?.copel_ra_code ?? "—"}
+                        <span className="flex items-center gap-1.5">
+                          {inspection.equipment?.copel_ra_code ?? "—"}
+                          {lockedIds.has(inspection.id) && (
+                            <span title="Em edicao por outro usuario" className="text-yellow-600">🔒</span>
+                          )}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
                         {inspection.service_order_id

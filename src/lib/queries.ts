@@ -52,6 +52,27 @@ export async function getInspectionById(id: string) {
   return data as Inspection;
 }
 
+// ─── Form Locks ────────────────────────────────────────────
+
+const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+
+export async function getLockedInspectionIds(): Promise<Set<string>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("form_locks")
+    .select("inspection_id, last_heartbeat");
+
+  if (error || !data) return new Set();
+
+  const now = Date.now();
+  const activeIds = data
+    .filter((lock) => now - new Date(lock.last_heartbeat).getTime() < STALE_THRESHOLD_MS)
+    .map((lock) => lock.inspection_id);
+
+  return new Set(activeIds);
+}
+
 // ─── Service Orders ─────────────────────────────────────────
 
 export async function getServiceOrders(filters?: ServiceOrderFilters) {
