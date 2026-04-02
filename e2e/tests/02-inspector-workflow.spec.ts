@@ -18,10 +18,10 @@ test.describe.serial('Inspector Workflow', () => {
     await page.waitForTimeout(1000);
 
     // Verify inspector name appears in sidebar
-    await expect(page.getByText(INSPECTOR.name)).toBeVisible();
+    await expect(page.getByText(INSPECTOR.name, { exact: true })).toBeVisible({ timeout: 10000 });
 
     // Verify inspector role
-    await expect(page.getByText('inspector')).toBeVisible();
+    await expect(page.getByText('inspector', { exact: true })).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/02-inspector-login.png' });
   });
@@ -63,7 +63,7 @@ test.describe.serial('Inspector Workflow', () => {
     await page.waitForTimeout(1000);
 
     // Verify the assigned order appears in the list
-    await expect(page.getByText(ORDER_1.title)).toBeVisible();
+    await expect(page.getByText(ORDER_1.title).first()).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/02-inspector-sees-order.png' });
   });
@@ -80,20 +80,20 @@ test.describe.serial('Inspector Workflow', () => {
     await page.waitForURL('**/ordens');
     await page.waitForTimeout(1000);
 
-    // Open the order by clicking "Detalhes"
-    const orderRow = page.getByRole('row', { name: new RegExp(ORDER_1.title) });
-    await orderRow.getByRole('link', { name: /Detalhes/i }).click();
+    // Open the first order by clicking "Detalhes"
+    await page.getByRole('link', { name: /Detalhes/i }).first().click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
     // Verify both equipment codes appear in the order detail
-    await expect(page.getByText(EQUIPMENT_1.copelRa)).toBeVisible();
-    await expect(page.getByText(EQUIPMENT_2.copelRa)).toBeVisible();
+    await expect(page.getByText(EQUIPMENT_1.copelRa).first()).toBeVisible();
+    await expect(page.getByText(EQUIPMENT_2.copelRa).first()).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/02-inspector-order-equipment.png' });
   });
 
-  test('Inspector starts inspection for equipment 1', async ({ page }) => {
+  test('Inspector complete inspection workflow', async ({ page }) => {
+    // Login
     const loginPage = new LoginPage(page);
     const inspectionsPage = new InspectionsPage(page);
 
@@ -101,190 +101,153 @@ test.describe.serial('Inspector Workflow', () => {
     await loginPage.loginAs(INSPECTOR.email, INSPECTOR.password);
     await page.waitForTimeout(1000);
 
-    // Navigate to inspections page
-    await inspectionsPage.goto();
-    await page.waitForTimeout(1000);
+    await test.step('Start new inspection', async () => {
+      // Navigate to inspections page
+      await inspectionsPage.goto();
+      await page.waitForTimeout(1000);
 
-    // Click "Nova Inspeção"
-    await page.getByRole('button', { name: /Nova Inspe/i }).click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+      // Click "Nova Inspecao" link
+      await page.getByRole('link', { name: /Nova Inspecao/i }).click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
 
-    // Select equipment from dropdown
-    const equipmentSelect = page.getByLabel(/equipamento/i);
-    await equipmentSelect.click();
-    await page.getByRole('option', { name: new RegExp(EQUIPMENT_1.copelRa) }).click();
-    await page.waitForTimeout(500);
+      // Select equipment from native <select> with id="equipamento"
+      // Options have format: "copel_ra_code — manufacturer"
+      await page.selectOption('#equipamento', { label: `${EQUIPMENT_1.copelRa} — ${EQUIPMENT_1.manufacturer}` });
+      await page.waitForTimeout(500);
 
-    // Select order from dropdown
-    const orderSelect = page.getByLabel(/ordem/i);
-    await orderSelect.click();
-    await page.getByRole('option', { name: new RegExp(ORDER_1.title) }).click();
-    await page.waitForTimeout(500);
+      // Select order from native <select> with id="ordem-de-servico"
+      await page.selectOption('#ordem-de-servico', { label: ORDER_1.title });
+      await page.waitForTimeout(500);
 
-    // Click "Iniciar Inspeção"
-    await page.getByRole('button', { name: /Iniciar|Criar|Salvar/i }).click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+      // Click "Iniciar Inspecao" and wait for redirect to detail page (UUID in URL)
+      await page.getByRole('button', { name: /Iniciar Inspecao/i }).click();
 
-    // Verify redirect to inspection detail page
-    await expect(page).toHaveURL(/\/inspecoes\//);
+      // Wait for redirect to inspection detail (URL with UUID, not /nova)
+      await page.waitForURL(/\/inspecoes\/[0-9a-f-]{36}/, { timeout: 30000 });
+      await page.waitForTimeout(2000);
 
-    await page.screenshot({ path: 'e2e/results/02-inspector-inspection-started.png' });
-  });
+      // Verify we're on the detail page (checklist should be visible)
+      await expect(page.getByText('Alimentação VCA e Tomada')).toBeVisible({ timeout: 10000 });
 
-  test('Inspector fills checklist', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const inspectionsPage = new InspectionsPage(page);
-    const inspectionDetail = new InspectionDetailPage(page);
+      await page.screenshot({ path: 'e2e/results/02-inspector-inspection-started.png' });
+    });
 
-    await loginPage.goto();
-    await loginPage.loginAs(INSPECTOR.email, INSPECTOR.password);
-    await page.waitForTimeout(1000);
+    await test.step('Fill checklist items', async () => {
+      // We're already on the inspection detail page from the previous step.
+      // Each checklist item has buttons with aria-label="Aprovado - ItemName",
+      // "Reprovado - ItemName", "NA - ItemName".
 
-    // Navigate to inspections and open the first one
-    await inspectionsPage.goto();
-    await page.waitForTimeout(1000);
-    await inspectionsPage.openInspection(0);
-    await page.waitForTimeout(1000);
+      // First, click all "Aprovado" buttons to approve all items
+      const approveButtons = page.getByRole('button', { name: /^Aprovado - / });
+      const totalButtons = await approveButtons.count();
+      expect(totalButtons).toBeGreaterThan(0);
 
-    // Get all inspection items
-    const items = page.locator('[data-testid="inspection-item"]');
-    const itemCount = await items.count();
+      for (let i = 0; i < totalButtons; i++) {
+        await approveButtons.nth(i).click();
+        await page.waitForTimeout(300);
+      }
 
-    // Approve items 1-5 (index 0-4)
-    for (let i = 0; i < 5; i++) {
-      const item = items.nth(i);
-      await item.getByRole('button', { name: /aprovado|aprovar|conforme/i }).click();
+      // Override "Alavanca Amarela" to Reprovado:
+      // First toggle off its approved state, then click Reprovado
+      const alavancaApproveBtn = page.getByRole('button', { name: /Aprovado - .*Alavanca Amarela/i });
+      await alavancaApproveBtn.click(); // Toggle off (back to pending)
       await page.waitForTimeout(300);
-    }
 
-    // Reject item 6 (index 5) - "Alavanca Amarela"
-    const item6 = items.nth(5);
-    await item6.getByRole('button', { name: /reprovado|reprovar|não conforme/i }).click();
-    await page.waitForTimeout(500);
+      const alavancaRejectBtn = page.getByRole('button', { name: /Reprovado - .*Alavanca Amarela/i });
+      await alavancaRejectBtn.click();
+      await page.waitForTimeout(500);
 
-    // Set rejection reason
-    const reasonInput = item6.getByPlaceholder(/motivo|razão|observação/i);
-    await reasonInput.fill('Alavanca com desgaste excessivo, necessita substituicao');
-    await page.waitForTimeout(300);
+      // Override last 2 items to NA:
+      // Get all NA buttons and toggle the last 2 from approved to NA
+      const naButtons = page.getByRole('button', { name: /^NA - / });
+      const naCount = await naButtons.count();
 
-    // Approve items 7-15 (index 6-14)
-    for (let i = 6; i < 15; i++) {
-      const item = items.nth(i);
-      await item.getByRole('button', { name: /aprovado|aprovar|conforme/i }).click();
-      await page.waitForTimeout(300);
-    }
+      for (let i = naCount - 2; i < naCount; i++) {
+        // Get the item name from the NA button's aria-label
+        const naButtonText = await naButtons.nth(i).getAttribute('aria-label');
+        if (naButtonText) {
+          const itemName = naButtonText.replace('NA - ', '');
+          // Click the approve button for this item to toggle it off
+          await page.getByRole('button', { name: `Aprovado - ${itemName}` }).click();
+          await page.waitForTimeout(300);
+        }
+        // Now click NA
+        await naButtons.nth(i).click();
+        await page.waitForTimeout(300);
+      }
 
-    // Set items 16-17 (index 15-16) as N/A
-    for (let i = 15; i < 17; i++) {
-      const item = items.nth(i);
-      await item.getByRole('button', { name: /n\/a|não aplicável/i }).click();
-      await page.waitForTimeout(300);
-    }
+      // Verify progress shows all items evaluated
+      await expect(page.getByText(/\d+ de \d+ itens avaliados/)).toContainText(`${totalButtons} de ${totalButtons}`);
 
-    // Approve items 18-19 (index 17-18)
-    for (let i = 17; i < 19; i++) {
-      const item = items.nth(i);
-      await item.getByRole('button', { name: /aprovado|aprovar|conforme/i }).click();
-      await page.waitForTimeout(300);
-    }
+      await page.screenshot({ path: 'e2e/results/02-inspector-checklist-filled.png' });
+    });
 
-    // Verify progress bar shows "19 de 19"
-    const progress = page.locator('[data-testid="inspection-progress"]');
-    await expect(progress).toContainText('19 de 19');
+    await test.step('Set rejection reason', async () => {
+      // For the rejected "Alavanca Amarela" item, fill the reason textarea
+      const alavancaLi = page.locator('li').filter({ hasText: /Alavanca Amarela/i });
+      const reasonInput = alavancaLi.locator('textarea[placeholder="Motivo da reprovacao"]');
+      await expect(reasonInput).toBeVisible();
+      await reasonInput.fill('Alavanca com desgaste excessivo, necessita substituicao');
+      await reasonInput.blur(); // Trigger save on blur
+      await page.waitForTimeout(1000);
 
-    await page.screenshot({ path: 'e2e/results/02-inspector-checklist-filled.png' });
-  });
+      await page.screenshot({ path: 'e2e/results/02-inspector-rejection-reason.png' });
+    });
 
-  test('Inspector adds observations', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const inspectionsPage = new InspectionsPage(page);
-    const inspectionDetail = new InspectionDetailPage(page);
+    await test.step('Add observations', async () => {
+      // Fill the observations textarea
+      const textarea = page.locator('textarea[placeholder="Adicione observacoes sobre a inspecao..."]');
+      await textarea.fill(
+        'Equipamento em bom estado geral, exceto alavanca amarela com desgaste'
+      );
+      await page.waitForTimeout(4000); // Wait for auto-save (delay is 3000ms)
 
-    await loginPage.goto();
-    await loginPage.loginAs(INSPECTOR.email, INSPECTOR.password);
-    await page.waitForTimeout(1000);
+      await page.screenshot({ path: 'e2e/results/02-inspector-observations.png' });
+    });
 
-    // Navigate to inspections and open the first one
-    await inspectionsPage.goto();
-    await page.waitForTimeout(1000);
-    await inspectionsPage.openInspection(0);
-    await page.waitForTimeout(1000);
+    await test.step('Complete evaluation', async () => {
+      // Click "Concluir Avaliação"
+      await page.getByRole('button', { name: /Concluir Avaliação/i }).click();
+      await page.waitForTimeout(1000);
 
-    // Fill observations
-    await inspectionDetail.setObservations(
-      'Equipamento em bom estado geral, exceto alavanca amarela com desgaste'
-    );
-    await page.waitForTimeout(2000); // Wait for auto-save
+      // Verify confirmation modal appears with "Sim, concluir" button
+      const confirmButton = page.getByRole('button', { name: /Sim, concluir/i });
+      await expect(confirmButton).toBeVisible();
 
-    await page.screenshot({ path: 'e2e/results/02-inspector-observations.png' });
-  });
+      // Verify summary is shown in the modal (data-testid="summary-counts")
+      const summarySection = page.locator('[data-testid="summary-counts"]');
+      await expect(summarySection).toBeVisible();
+      await expect(summarySection.getByText(/Aprovados:/)).toBeVisible();
+      await expect(summarySection.getByText(/Reprovados:/)).toBeVisible();
 
-  test('Inspector completes evaluation', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const inspectionsPage = new InspectionsPage(page);
-    const inspectionDetail = new InspectionDetailPage(page);
+      // Confirm
+      await confirmButton.click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
 
-    await loginPage.goto();
-    await loginPage.loginAs(INSPECTOR.email, INSPECTOR.password);
-    await page.waitForTimeout(1000);
+      await page.screenshot({ path: 'e2e/results/02-inspector-evaluation-completed.png' });
+    });
 
-    // Navigate to inspections and open the first one
-    await inspectionsPage.goto();
-    await page.waitForTimeout(1000);
-    await inspectionsPage.openInspection(0);
-    await page.waitForTimeout(1000);
+    await test.step('Verify read-only state', async () => {
+      // Verify no evaluation buttons are visible (Aprovado/Reprovado/NA/Concluir)
+      await expect(
+        page.getByRole('button', { name: /Aprovado|Reprovado|Concluir/i })
+      ).toHaveCount(0);
 
-    // Click "Concluir Avaliação"
-    await page.getByRole('button', { name: /Concluir/i }).click();
-    await page.waitForTimeout(1000);
+      // Verify observations section shows read-only text (a div, not a textarea)
+      const observationsDiv = page.locator('div').filter({ hasText: /Equipamento em bom estado geral/ }).first();
+      await expect(observationsDiv).toBeVisible();
 
-    // Verify confirmation modal appears
-    const confirmButton = page.getByRole('button', { name: /Confirmar|Sim/i });
-    await expect(confirmButton).toBeVisible();
+      // Verify no textarea is present in the observations section
+      const observationsSection = page.locator('text=Observacoes').locator('..');
+      const textareas = observationsSection.locator('textarea');
+      await expect(textareas).toHaveCount(0);
 
-    // Verify summary is shown in the modal (Aprovados: 15, Reprovados: 1, N/A: 2)
-    // The exact format may vary, but check for the presence of key numbers
-    await expect(page.getByText(/15/)).toBeVisible();
-    await expect(page.getByText(/1/)).toBeVisible();
+      await page.screenshot({ path: 'e2e/results/02-inspector-read-only.png' });
+    });
 
-    // Confirm
-    await confirmButton.click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    await page.screenshot({ path: 'e2e/results/02-inspector-evaluation-completed.png' });
-  });
-
-  test('Inspector verifies inspection is read-only', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const inspectionsPage = new InspectionsPage(page);
-    const inspectionDetail = new InspectionDetailPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(INSPECTOR.email, INSPECTOR.password);
-    await page.waitForTimeout(1000);
-
-    // Navigate to inspections and open the first one
-    await inspectionsPage.goto();
-    await page.waitForTimeout(1000);
-    await inspectionsPage.openInspection(0);
-    await page.waitForTimeout(1000);
-
-    // Verify no evaluation buttons are visible
-    await inspectionDetail.expectReadOnly();
-
-    // Verify observations field is read-only or disabled
-    const observationsField = page.getByLabel(/observações|observação/i);
-    if (await observationsField.isVisible()) {
-      // Check if it's disabled or readonly
-      const isDisabled = await observationsField.isDisabled();
-      const isReadonly = await observationsField.getAttribute('readonly');
-      expect(isDisabled || isReadonly !== null).toBeTruthy();
-    }
-
-    await page.screenshot({ path: 'e2e/results/02-inspector-read-only.png' });
+    await page.screenshot({ path: 'e2e/results/02-full-workflow.png' });
   });
 
   test('Inspector logout', async ({ page }) => {

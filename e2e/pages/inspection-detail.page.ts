@@ -4,80 +4,76 @@ export class InspectionDetailPage {
   constructor(private page: Page) {}
 
   async evaluateItem(itemName: string, status: 'approved' | 'rejected' | 'na') {
-    const itemRow = this.page.locator('[data-testid="inspection-item"]', {
-      hasText: itemName,
-    });
-
-    const statusMap = {
-      approved: /aprovado|aprovar|conforme/i,
-      rejected: /reprovado|reprovar|não conforme/i,
-      na: /n\/a|não aplicável/i,
+    const statusMap: Record<string, string> = {
+      approved: 'Aprovado',
+      rejected: 'Reprovado',
+      na: 'NA',
     };
 
-    await itemRow.getByRole('button', { name: statusMap[status] }).click();
-    await this.page.waitForLoadState('networkidle');
+    // Find the button by its aria-label which contains "StatusLabel - ItemName"
+    const buttonLabel = `${statusMap[status]} - ${itemName}`;
+    await this.page.getByRole('button', { name: buttonLabel }).click();
+    await this.page.waitForTimeout(500);
   }
 
   async setRejectionReason(itemName: string, reason: string) {
-    const itemRow = this.page.locator('[data-testid="inspection-item"]', {
-      hasText: itemName,
-    });
-
-    const reasonInput = itemRow.getByPlaceholder(/motivo|razão|observação/i);
+    // The rejection reason textarea appears after clicking "Reprovado"
+    // It's inside the same <li> as the item. Find the li containing the item name,
+    // then find the textarea with placeholder "Motivo da reprovacao"
+    const itemLi = this.page.locator('li').filter({ hasText: itemName });
+    const reasonInput = itemLi.locator('textarea[placeholder="Motivo da reprovacao"]');
     await reasonInput.fill(reason);
+    // Trigger blur to save
+    await reasonInput.blur();
+    await this.page.waitForTimeout(1000);
   }
 
   async getProgress(): Promise<string> {
-    const progressEl = this.page.locator('[data-testid="inspection-progress"]');
+    // Progress text is like "X de 19 itens avaliados"
+    const progressEl = this.page.locator('text=/\\d+ de \\d+ itens avaliados/');
     await expect(progressEl).toBeVisible();
     return (await progressEl.textContent()) ?? '';
   }
 
   async expectItemStatus(itemName: string, status: string) {
-    const itemRow = this.page.locator('[data-testid="inspection-item"]', {
-      hasText: itemName,
-    });
-    await expect(itemRow.getByText(status)).toBeVisible();
+    const itemLi = this.page.locator('li').filter({ hasText: itemName });
+    await expect(itemLi.getByText(status)).toBeVisible();
   }
 
   async setObservations(text: string) {
-    const textarea = this.page.getByLabel(/observações|observação/i);
+    const textarea = this.page.locator('textarea[placeholder="Adicione observacoes sobre a inspecao..."]');
     await textarea.fill(text);
   }
 
   async completeEvaluation() {
-    await this.page.getByRole('button', { name: /concluir/i }).click();
+    await this.page.getByRole('button', { name: /Concluir Avaliação/i }).click();
+    await this.page.waitForTimeout(500);
 
-    // Confirm modal
-    const confirmButton = this.page.getByRole('button', { name: /confirmar|sim/i });
+    // Confirm modal - button says "Sim, concluir"
+    const confirmButton = this.page.getByRole('button', { name: /Sim, concluir/i });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
     await this.page.waitForLoadState('networkidle');
   }
 
   async expectReadOnly() {
-    // Verify that no edit/action buttons are present
+    // In read-only mode, there are no Aprovado/Reprovado/NA buttons
+    // and no "Concluir Avaliação" button
     await expect(
-      this.page.getByRole('button', { name: /aprovar|reprovar|concluir/i })
+      this.page.getByRole('button', { name: /Aprovado|Reprovado|Concluir/i })
     ).toHaveCount(0);
   }
 
   async getSummary(): Promise<{ approved: string; rejected: string; na: string }> {
-    const summarySection = this.page.locator('[data-testid="inspection-summary"]');
+    const summarySection = this.page.locator('[data-testid="summary-counts"]');
     await expect(summarySection).toBeVisible();
 
     const approved =
-      (await summarySection
-        .locator('[data-testid="summary-approved"]')
-        .textContent()) ?? '0';
+      (await summarySection.getByText(/Aprovados:/).textContent()) ?? '0';
     const rejected =
-      (await summarySection
-        .locator('[data-testid="summary-rejected"]')
-        .textContent()) ?? '0';
+      (await summarySection.getByText(/Reprovados:/).textContent()) ?? '0';
     const na =
-      (await summarySection
-        .locator('[data-testid="summary-na"]')
-        .textContent()) ?? '0';
+      (await summarySection.getByText(/N\/A:/).textContent()) ?? '0';
 
     return { approved, rejected, na };
   }

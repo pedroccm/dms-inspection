@@ -42,7 +42,7 @@ export async function getInspectionById(id: string) {
   const { data, error } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(*), checklist_items(*), photos(*), inspector:profiles!inspector_id(full_name)"
+      "*, equipment(*), checklist_items(*), photos(*)"
     )
     .eq("id", id)
     .order("sort_order", { referencedTable: "checklist_items", ascending: true })

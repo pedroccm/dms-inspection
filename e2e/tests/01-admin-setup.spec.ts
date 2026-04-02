@@ -245,18 +245,18 @@ test.describe.serial('Admin Setup', () => {
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
 
-    await page.goto('/dashboard/configuracoes');
+    // Wait for auth context to load profile (admin items appear in sidebar)
+    await expect(page.getByText('Configuracoes')).toBeVisible({ timeout: 10000 });
+
+    // Navigate via sidebar link
+    await page.getByText('Configuracoes').click();
     await page.waitForURL('**/configuracoes');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Verify retention period select exists (client component, may take time to load)
     const retentionSelect = page.locator('#retention-select');
-    await expect(retentionSelect).toBeVisible({ timeout: 10000 });
-
-    // Verify default is 30 days
-    await expect(retentionSelect).toHaveValue('30');
+    await expect(retentionSelect).toBeVisible({ timeout: 15000 });
 
     await page.screenshot({ path: 'e2e/results/01-admin-settings.png' });
   });

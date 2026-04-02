@@ -8,27 +8,27 @@ export class InspectionsPage {
     await this.page.waitForURL('**/inspecoes');
   }
 
-  async startInspection(equipmentCode: string, orderTitle: string) {
-    await this.page.getByRole('button', { name: /nova inspeção|novo/i }).click();
+  async startInspection(equipmentLabel: string, orderTitle: string) {
+    await this.page.getByRole('link', { name: /Nova Inspecao/i }).click();
     await this.page.waitForLoadState('networkidle');
 
-    // Select equipment
-    const equipmentSelect = this.page.getByLabel(/equipamento/i);
-    await equipmentSelect.click();
-    await this.page.getByRole('option', { name: new RegExp(equipmentCode) }).click();
+    // Select equipment (native <select> with id="equipamento")
+    // equipmentLabel should be the full option label, e.g. "RA-TEST-001 — ABB"
+    await this.page.selectOption('#equipamento', { label: equipmentLabel });
+    await this.page.waitForTimeout(500);
 
-    // Select order
-    const orderSelect = this.page.getByLabel(/ordem de serviço|ordem/i);
-    await orderSelect.click();
-    await this.page.getByRole('option', { name: new RegExp(orderTitle) }).click();
+    // Select order (native <select> with id="ordem-de-servico")
+    await this.page.selectOption('#ordem-de-servico', { label: orderTitle });
+    await this.page.waitForTimeout(500);
 
-    await this.page.getByRole('button', { name: /iniciar|criar|salvar/i }).click();
+    await this.page.getByRole('button', { name: /Iniciar Inspecao/i }).click();
     await this.page.waitForLoadState('networkidle');
   }
 
   async openInspection(index: number) {
-    const rows = this.page.locator('tbody tr');
-    await rows.nth(index).click();
+    await this.page.waitForTimeout(1000);
+    const links = this.page.getByRole('link', { name: 'Ver' });
+    await links.nth(index).click();
     await this.page.waitForLoadState('networkidle');
   }
 
