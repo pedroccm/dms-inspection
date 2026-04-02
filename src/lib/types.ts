@@ -83,16 +83,34 @@ export type ServiceOrderStatus = "open" | "in_progress" | "completed" | "cancell
 export interface ServiceOrder {
   id: string;
   title: string;
+  client_name: string;
+  location: string | null;
   description: string | null;
   status: ServiceOrderStatus;
   assigned_to: string;
   equipment_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
   due_date: string | null;
+  created_by: string;
   created_at: string;
   updated_at: string;
   // Joined relations (optional)
   equipment?: Equipment;
   assignee?: Profile;
+  service_order_equipment?: ServiceOrderEquipment[];
+}
+
+export type EquipmentInspectionStatus = "not_started" | "in_progress" | "completed";
+
+export interface ServiceOrderEquipment {
+  id: string;
+  service_order_id: string;
+  equipment_id: string;
+  inspection_status: EquipmentInspectionStatus;
+  created_at: string;
+  // Joined relations (optional)
+  equipment?: Equipment;
 }
 
 export interface Equipment {

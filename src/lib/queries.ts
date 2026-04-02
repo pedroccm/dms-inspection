@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Inspection,
   InspectionFilters,
+  Profile,
   ServiceOrder,
   ServiceOrderFilters,
   Equipment,
@@ -82,12 +83,42 @@ export async function getServiceOrderById(id: string) {
 
   const { data, error } = await supabase
     .from("service_orders")
-    .select("*, equipment(*), assignee:profiles!assigned_to(*)")
+    .select(
+      "*, equipment(*), assignee:profiles!assigned_to(*), service_order_equipment(*, equipment(*))"
+    )
     .eq("id", id)
     .single();
 
   if (error) throw error;
   return data as ServiceOrder;
+}
+
+export async function getInspectors() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, role, active")
+    .eq("role", "inspector")
+    .eq("active", true)
+    .order("full_name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as Pick<Profile, "id" | "full_name" | "role" | "active">[];
+}
+
+export async function searchEquipmentByCode(search: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("id, copel_ra_code, manufacturer")
+    .ilike("copel_ra_code", `%${search}%`)
+    .order("copel_ra_code", { ascending: true })
+    .limit(10);
+
+  if (error) throw error;
+  return (data ?? []) as Pick<Equipment, "id" | "copel_ra_code" | "manufacturer">[];
 }
 
 // ─── Equipment ──────────────────────────────────────────────
