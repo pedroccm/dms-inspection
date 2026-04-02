@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
-import { getEquipment } from "@/lib/queries";
+import { getEquipment, getDistinctManufacturers } from "@/lib/queries";
 import { EquipmentSearch } from "./equipment-search";
+import { Pagination } from "@/components/ui/pagination";
 
 interface EquipamentosPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    manufacturer?: string;
+    page?: string;
+  }>;
 }
 
 export default async function EquipamentosPage({
@@ -12,8 +17,30 @@ export default async function EquipamentosPage({
 }: EquipamentosPageProps) {
   await requireAuth();
 
-  const { q } = await searchParams;
-  const equipment = await getEquipment(q ? { search: q } : undefined);
+  const params = await searchParams;
+  const q = params.q;
+  const manufacturer = params.manufacturer;
+  const page = Math.max(1, Number(params.page) || 1);
+  const perPage = 20;
+
+  const [{ data: equipment, count }, manufacturers] = await Promise.all([
+    getEquipment({
+      search: q || undefined,
+      manufacturer: manufacturer || undefined,
+      page,
+      perPage,
+    }),
+    getDistinctManufacturers(),
+  ]);
+
+  const totalPages = Math.ceil(count / perPage);
+  const from = (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, count);
+
+  // Build search params for pagination links (excluding "page")
+  const paginationParams: Record<string, string> = {};
+  if (q) paginationParams.q = q;
+  if (manufacturer) paginationParams.manufacturer = manufacturer;
 
   return (
     <div>
@@ -28,8 +55,18 @@ export default async function EquipamentosPage({
       </div>
 
       <div className="mb-6">
-        <EquipmentSearch defaultValue={q} />
+        <EquipmentSearch
+          defaultSearch={q}
+          defaultManufacturer={manufacturer}
+          manufacturers={manufacturers}
+        />
       </div>
+
+      {count > 0 && (
+        <p className="text-sm text-gray-600 mb-4">
+          Mostrando {from}-{to} de {count} equipamentos
+        </p>
+      )}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
@@ -43,13 +80,13 @@ export default async function EquipamentosPage({
                   Fabricante
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 hidden sm:table-cell">
-                  Nº Série Mecanismo
+                  N Serie Mecanismo
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 hidden md:table-cell">
                   Data Cadastro
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
-                  Ações
+                  Acoes
                 </th>
               </tr>
             </thead>
@@ -60,7 +97,7 @@ export default async function EquipamentosPage({
                     colSpan={5}
                     className="px-6 py-8 text-center text-gray-500"
                   >
-                    Nenhum equipamento cadastrado.
+                    Nenhum equipamento encontrado.
                   </td>
                 </tr>
               ) : (
@@ -96,6 +133,13 @@ export default async function EquipamentosPage({
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/dashboard/equipamentos"
+        searchParams={paginationParams}
+      />
     </div>
   );
 }

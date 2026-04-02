@@ -92,9 +92,11 @@ describe("CreateEquipmentForm", () => {
 });
 
 describe("EquipmentSearch", () => {
+  const defaultManufacturers = ["ABB", "Siemens", "WEG"];
+
   it("renders search input and button", async () => {
     const { EquipmentSearch } = await import("../equipment-search");
-    render(<EquipmentSearch />);
+    render(<EquipmentSearch manufacturers={defaultManufacturers} />);
 
     expect(
       screen.getByPlaceholderText("Buscar por Código Copel RA...")
@@ -102,17 +104,22 @@ describe("EquipmentSearch", () => {
     expect(screen.getByText("Buscar")).toBeInTheDocument();
   });
 
-  it("renders Limpar button when defaultValue is set", async () => {
+  it("renders Limpar filtros button when defaultSearch is set", async () => {
     const { EquipmentSearch } = await import("../equipment-search");
-    render(<EquipmentSearch defaultValue="ABC-123" />);
+    render(
+      <EquipmentSearch
+        defaultSearch="ABC-123"
+        manufacturers={defaultManufacturers}
+      />
+    );
 
-    expect(screen.getByText("Limpar")).toBeInTheDocument();
+    expect(screen.getByText("Limpar filtros")).toBeInTheDocument();
   });
 
-  it("does not render Limpar button when no defaultValue", async () => {
+  it("does not render Limpar filtros button when no filters", async () => {
     const { EquipmentSearch } = await import("../equipment-search");
-    render(<EquipmentSearch />);
+    render(<EquipmentSearch manufacturers={defaultManufacturers} />);
 
-    expect(screen.queryByText("Limpar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Limpar filtros")).not.toBeInTheDocument();
   });
 });

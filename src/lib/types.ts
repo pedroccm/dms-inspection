@@ -100,4 +100,12 @@ export interface ServiceOrderFilters {
 
 export interface EquipmentFilters {
   search?: string;
+  manufacturer?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  count: number;
 }

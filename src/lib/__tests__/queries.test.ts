@@ -11,6 +11,7 @@ function createMockQueryBuilder(resolvedData: unknown[] | null = []) {
   builder.in = vi.fn().mockImplementation(returnSelf);
   builder.gte = vi.fn().mockImplementation(returnSelf);
   builder.order = vi.fn().mockImplementation(returnSelf);
+  builder.range = vi.fn().mockImplementation(returnSelf);
   builder.single = vi
     .fn()
     .mockResolvedValue({ data: resolvedData, error: null });

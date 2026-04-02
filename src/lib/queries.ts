@@ -6,6 +6,7 @@ import type {
   ServiceOrderFilters,
   Equipment,
   EquipmentFilters,
+  PaginatedResult,
 } from "@/lib/types";
 
 // ─── Inspections ────────────────────────────────────────────
@@ -90,22 +91,50 @@ export async function getServiceOrderById(id: string) {
 
 // ─── Equipment ──────────────────────────────────────────────
 
-export async function getEquipment(filters?: EquipmentFilters) {
+export async function getEquipment(
+  filters?: EquipmentFilters
+): Promise<PaginatedResult<Equipment>> {
   const supabase = await createClient();
+
+  const page = filters?.page ?? 1;
+  const perPage = filters?.perPage ?? 20;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
 
   let query = supabase
     .from("equipment")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (filters?.search) {
     query = query.ilike("copel_ra_code", `%${filters.search}%`);
   }
+  if (filters?.manufacturer) {
+    query = query.eq("manufacturer", filters.manufacturer);
+  }
 
-  const { data, error } = await query;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) throw error;
-  return (data ?? []) as Equipment[];
+  return { data: (data ?? []) as Equipment[], count: count ?? 0 };
+}
+
+export async function getDistinctManufacturers(): Promise<string[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("manufacturer")
+    .order("manufacturer", { ascending: true });
+
+  if (error) throw error;
+
+  const unique = [...new Set((data ?? []).map((d) => d.manufacturer))].filter(
+    Boolean
+  );
+  return unique as string[];
 }
 
 export async function getEquipmentById(id: string) {
