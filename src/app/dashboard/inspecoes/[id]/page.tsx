@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
 import { ChecklistForm } from "./checklist-form";
+import { PhotoSection } from "./photo-section";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -40,6 +41,9 @@ export default async function InspecaoDetailPage({
   }
 
   const checklistItems = inspection.checklist_items ?? [];
+  const photos = inspection.photos ?? [];
+  const isEditable =
+    inspection.status !== "submitted" && inspection.status !== "transferred";
 
   const config =
     statusConfig[inspection.status] ?? statusConfig.draft;
@@ -75,6 +79,13 @@ export default async function InspecaoDetailPage({
         inspectionId={inspection.id}
         inspectionStatus={inspection.status}
         inspectionNotes={inspection.notes}
+      />
+
+      {/* Photo Capture Section (US-401 + US-402) */}
+      <PhotoSection
+        inspectionId={inspection.id}
+        existingPhotos={photos}
+        isEditable={isEditable}
       />
     </div>
   );

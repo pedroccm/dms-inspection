@@ -50,13 +50,33 @@ export interface ChecklistItem {
   updated_at: string;
 }
 
+export type PhotoType =
+  | "mechanism_front"
+  | "mechanism_back"
+  | "control_front_closed"
+  | "control_mirror_closed"
+  | "relay_front"
+  | "control_internal";
+
 export interface Photo {
   id: string;
   inspection_id: string;
+  photo_type: PhotoType;
   storage_path: string;
+  file_size: number;
   caption: string | null;
+  uploaded_at: string;
   created_at: string;
 }
+
+export const PHOTO_TYPE_LABELS: Record<PhotoType, string> = {
+  mechanism_front: "Foto Mecanismo Frente",
+  mechanism_back: "Foto Mecanismo Traseira",
+  control_front_closed: "Foto Controle Frente Fechado",
+  control_mirror_closed: "Foto Controle Espelho Fechado",
+  relay_front: "Foto Frente Rele",
+  control_internal: "Foto Interna Controle",
+};
 
 export type ServiceOrderStatus = "open" | "in_progress" | "completed" | "cancelled";
 
