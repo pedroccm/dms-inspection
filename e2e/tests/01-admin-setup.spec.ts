@@ -23,7 +23,7 @@ test.describe.serial('Admin Setup', () => {
     await expect(page.getByText(ADMIN.name)).toBeVisible();
 
     // Verify admin role badge
-    await expect(page.getByText('admin', { exact: true })).toBeVisible();
+    await expect(page.getByText('Master', { exact: true })).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/01-admin-login.png' });
   });
@@ -38,12 +38,12 @@ test.describe.serial('Admin Setup', () => {
 
     // Verify all sidebar menu items are visible for admin
     await dashboard.expectMenuItemVisible('Painel');
-    await dashboard.expectMenuItemVisible('Ordens de Servico');
+    await dashboard.expectMenuItemVisible('Ordens de Serviço');
     await dashboard.expectMenuItemVisible('Equipamentos');
-    await dashboard.expectMenuItemVisible('Inspecoes');
-    await dashboard.expectMenuItemVisible('Relatorios');
-    await dashboard.expectMenuItemVisible('Usuarios');
-    await dashboard.expectMenuItemVisible('Configuracoes');
+    await dashboard.expectMenuItemVisible('Inspeções');
+    await dashboard.expectMenuItemVisible('Relatórios');
+    await dashboard.expectMenuItemVisible('Usuários');
+    await dashboard.expectMenuItemVisible('Configurações');
 
     await page.screenshot({ path: 'e2e/results/01-admin-menu-items.png' });
   });
@@ -255,10 +255,10 @@ test.describe.serial('Admin Setup', () => {
     }
 
     // Wait for auth context to load profile (admin items appear in sidebar)
-    await expect(page.getByText('Configuracoes')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Configurações')).toBeVisible({ timeout: 10000 });
 
     // Navigate via sidebar link
-    await page.getByText('Configuracoes').click();
+    await page.getByText('Configurações').click();
     await page.waitForURL('**/configuracoes');
     await page.waitForTimeout(3000);
 
@@ -284,7 +284,7 @@ test.describe.serial('Admin Setup', () => {
     await page.goto('/dashboard/relatorios');
     await page.waitForTimeout(2000);
 
-    // Verify "Produtividade por Inspetor" card/section exists
+    // Verify "Produtividade por Executor" card/section exists
     await expect(page.getByText(/Produtividade/i)).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/01-admin-reports.png' });

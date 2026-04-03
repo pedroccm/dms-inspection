@@ -135,8 +135,8 @@ test.describe.serial('03 - Admin Review', () => {
     await expect(page.getByText('Pronta para Revisao').first()).toBeVisible({ timeout: 10000 });
 
     // Status is "ready_for_review" (Pronta para Revisao)
-    // Export button only appears for "submitted" or "transferred" status
-    // Transfer button only appears for "submitted" status
+    // Export button only appears for "aprovado" or "transferred" status
+    // Transfer button only appears for "aprovado" status
     // So both should NOT be visible in the current state
     await expect(
       page.getByRole('button', { name: /Exportar para Webed/i })
@@ -160,7 +160,7 @@ test.describe.serial('03 - Admin Review', () => {
     await page.goto('/dashboard/relatorios');
     await page.waitForTimeout(2000);
 
-    // Verify "Produtividade por Inspetor" section exists
+    // Verify "Produtividade por Executor" section exists
     await expect(page.getByText(/Produtividade/i)).toBeVisible();
 
     // Click "Ver Relatorio" to open the productivity report

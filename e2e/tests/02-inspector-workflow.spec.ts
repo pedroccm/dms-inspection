@@ -21,7 +21,7 @@ test.describe.serial('Inspector Workflow', () => {
     await expect(page.getByText(INSPECTOR.name, { exact: true })).toBeVisible({ timeout: 10000 });
 
     // Verify inspector role
-    await expect(page.getByText('inspector', { exact: true })).toBeVisible();
+    await expect(page.getByText('Executor', { exact: true })).toBeVisible();
 
     await page.screenshot({ path: 'e2e/results/02-inspector-login.png' });
   });
@@ -36,16 +36,16 @@ test.describe.serial('Inspector Workflow', () => {
 
     // Verify visible menu items
     await dashboard.expectMenuItemVisible('Painel');
-    await dashboard.expectMenuItemVisible('Ordens de Servico');
+    await dashboard.expectMenuItemVisible('Ordens de Serviço');
     await dashboard.expectMenuItemVisible('Equipamentos');
-    await dashboard.expectMenuItemVisible('Inspecoes');
+    await dashboard.expectMenuItemVisible('Inspeções');
 
     // Verify admin-only items are NOT visible
-    await dashboard.expectMenuItemHidden('Usuarios');
-    await dashboard.expectMenuItemHidden('Configuracoes');
+    await dashboard.expectMenuItemHidden('Usuários');
+    await dashboard.expectMenuItemHidden('Configurações');
 
     // Note: Relatorios has adminOnly: false in layout.tsx, so it IS visible to inspectors
-    await dashboard.expectMenuItemVisible('Relatorios');
+    await dashboard.expectMenuItemVisible('Relatórios');
 
     await page.screenshot({ path: 'e2e/results/02-inspector-limited-menu.png' });
   });
@@ -228,8 +228,8 @@ test.describe.serial('Inspector Workflow', () => {
       await page.reload();
       await page.waitForTimeout(3000);
 
-      // The status should show "Pronta para Revisao" or "Enviada"
-      await expect(page.getByText(/Pronta para Revisao|Enviada/).first()).toBeVisible({ timeout: 10000 });
+      // The status should show "Pronta para Revisao" (ready for Master review)
+      await expect(page.getByText(/Pronta para Revisao/).first()).toBeVisible({ timeout: 10000 });
 
       // Take screenshot of the completed inspection
       await page.screenshot({ path: 'e2e/results/02-inspector-read-only.png' });
