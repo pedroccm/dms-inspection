@@ -19,9 +19,9 @@ export class InspectionDetailPage {
   async setRejectionReason(itemName: string, reason: string) {
     // The rejection reason textarea appears after clicking "Reprovado"
     // It's inside the same <li> as the item. Find the li containing the item name,
-    // then find the textarea with placeholder "Motivo da reprovacao"
+    // then find the textarea with placeholder "Motivo da reprovação"
     const itemLi = this.page.locator('li').filter({ hasText: itemName });
-    const reasonInput = itemLi.locator('textarea[placeholder="Motivo da reprovacao"]');
+    const reasonInput = itemLi.locator('textarea[placeholder="Motivo da reprovação"]');
     await reasonInput.fill(reason);
     // Trigger blur to save
     await reasonInput.blur();
@@ -41,7 +41,7 @@ export class InspectionDetailPage {
   }
 
   async setObservations(text: string) {
-    const textarea = this.page.locator('textarea[placeholder="Adicione observacoes sobre a inspecao..."]');
+    const textarea = this.page.locator('textarea[placeholder="Adicione observações sobre a inspeção..."]');
     await textarea.fill(text);
   }
 

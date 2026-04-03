@@ -180,7 +180,7 @@ test.describe.serial('Inspector Workflow', () => {
     await test.step('Set rejection reason', async () => {
       // For the rejected "Alavanca Amarela" item, fill the reason textarea
       const alavancaLi = page.locator('li').filter({ hasText: /Alavanca Amarela/i });
-      const reasonInput = alavancaLi.locator('textarea[placeholder="Motivo da reprovacao"]');
+      const reasonInput = alavancaLi.locator('textarea[placeholder="Motivo da reprovação"]');
       await expect(reasonInput).toBeVisible();
       await reasonInput.fill('Alavanca com desgaste excessivo, necessita substituicao');
       await reasonInput.blur(); // Trigger save on blur
@@ -191,7 +191,7 @@ test.describe.serial('Inspector Workflow', () => {
 
     await test.step('Add observations', async () => {
       // Fill the observations textarea
-      const textarea = page.locator('textarea[placeholder="Adicione observacoes sobre a inspecao..."]');
+      const textarea = page.locator('textarea[placeholder="Adicione observações sobre a inspeção..."]');
       await textarea.fill(
         'Equipamento em bom estado geral, exceto alavanca amarela com desgaste'
       );
