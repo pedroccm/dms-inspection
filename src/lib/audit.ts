@@ -6,9 +6,9 @@ import type { AuditLog, FormattedAuditEntry, ChecklistItemStatus, InspectionStat
 const STATUS_LABELS: Record<string, string> = {
   draft: "Rascunho",
   in_progress: "Em Andamento",
-  ready_for_review: "Pronta para Revisao",
+  ready_for_review: "Pronta para Revisão",
   aprovado: "Aprovado",
-  relatorio_reprovado: "Relatorio Reprovado",
+  relatorio_reprovado: "Relatório Reprovado",
   equipamento_reprovado: "Equipamento Reprovado",
   transferred: "Transferida",
 };

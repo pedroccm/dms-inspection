@@ -19,9 +19,9 @@ const statusConfig: Record<
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
   aprovado: { label: "Aprovado", variant: "success" },
-  relatorio_reprovado: { label: "Relatorio Reprovado", variant: "danger" },
+  relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
   equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
   transferred: { label: "Transferida", variant: "neutral" },
 };
@@ -123,7 +123,7 @@ export default async function InspecaoDetailPage({
             <span className="text-red-600 text-xl mt-0.5">&#10060;</span>
             <div>
               <h3 className="text-sm font-semibold text-red-800 mb-1">
-                Equipamento Reprovado - Defeito de Fabricacao
+                Equipamento Reprovado - Defeito de Fabricação
               </h3>
               <p className="text-sm text-red-700">
                 <span className="font-medium">Motivo:</span> {inspection.rejection_reason}

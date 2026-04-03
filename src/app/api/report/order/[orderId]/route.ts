@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 const INSPECTION_STATUS_LABELS: Record<string, string> = {
   draft: "Rascunho",
   in_progress: "Em Andamento",
-  ready_for_review: "Pronta para Revisao",
+  ready_for_review: "Pronta para Revisão",
   aprovado: "Aprovado",
   relatorio_reprovado: "Rel. Reprovado",
   equipamento_reprovado: "Eq. Reprovado",
@@ -74,7 +74,7 @@ export async function GET(
   // Header
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("DIEN - Relatorio da Ordem de Servico", pageWidth / 2, 20, {
+  doc.text("DIEN - Relatório da Ordem de Serviço", pageWidth / 2, 20, {
     align: "center",
   });
 

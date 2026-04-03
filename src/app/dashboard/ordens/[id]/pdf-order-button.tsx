@@ -46,7 +46,7 @@ function PdfOrderButtonInner({ orderId }: PdfOrderButtonProps) {
       disabled={loading}
       className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {loading ? "Gerando PDF..." : "Gerar Relatorio PDF"}
+      {loading ? "Gerando PDF..." : "Gerar Relatório PDF"}
     </button>
   );
 }

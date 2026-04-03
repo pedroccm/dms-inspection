@@ -11,9 +11,9 @@ const statusConfig: Record<
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
   aprovado: { label: "Aprovado", variant: "success" },
-  relatorio_reprovado: { label: "Relatorio Reprovado", variant: "danger" },
+  relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
   equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
   transferred: { label: "Transferida", variant: "neutral" },
 };

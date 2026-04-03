@@ -14,9 +14,9 @@ const STATUS_LABELS: Record<string, string> = {
 const INSPECTION_STATUS_LABELS: Record<string, string> = {
   draft: "Rascunho",
   in_progress: "Em Andamento",
-  ready_for_review: "Pronta para Revisao",
+  ready_for_review: "Pronta para Revisão",
   aprovado: "Aprovado",
-  relatorio_reprovado: "Relatorio Reprovado",
+  relatorio_reprovado: "Relatório Reprovado",
   equipamento_reprovado: "Equipamento Reprovado",
   transferred: "Transferida",
 };
@@ -69,7 +69,7 @@ export async function GET(
   // Header
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("DIEN - Relatorio de Inspecao", pageWidth / 2, 20, {
+  doc.text("DIEN - Relatório de Inspeção", pageWidth / 2, 20, {
     align: "center",
   });
 
