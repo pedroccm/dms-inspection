@@ -132,7 +132,7 @@ export default async function EquipamentoDetailPage({
                     Data
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Inspetor
+                    Executor
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status

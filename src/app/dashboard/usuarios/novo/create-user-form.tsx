@@ -90,8 +90,8 @@ export function CreateUserForm() {
           <option value="" disabled>
             Selecione uma função
           </option>
-          <option value="admin">Administrador</option>
-          <option value="inspector">Inspetor</option>
+          <option value="admin">Master</option>
+          <option value="inspector">Executor</option>
         </select>
       </div>
 

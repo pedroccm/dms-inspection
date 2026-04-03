@@ -18,6 +18,12 @@ export default function EsqueciSenhaPage() {
     setLoading(true);
 
     try {
+      if (!email.trim().toLowerCase().endsWith("@dms.eng.br")) {
+        setError("Apenas e-mails com domínio @dms.eng.br são permitidos.");
+        setLoading(false);
+        return;
+      }
+
       const supabase = createClient();
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(

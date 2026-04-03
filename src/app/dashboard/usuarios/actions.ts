@@ -22,6 +22,11 @@ export async function createUser(formData: FormData) {
     return { error: "A senha deve ter no mínimo 6 caracteres." };
   }
 
+  // RF-01: Validar domínio @dms.eng.br
+  if (!email.trim().toLowerCase().endsWith("@dms.eng.br")) {
+    return { error: "Apenas e-mails com domínio @dms.eng.br são permitidos." };
+  }
+
   const supabase = createAdminClient();
 
   const { data: authData, error: authError } =

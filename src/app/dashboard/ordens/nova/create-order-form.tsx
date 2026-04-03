@@ -86,10 +86,10 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
       </div>
 
       <Select
-        label="Inspetor Responsável"
+        label="Executor Responsável"
         name="assigned_to"
         required
-        placeholder="Selecione o inspetor"
+        placeholder="Selecione o executor"
         options={inspectorOptions}
       />
 

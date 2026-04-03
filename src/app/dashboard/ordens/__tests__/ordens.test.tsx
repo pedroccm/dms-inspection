@@ -65,7 +65,7 @@ describe("CreateOrderForm", () => {
     expect(screen.getByLabelText(/Localização/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Data Início/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Data Fim/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Inspetor Responsável/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Executor Responsável/)).toBeInTheDocument();
   });
 
   it("title and client name are required", async () => {

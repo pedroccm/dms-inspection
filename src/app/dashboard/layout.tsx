@@ -124,7 +124,7 @@ function Sidebar({
               <p className="text-sm font-medium text-white truncate">
                 {profile.full_name}
               </p>
-              <p className="text-xs text-white/50 capitalize">{profile.role}</p>
+              <p className="text-xs text-white/50">{profile.role === "admin" ? "Master" : "Executor"}</p>
             </div>
           )}
           <button

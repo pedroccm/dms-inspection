@@ -61,7 +61,7 @@ export default async function InspecoesPage({
                   Ordem de Serviço
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
-                  Inspetor
+                  Executor
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status

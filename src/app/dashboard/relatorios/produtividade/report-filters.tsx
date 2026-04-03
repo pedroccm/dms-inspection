@@ -80,7 +80,7 @@ export function ReportFilters({
             htmlFor="inspector-filter"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Inspetor
+            Executor
           </label>
           <select
             id="inspector-filter"

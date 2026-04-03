@@ -9,7 +9,7 @@ interface ExportCsvProps {
 export function ExportCsv({ rows }: ExportCsvProps) {
   function handleExport() {
     const headers = [
-      "Inspetor",
+      "Executor",
       "Total Inspeções",
       "Itens Aprovados",
       "Itens Reprovados",

@@ -104,7 +104,7 @@ export async function GET(
   lines.push("");
 
   // Inspector and date
-  lines.push(`Inspetor,${escapeCSV(inspectorName)}`);
+  lines.push(`Executor,${escapeCSV(inspectorName)}`);
   lines.push(`Data,${escapeCSV(dateStr)}`);
 
   const csv = lines.join("\n");

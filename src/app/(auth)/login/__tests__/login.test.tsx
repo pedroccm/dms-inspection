@@ -57,7 +57,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     fireEvent.change(screen.getByLabelText("E-mail"), {
-      target: { value: "test@example.com" },
+      target: { value: "teste@dms.eng.br" },
     });
     fireEvent.change(screen.getByLabelText("Senha"), {
       target: { value: "password123" },
@@ -76,7 +76,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     fireEvent.change(screen.getByLabelText("E-mail"), {
-      target: { value: "test@example.com" },
+      target: { value: "teste@dms.eng.br" },
     });
     fireEvent.change(screen.getByLabelText("Senha"), {
       target: { value: "password123" },
@@ -100,7 +100,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     fireEvent.change(screen.getByLabelText("E-mail"), {
-      target: { value: "test@example.com" },
+      target: { value: "teste@dms.eng.br" },
     });
     fireEvent.change(screen.getByLabelText("Senha"), {
       target: { value: "wrongpassword" },

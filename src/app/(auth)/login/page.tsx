@@ -20,6 +20,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // RF-01: Validar domínio @dms.eng.br
+      if (!email.trim().toLowerCase().endsWith("@dms.eng.br")) {
+        setError("Apenas e-mails com domínio @dms.eng.br são permitidos.");
+        setLoading(false);
+        return;
+      }
+
       const supabase = createClient();
 
       const { data, error: signInError } =

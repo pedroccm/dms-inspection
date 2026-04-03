@@ -98,8 +98,8 @@ describe("Badge", () => {
 
 describe("Select", () => {
   const options = [
-    { value: "admin", label: "Administrador" },
-    { value: "inspector", label: "Inspetor" },
+    { value: "admin", label: "Master" },
+    { value: "inspector", label: "Executor" },
     { value: "reviewer", label: "Revisor" },
   ];
 
@@ -110,8 +110,8 @@ describe("Select", () => {
 
   it("renders all options", () => {
     render(<Select label="Role" options={options} />);
-    expect(screen.getByRole("option", { name: "Administrador" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Inspetor" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Master" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Executor" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Revisor" })).toBeInTheDocument();
   });
 

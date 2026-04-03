@@ -75,7 +75,7 @@ function buildInspectionCSV(inspection: {
   lines.push(escapeCSV(inspection.observations));
 
   lines.push("");
-  lines.push(`Inspetor,${escapeCSV(inspection.inspector_name)}`);
+  lines.push(`Executor,${escapeCSV(inspection.inspector_name)}`);
   lines.push(`Data,${escapeCSV(inspection.date)}`);
 
   return lines.join("\n");
@@ -96,7 +96,7 @@ function buildOrderCSV(
 ): string {
   const lines: string[] = [];
   lines.push(
-    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
+    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Executor,Data"
   );
 
   for (const insp of inspections) {
@@ -323,7 +323,7 @@ describe("CSV Export", () => {
         date: "15/03/2026",
       });
 
-      expect(csv).toContain("Inspetor,Maria Silva");
+      expect(csv).toContain("Executor,Maria Silva");
       expect(csv).toContain("Data,15/03/2026");
       expect(csv).toContain("Observacao de teste");
     });
@@ -357,7 +357,7 @@ describe("CSV Export", () => {
       const lines = csv.split("\n");
       expect(lines).toHaveLength(3); // header + 2 rows
       expect(lines[0]).toBe(
-        "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
+        "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Executor,Data"
       );
       expect(lines[1]).toBe("RA001,ABB,Item A,Aprovado,,Joao,15/03/2026");
       expect(lines[2]).toBe(

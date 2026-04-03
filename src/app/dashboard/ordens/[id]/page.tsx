@@ -83,7 +83,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">
-              Inspetor Responsável
+              Executor Responsável
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.assignee?.full_name ?? "—"}

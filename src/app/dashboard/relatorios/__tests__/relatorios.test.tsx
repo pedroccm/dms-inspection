@@ -40,7 +40,7 @@ describe("ReportFilters", () => {
 
     expect(screen.getByLabelText("Data Início")).toBeInTheDocument();
     expect(screen.getByLabelText("Data Fim")).toBeInTheDocument();
-    expect(screen.getByLabelText("Inspetor")).toBeInTheDocument();
+    expect(screen.getByLabelText("Executor")).toBeInTheDocument();
     expect(screen.getByText("Filtrar")).toBeInTheDocument();
   });
 
@@ -64,7 +64,7 @@ describe("ReportFilters", () => {
 describe("Report table headers", () => {
   it("has all expected column headers", () => {
     const headers = [
-      "Nome do Inspetor",
+      "Nome do Executor",
       "Total de Inspeções",
       "Itens Aprovados",
       "Itens Reprovados",

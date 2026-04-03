@@ -69,7 +69,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                   Local
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  Inspetor
+                  Executor
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status

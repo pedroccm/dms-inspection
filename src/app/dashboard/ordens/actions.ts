@@ -16,7 +16,7 @@ export async function createServiceOrder(formData: FormData) {
   const assignedTo = (formData.get("assigned_to") as string)?.trim();
 
   if (!title || !clientName || !assignedTo) {
-    return { error: "Título, nome do cliente e inspetor são obrigatórios." };
+    return { error: "Título, nome do cliente e executor são obrigatórios." };
   }
 
   if (startDate && endDate && startDate > endDate) {

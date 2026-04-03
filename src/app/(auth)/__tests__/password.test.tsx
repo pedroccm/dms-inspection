@@ -48,7 +48,7 @@ describe("EsqueciSenhaPage", () => {
     render(<EsqueciSenhaPage />);
 
     fireEvent.change(screen.getByLabelText("E-mail"), {
-      target: { value: "test@example.com" },
+      target: { value: "teste@dms.eng.br" },
     });
 
     fireEvent.click(
