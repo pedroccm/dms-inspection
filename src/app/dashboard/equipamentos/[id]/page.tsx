@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getEquipmentById } from "@/lib/queries";
+import type { Equipment } from "@/lib/types";
 
 interface EquipamentoDetailPageProps {
   params: Promise<{ id: string }>;
@@ -113,6 +114,8 @@ export default async function EquipamentoDetailPage({
         </dl>
       </div>
 
+      <TechnicalDataSection equipment={equipment} />
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -174,6 +177,63 @@ export default async function EquipamentoDetailPage({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Technical Data Section ─────────────────────────────────
+
+const TECHNICAL_FIELDS: { key: keyof Equipment; label: string }[] = [
+  { key: "modelo", label: "Modelo" },
+  { key: "marca", label: "Marca" },
+  { key: "tipo", label: "Tipo" },
+  { key: "numero_serie_controle", label: "Nº Série do Controle" },
+  { key: "numero_serie_tanque", label: "Nº Série do Tanque" },
+  { key: "tensao_nominal", label: "Tensão Nominal" },
+  { key: "nbi", label: "NBI" },
+  { key: "frequencia_nominal", label: "Frequência Nominal" },
+  { key: "corrente_nominal", label: "Corrente Nominal" },
+  { key: "capacidade_interrupcao", label: "Capacidade de Interrupção" },
+  { key: "numero_fases", label: "Nº de Fases" },
+  { key: "tipo_controle", label: "Tipo de Controle" },
+  { key: "modelo_controle", label: "Modelo Controle Eletrônico" },
+  { key: "sensor_tensao", label: "Sensor de Tensão" },
+  { key: "tc_interno", label: "TC Interno" },
+  { key: "sequencia_operacao", label: "Sequência de Operação" },
+  { key: "meio_interrupcao", label: "Meio de Interrupção" },
+  { key: "massa_interruptor", label: "Massa do Interruptor" },
+  { key: "massa_caixa_controle", label: "Massa da Caixa de Controle" },
+  { key: "massa_total", label: "Massa Total" },
+  { key: "norma_aplicavel", label: "Norma Aplicável" },
+];
+
+function TechnicalDataSection({ equipment }: { equipment: Equipment }) {
+  // Only show if at least one technical field has data
+  const hasData = TECHNICAL_FIELDS.some(
+    ({ key }) => equipment[key] != null && equipment[key] !== ""
+  );
+
+  if (!hasData) return null;
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        Dados Técnicos
+      </h2>
+      <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
+        {TECHNICAL_FIELDS.map(({ key, label }) => {
+          const value = equipment[key];
+          if (value == null || value === "") return null;
+          return (
+            <div key={key}>
+              <dt className="text-sm font-medium text-gray-500">{label}</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {String(value)}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
     </div>
   );
 }

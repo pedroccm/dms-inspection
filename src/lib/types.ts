@@ -112,6 +112,29 @@ export interface Equipment {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // Expanded technical data (from QR Code)
+  modelo?: string;
+  numero_serie_controle?: string;
+  numero_serie_tanque?: string;
+  marca?: string;
+  tipo?: string;
+  tensao_nominal?: string;
+  nbi?: string;
+  frequencia_nominal?: string;
+  corrente_nominal?: string;
+  capacidade_interrupcao?: string;
+  numero_fases?: string;
+  tipo_controle?: string;
+  modelo_controle?: string;
+  sensor_tensao?: string;
+  tc_interno?: string;
+  sequencia_operacao?: string;
+  meio_interrupcao?: string;
+  massa_interruptor?: string;
+  massa_caixa_controle?: string;
+  massa_total?: string;
+  norma_aplicavel?: string;
+  qr_code_raw?: string;
   // Joined relations (optional)
   inspections?: Inspection[];
 }
