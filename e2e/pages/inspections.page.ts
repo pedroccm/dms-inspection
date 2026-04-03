@@ -18,7 +18,7 @@ export class InspectionsPage {
     await this.page.waitForTimeout(500);
 
     // Select order (native <select> with id="ordem-de-servico")
-    await this.page.selectOption('#ordem-de-servico', { label: orderTitle });
+    await this.page.selectOption('#ordem-de-serviço', { label: orderTitle });
     await this.page.waitForTimeout(500);
 
     await this.page.getByRole('button', { name: /Iniciar Inspeção/i }).click();

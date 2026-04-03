@@ -30,7 +30,7 @@ export const EQUIPMENT_2 = {
 
 export const ORDER_1 = {
   title: 'OS-E2E-001 Inspeção Religadores',
-  clientName: 'Copel Distribuicao',
+  clientName: 'Copel Distribuição',
   location: 'Curitiba - PR',
   startDate: '2026-04-02',
   endDate: '2026-04-15',

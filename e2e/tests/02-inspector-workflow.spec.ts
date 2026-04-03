@@ -116,7 +116,7 @@ test.describe.serial('Inspector Workflow', () => {
       await page.waitForTimeout(500);
 
       // Select order
-      await page.selectOption('#ordem-de-servico', { label: ORDER_1.title });
+      await page.selectOption('#ordem-de-serviço', { label: ORDER_1.title });
       await page.waitForTimeout(500);
 
       // Click "Iniciar Inspeção"
