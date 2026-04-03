@@ -200,7 +200,7 @@ test.describe.serial('Admin Setup', () => {
     await page.waitForTimeout(1000);
 
     // Add EQUIPMENT_1: search and add
-    await page.fill('#buscar-por-codigo-copel-ra', EQUIPMENT_1.copelRa);
+    await page.fill('#buscar-por-código-copel-ra', EQUIPMENT_1.copelRa);
     await page.getByRole('button', { name: 'Buscar' }).click();
     await page.waitForTimeout(2000);
 
@@ -209,7 +209,7 @@ test.describe.serial('Admin Setup', () => {
     await page.waitForTimeout(2000);
 
     // Add EQUIPMENT_2: search and add
-    await page.fill('#buscar-por-codigo-copel-ra', EQUIPMENT_2.copelRa);
+    await page.fill('#buscar-por-código-copel-ra', EQUIPMENT_2.copelRa);
     await page.getByRole('button', { name: 'Buscar' }).click();
     await page.waitForTimeout(2000);
 
