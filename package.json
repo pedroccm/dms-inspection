@@ -1,6 +1,6 @@
 {
   "name": "dms-inspection",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "private": true,
   "description": "Field inspection system for DMS Manutenção - Recloser inspection for Copel",
   "scripts": {
@@ -19,7 +19,10 @@
     "next": "^16.0.0",
     "react": "^19.0.0",
     "jsqr": "^1.4.0",
-    "react-dom": "^19.0.0"
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
+    "react-dom": "^19.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

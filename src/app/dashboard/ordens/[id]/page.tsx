@@ -7,6 +7,8 @@ import { AdminOnly } from "@/components/admin-only";
 import { AddEquipmentSection } from "./add-equipment-section";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
 import { ExportOrderButton } from "./export-order-button";
+import { PdfOrderButton } from "./pdf-order-button";
+import { ImportEquipment } from "./import-equipment";
 import type { ServiceOrderStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -53,6 +55,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-2xl font-bold text-[#1B2B5E]">{order.title}</h1>
         <div className="flex items-center gap-3">
+          <PdfOrderButton orderId={order.id} />
           {allInspectionsCompleted && (
             <ExportOrderButton orderId={order.id} />
           )}
@@ -183,6 +186,13 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
       {!isCompleted && (
         <AdminOnly>
           <AddEquipmentSection orderId={order.id} />
+        </AdminOnly>
+      )}
+
+      {/* Import equipment section - admin only, only if order is not completed */}
+      {!isCompleted && (
+        <AdminOnly>
+          <ImportEquipment orderId={order.id} />
         </AdminOnly>
       )}
     </div>

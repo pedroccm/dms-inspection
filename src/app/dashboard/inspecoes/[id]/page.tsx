@@ -6,6 +6,7 @@ import { getInspectionAuditLogs } from "@/lib/audit";
 import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
 import { ExportButton } from "./export-button";
+import { PdfButton } from "./pdf-button";
 import { TransferButton } from "./transfer-button";
 import { ApprovalPanel } from "./approval-panel";
 import { RejectionBanner } from "./rejection-banner";
@@ -89,7 +90,10 @@ export default async function InspecaoDetailPage({
         <div className="flex items-center gap-3">
           {(inspection.status === "aprovado" ||
             inspection.status === "transferred") && (
-            <ExportButton inspectionId={inspection.id} />
+            <>
+              <PdfButton inspectionId={inspection.id} />
+              <ExportButton inspectionId={inspection.id} />
+            </>
           )}
           {inspection.status === "aprovado" && (
             <TransferButton inspectionId={inspection.id} />
