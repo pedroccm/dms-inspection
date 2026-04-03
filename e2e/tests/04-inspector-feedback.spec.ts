@@ -3,7 +3,7 @@ import { LoginPage } from '../pages/login.page';
 import { INSPECTOR, EQUIPMENT_1 } from '../fixtures/test-data';
 
 /**
- * Helper: navigate to the inspection detail page for the "Pronta para Revisao" inspection.
+ * Helper: navigate to the inspection detail page for the "Pronta para Revisão" inspection.
  * Handles form lock loading by reloading the page if the client component stays stuck.
  */
 async function navigateToReviewInspection(page: Page) {
@@ -11,8 +11,8 @@ async function navigateToReviewInspection(page: Page) {
   await page.waitForURL('**/inspecoes');
   await page.waitForTimeout(2000);
 
-  // Find the row with "Pronta para Revisao" status (there may be duplicate inspections)
-  const targetRow = page.locator('tr', { hasText: 'Pronta para Revisao' }).first();
+  // Find the row with "Pronta para Revisão" status (there may be duplicate inspections)
+  const targetRow = page.locator('tr', { hasText: 'Pronta para Revisão' }).first();
   await expect(targetRow).toBeVisible({ timeout: 10000 });
   await targetRow.getByRole('link', { name: 'Ver' }).click();
   await page.waitForLoadState('networkidle');
@@ -20,7 +20,7 @@ async function navigateToReviewInspection(page: Page) {
 
   // Wait for the client component (InspectionDetailClient) to finish loading.
   // The form lock hook can sometimes hang; if so, reload to retry.
-  const summaryVisible = await page.getByText('Resumo da Avaliacao').isVisible({ timeout: 10000 }).catch(() => false);
+  const summaryVisible = await page.getByText('Resumo da Avaliação').isVisible({ timeout: 10000 }).catch(() => false);
   if (!summaryVisible) {
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -65,11 +65,11 @@ test.describe.serial('04 - Inspector Feedback', () => {
       page.getByRole('cell', { name: new RegExp(EQUIPMENT_1.copelRa) }).first()
     ).toBeVisible({ timeout: 10000 });
 
-    // Verify status shows "Pronta para Revisao" in the table (set by spec 02 completion)
+    // Verify status shows "Pronta para Revisão" in the table (set by spec 02 completion)
     // Scope to <table> to avoid matching the hidden <option> in the status filter dropdown
     const table = page.locator('table');
     await expect(
-      table.getByText('Pronta para Revisao').first()
+      table.getByText('Pronta para Revisão').first()
     ).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e/results/04-inspection-status.png' });
@@ -88,7 +88,7 @@ test.describe.serial('04 - Inspector Feedback', () => {
     // The form lock may delay rendering, so we check for either indicator
     const hasContent = await Promise.race([
       page.getByText('Alavanca Amarela').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
-      page.getByText('Pronta para Revisao').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
+      page.getByText('Pronta para Revisão').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
       page.getByText(EQUIPMENT_1.copelRa).first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
     ]);
 

@@ -3,7 +3,7 @@ import { LoginPage } from '../pages/login.page';
 import { ADMIN, EQUIPMENT_1, INSPECTOR } from '../fixtures/test-data';
 
 /**
- * Helper: navigate to the inspection detail page for the "Pronta para Revisao" inspection.
+ * Helper: navigate to the inspection detail page for the "Pronta para Revisão" inspection.
  * Handles form lock loading by reloading the page if the client component stays stuck.
  */
 async function navigateToReviewInspection(page: Page) {
@@ -11,8 +11,8 @@ async function navigateToReviewInspection(page: Page) {
   await page.waitForURL('**/inspecoes');
   await page.waitForTimeout(2000);
 
-  // Find the row with "Pronta para Revisao" status (there may be duplicate inspections)
-  const targetRow = page.locator('tr', { hasText: 'Pronta para Revisao' }).first();
+  // Find the row with "Pronta para Revisão" status (there may be duplicate inspections)
+  const targetRow = page.locator('tr', { hasText: 'Pronta para Revisão' }).first();
   await expect(targetRow).toBeVisible({ timeout: 10000 });
   await targetRow.getByRole('link', { name: 'Ver' }).click();
   await page.waitForLoadState('networkidle');
@@ -20,7 +20,7 @@ async function navigateToReviewInspection(page: Page) {
 
   // Wait for the client component (InspectionDetailClient) to finish loading.
   // The form lock hook can sometimes hang; if so, reload to retry.
-  const summaryVisible = await page.getByText('Resumo da Avaliacao').isVisible({ timeout: 10000 }).catch(() => false);
+  const summaryVisible = await page.getByText('Resumo da Avaliação').isVisible({ timeout: 10000 }).catch(() => false);
   if (!summaryVisible) {
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -80,11 +80,11 @@ test.describe.serial('03 - Admin Review', () => {
       page.getByRole('cell', { name: new RegExp(EQUIPMENT_1.copelRa) }).first()
     ).toBeVisible({ timeout: 10000 });
 
-    // Verify a status badge is visible in the table (should be "Pronta para Revisao" from spec 02)
+    // Verify a status badge is visible in the table (should be "Pronta para Revisão" from spec 02)
     // Scope to <table> to avoid matching the hidden <option> in the status filter dropdown
     const table = page.locator('table');
     await expect(
-      table.getByText('Pronta para Revisao').first()
+      table.getByText('Pronta para Revisão').first()
     ).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e/results/03-inspection-list.png' });
@@ -104,7 +104,7 @@ test.describe.serial('03 - Admin Review', () => {
     const loaded = await Promise.race([
       page.getByText(/Aprovados/).first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
       page.getByText('Alavanca Amarela').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
-      page.getByText('Pronta para Revisao').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
+      page.getByText('Pronta para Revisão').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
     ]);
 
     // If nothing loaded, try reloading
@@ -131,10 +131,10 @@ test.describe.serial('03 - Admin Review', () => {
 
     await page.screenshot({ path: 'e2e/results/03-observations.png' });
 
-    // Verify status badge shows "Pronta para Revisao"
-    await expect(page.getByText('Pronta para Revisao').first()).toBeVisible({ timeout: 10000 });
+    // Verify status badge shows "Pronta para Revisão"
+    await expect(page.getByText('Pronta para Revisão').first()).toBeVisible({ timeout: 10000 });
 
-    // Status is "ready_for_review" (Pronta para Revisao)
+    // Status is "ready_for_review" (Pronta para Revisão)
     // Export button only appears for "aprovado" or "transferred" status
     // Transfer button only appears for "aprovado" status
     // So both should NOT be visible in the current state
@@ -163,13 +163,13 @@ test.describe.serial('03 - Admin Review', () => {
     // Verify "Produtividade por Executor" section exists
     await expect(page.getByText(/Produtividade/i)).toBeVisible();
 
-    // Click "Ver Relatorio" to open the productivity report
-    await page.getByRole('link', { name: /Ver Relatorio/i }).first().click();
+    // Click "Ver Relatório" to open the productivity report
+    await page.getByRole('link', { name: /Ver Relatório/i }).first().click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
     // Verify we're on the productivity report page
-    await expect(page.getByText('Relatorio de Produtividade')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Relatório de Produtividade')).toBeVisible({ timeout: 10000 });
 
     // Verify inspector name appears in the report table (scope to table to avoid filter dropdown)
     const table = page.locator('table');

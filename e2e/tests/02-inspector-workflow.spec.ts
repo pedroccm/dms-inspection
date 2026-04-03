@@ -106,8 +106,8 @@ test.describe.serial('Inspector Workflow', () => {
       await inspectionsPage.goto();
       await page.waitForTimeout(1000);
 
-      // Click "Nova Inspecao" link
-      await page.getByRole('link', { name: /Nova Inspecao/i }).click();
+      // Click "Nova Inspeção" link
+      await page.getByRole('link', { name: /Nova Inspeção/i }).click();
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
@@ -119,12 +119,12 @@ test.describe.serial('Inspector Workflow', () => {
       await page.selectOption('#ordem-de-servico', { label: ORDER_1.title });
       await page.waitForTimeout(500);
 
-      // Click "Iniciar Inspecao"
-      await page.getByRole('button', { name: /Iniciar Inspecao/i }).click();
+      // Click "Iniciar Inspeção"
+      await page.getByRole('button', { name: /Iniciar Inspeção/i }).click();
       await page.waitForTimeout(3000);
 
-      // Handle "already exists" case: click "Retomar inspecao existente" link if visible
-      const resumeLink = page.getByRole('link', { name: /Retomar inspecao existente/i });
+      // Handle "already exists" case: click "Retomar inspeção existente" link if visible
+      const resumeLink = page.getByRole('link', { name: /Retomar inspeção existente/i });
       if (await resumeLink.isVisible({ timeout: 2000 }).catch(() => false)) {
         await resumeLink.click();
         await page.waitForURL(/\/inspecoes\/[0-9a-f-]{36}/, { timeout: 15000 });
@@ -228,8 +228,8 @@ test.describe.serial('Inspector Workflow', () => {
       await page.reload();
       await page.waitForTimeout(3000);
 
-      // The status should show "Pronta para Revisao" (ready for Master review)
-      await expect(page.getByText(/Pronta para Revisao/).first()).toBeVisible({ timeout: 10000 });
+      // The status should show "Pronta para Revisão" (ready for Master review)
+      await expect(page.getByText(/Pronta para Revisão/).first()).toBeVisible({ timeout: 10000 });
 
       // Take screenshot of the completed inspection
       await page.screenshot({ path: 'e2e/results/02-inspector-read-only.png' });

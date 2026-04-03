@@ -9,7 +9,7 @@ export class InspectionsPage {
   }
 
   async startInspection(equipmentLabel: string, orderTitle: string) {
-    await this.page.getByRole('link', { name: /Nova Inspecao/i }).click();
+    await this.page.getByRole('link', { name: /Nova Inspeção/i }).click();
     await this.page.waitForLoadState('networkidle');
 
     // Select equipment (native <select> with id="equipamento")
@@ -21,7 +21,7 @@ export class InspectionsPage {
     await this.page.selectOption('#ordem-de-servico', { label: orderTitle });
     await this.page.waitForTimeout(500);
 
-    await this.page.getByRole('button', { name: /Iniciar Inspecao/i }).click();
+    await this.page.getByRole('button', { name: /Iniciar Inspeção/i }).click();
     await this.page.waitForLoadState('networkidle');
   }
 
