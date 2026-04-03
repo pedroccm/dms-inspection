@@ -454,7 +454,7 @@ export function ChecklistForm({
                           {editable ? (
                             <div>
                               <textarea
-                                placeholder="Motivo da reprovacao"
+                                placeholder="Motivo da reprovação"
                                 value={rejectionReasons[item.id] ?? ""}
                                 onChange={(e) =>
                                   setRejectionReasons((prev) => ({
@@ -498,7 +498,7 @@ export function ChecklistForm({
       {/* Observations */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Observacoes</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Observações</h2>
           {editable && (
             <SaveIndicator
               status={autoSave.status}
@@ -512,13 +512,13 @@ export function ChecklistForm({
           <textarea
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
-            placeholder="Adicione observacoes sobre a inspecao..."
+            placeholder="Adicione observações sobre a inspeção..."
             rows={4}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
           />
         ) : (
           <div className="rounded-lg border border-gray-300 p-4 min-h-[100px] text-sm text-gray-700 bg-gray-50">
-            {inspectionNotes || "Nenhuma observacao registrada."}
+            {inspectionNotes || "Nenhuma observação registrada."}
           </div>
         )}
       </div>

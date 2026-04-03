@@ -38,7 +38,7 @@ describe("ReportFilters", () => {
       />
     );
 
-    expect(screen.getByLabelText("Data Inicio")).toBeInTheDocument();
+    expect(screen.getByLabelText("Data Início")).toBeInTheDocument();
     expect(screen.getByLabelText("Data Fim")).toBeInTheDocument();
     expect(screen.getByLabelText("Inspetor")).toBeInTheDocument();
     expect(screen.getByText("Filtrar")).toBeInTheDocument();
@@ -65,11 +65,11 @@ describe("Report table headers", () => {
   it("has all expected column headers", () => {
     const headers = [
       "Nome do Inspetor",
-      "Total de Inspecoes",
+      "Total de Inspeções",
       "Itens Aprovados",
       "Itens Reprovados",
       "Itens NA",
-      "Taxa de Aprovacao (%)",
+      "Taxa de Aprovação (%)",
     ];
 
     // Verify all header strings are defined
@@ -121,9 +121,9 @@ describe("ExportCsv", () => {
 
 describe("Empty state", () => {
   it("shows empty state message text", () => {
-    const emptyMessage = "Nenhuma inspecao encontrada no periodo selecionado.";
+    const emptyMessage = "Nenhuma inspeção encontrada no período selecionado.";
     expect(emptyMessage).toBe(
-      "Nenhuma inspecao encontrada no periodo selecionado."
+      "Nenhuma inspeção encontrada no período selecionado."
     );
   });
 });

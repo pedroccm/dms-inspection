@@ -12,7 +12,7 @@ export async function GET(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Nao autenticado." }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
 
   // Check admin role
@@ -34,7 +34,7 @@ export async function GET(
   } catch (error) {
     console.error("Failed to fetch audit logs:", error);
     return NextResponse.json(
-      { error: "Erro ao buscar historico." },
+      { error: "Erro ao buscar histórico." },
       { status: 500 }
     );
   }

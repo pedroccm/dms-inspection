@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context";
 const allNavItems = [
   { label: "Painel", href: "/dashboard", icon: "grid", adminOnly: false },
   {
-    label: "Ordens de Servico",
+    label: "Ordens de Serviço",
     href: "/dashboard/ordens",
     icon: "clipboard",
     adminOnly: false,
@@ -20,25 +20,25 @@ const allNavItems = [
     adminOnly: false,
   },
   {
-    label: "Inspecoes",
+    label: "Inspeções",
     href: "/dashboard/inspecoes",
     icon: "search",
     adminOnly: false,
   },
   {
-    label: "Relatorios",
+    label: "Relatórios",
     href: "/dashboard/relatorios",
     icon: "file-text",
     adminOnly: false,
   },
   {
-    label: "Usuarios",
+    label: "Usuários",
     href: "/dashboard/usuarios",
     icon: "users",
     adminOnly: true,
   },
   {
-    label: "Configuracoes",
+    label: "Configurações",
     href: "/dashboard/configuracoes",
     icon: "settings",
     adminOnly: true,

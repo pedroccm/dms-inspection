@@ -50,7 +50,7 @@ describe("NewInspectionForm", () => {
     );
 
     expect(screen.getByLabelText(/Equipamento/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Ordem de Servico/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Ordem de Serviço/)).toBeInTheDocument();
   });
 
   it("renders Iniciar Inspecao and Cancelar buttons", async () => {
@@ -64,7 +64,7 @@ describe("NewInspectionForm", () => {
       />
     );
 
-    expect(screen.getByText("Iniciar Inspecao")).toBeInTheDocument();
+    expect(screen.getByText("Iniciar Inspeção")).toBeInTheDocument();
     expect(screen.getByText("Cancelar")).toBeInTheDocument();
   });
 
@@ -95,7 +95,7 @@ describe("InspectionStatusFilter", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Rascunho")).toBeInTheDocument();
     expect(screen.getByText("Em Andamento")).toBeInTheDocument();
-    expect(screen.getByText("Pronta para Revisao")).toBeInTheDocument();
+    expect(screen.getByText("Pronta para Revisão")).toBeInTheDocument();
     expect(screen.getByText("Enviada")).toBeInTheDocument();
     expect(screen.getByText("Transferida")).toBeInTheDocument();
   });
@@ -173,7 +173,7 @@ describe("Status badge rendering", () => {
   const statusConfig = {
     draft: { label: "Rascunho", variant: "neutral" },
     in_progress: { label: "Em Andamento", variant: "info" },
-    ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+    ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
     submitted: { label: "Enviada", variant: "success" },
     transferred: { label: "Transferida", variant: "neutral" },
   } as const;
@@ -181,7 +181,7 @@ describe("Status badge rendering", () => {
   it("maps all statuses to correct labels", () => {
     expect(statusConfig.draft.label).toBe("Rascunho");
     expect(statusConfig.in_progress.label).toBe("Em Andamento");
-    expect(statusConfig.ready_for_review.label).toBe("Pronta para Revisao");
+    expect(statusConfig.ready_for_review.label).toBe("Pronta para Revisão");
     expect(statusConfig.submitted.label).toBe("Enviada");
     expect(statusConfig.transferred.label).toBe("Transferida");
   });

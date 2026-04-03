@@ -48,7 +48,7 @@ export function ReportFilters({
             htmlFor="start-date"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Data Inicio
+            Data Início
           </label>
           <input
             id="start-date"

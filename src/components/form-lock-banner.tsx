@@ -20,10 +20,10 @@ export function FormLockBanner({ lockedBy, lockedAt }: FormLockBannerProps) {
       </span>
       <div>
         <p className="text-sm font-medium text-yellow-800">
-          Formulario em edicao
+          Formulário em edição
         </p>
         <p className="text-sm text-yellow-700 mt-1">
-          Este formulario esta sendo editado por{" "}
+          Este formulário está sendo editado por{" "}
           <span className="font-semibold">{lockedBy}</span>
           {timeString && <> desde {timeString}</>}. Tente novamente mais tarde.
         </p>

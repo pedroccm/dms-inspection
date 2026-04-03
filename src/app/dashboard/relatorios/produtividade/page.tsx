@@ -48,10 +48,10 @@ export default async function ProdutividadePage({
             href="/dashboard/relatorios"
             className="text-sm text-[#F5A623] hover:text-[#E8941E]"
           >
-            ← Relatorios
+            ← Relatórios
           </Link>
           <h1 className="text-2xl font-bold text-[#1B2B5E] mt-1">
-            Relatorio de Produtividade
+            Relatório de Produtividade
           </h1>
 
         </div>
@@ -76,7 +76,7 @@ export default async function ProdutividadePage({
                   Nome do Inspetor
                 </th>
                 <th className="text-right px-6 py-4 text-sm font-semibold text-white">
-                  Total de Inspecoes
+                  Total de Inspeções
                 </th>
                 <th className="text-right px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                   Itens Aprovados
@@ -88,7 +88,7 @@ export default async function ProdutividadePage({
                   Itens NA
                 </th>
                 <th className="text-right px-6 py-4 text-sm font-semibold text-white">
-                  Taxa de Aprovacao (%)
+                  Taxa de Aprovação (%)
                 </th>
               </tr>
             </thead>
@@ -99,7 +99,7 @@ export default async function ProdutividadePage({
                     colSpan={6}
                     className="px-6 py-8 text-center text-gray-500"
                   >
-                    Nenhuma inspecao encontrada no periodo selecionado.
+                    Nenhuma inspeção encontrada no período selecionado.
                   </td>
                 </tr>
               ) : (

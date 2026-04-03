@@ -36,11 +36,11 @@ describe("ConfiguracoesPage", () => {
     render(<ConfiguracoesPage />);
 
     // Wait for async loading to finish
-    const heading = await screen.findByText("Configuracoes");
+    const heading = await screen.findByText("Configurações");
     expect(heading).toBeInTheDocument();
 
     expect(
-      screen.getByText("Politica de Retencao de Dados")
+      screen.getByText("Política de Retenção de Dados")
     ).toBeInTheDocument();
   });
 
@@ -48,7 +48,7 @@ describe("ConfiguracoesPage", () => {
     const { default: ConfiguracoesPage } = await import("../page");
     render(<ConfiguracoesPage />);
 
-    const select = await screen.findByLabelText("Periodo de retencao");
+    const select = await screen.findByLabelText("Período de retenção");
     expect(select).toBeInTheDocument();
 
     expect(screen.getByText("7 dias")).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("AdminOnly wrapper", () => {
     render(<ConfiguracoesPage />);
 
     // Wait for content to load
-    await screen.findByText("Configuracoes");
+    await screen.findByText("Configurações");
 
     // Verify the page does NOT show fallback when admin
     expect(
@@ -97,6 +97,6 @@ describe("AdminOnly wrapper", () => {
     ).not.toBeInTheDocument();
 
     // Verify the settings content is rendered
-    expect(screen.getByLabelText("Periodo de retencao")).toBeInTheDocument();
+    expect(screen.getByLabelText("Período de retenção")).toBeInTheDocument();
   });
 });

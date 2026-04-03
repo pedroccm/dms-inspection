@@ -89,10 +89,10 @@ export function AddEquipmentSection({ orderId }: AddEquipmentSectionProps) {
       <div className="flex items-end gap-4 mb-4">
         <div className="flex-1">
           <Input
-            label="Buscar por Codigo Copel RA"
+            label="Buscar por Código Copel RA"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Digite o codigo para buscar..."
+            placeholder="Digite o código para buscar..."
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -117,13 +117,13 @@ export function AddEquipmentSection({ orderId }: AddEquipmentSectionProps) {
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-4 py-3 text-sm font-semibold text-white">
-                  Codigo Copel RA
+                  Código Copel RA
                 </th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-white">
                   Fabricante
                 </th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-white">
-                  Acao
+                  Ação
                 </th>
               </tr>
             </thead>

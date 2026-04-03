@@ -43,11 +43,11 @@ function SettingsContent() {
     startSaving(async () => {
       const result = await updateRetentionPeriod(retentionDays);
       if (result.success) {
-        setMessage({ type: "success", text: "Configuracao salva com sucesso." });
+        setMessage({ type: "success", text: "Configuração salva com sucesso." });
       } else {
         setMessage({
           type: "error",
-          text: result.error ?? "Erro ao salvar configuracao.",
+          text: result.error ?? "Erro ao salvar configuração.",
         });
       }
     });
@@ -63,7 +63,7 @@ function SettingsContent() {
         setCleanupResult(result.summary);
         setMessage({
           type: "success",
-          text: `Limpeza concluida: ${result.summary.inspections} inspecao(oes) e ${result.summary.photos} foto(s) removidas.`,
+          text: `Limpeza concluída: ${result.summary.inspections} inspeção(ões) e ${result.summary.photos} foto(s) removidas.`,
         });
       } else {
         setMessage({
@@ -84,17 +84,17 @@ function SettingsContent() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">Configuracoes</h1>
+      <h1 className="text-2xl font-bold text-[#1B2B5E] mb-8">Configurações</h1>
 
       {/* Retention Policy */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">
-          Politica de Retencao de Dados
+          Política de Retenção de Dados
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Inspecoes com status &quot;Transferida&quot; serao elegíveis para
-          limpeza automatica apos o periodo configurado. Apenas inspecoes
-          transferidas sao afetadas.
+          Inspeções com status &quot;Transferida&quot; serão elegíveis para
+          limpeza automática após o período configurado. Apenas inspeções
+          transferidas são afetadas.
         </p>
 
         <div className="flex items-end gap-4">
@@ -103,7 +103,7 @@ function SettingsContent() {
               htmlFor="retention-select"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Periodo de retencao
+              Período de retenção
             </label>
             <select
               id="retention-select"
@@ -134,8 +134,8 @@ function SettingsContent() {
           Limpeza Manual
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Remove inspecoes transferidas que ultrapassaram o periodo de retencao
-          configurado ({retentionDays} dias). Esta acao e irreversivel.
+          Remove inspeções transferidas que ultrapassaram o período de retenção
+          configurado ({retentionDays} dias). Esta ação é irreversível.
         </p>
 
         {!showConfirm ? (
@@ -148,7 +148,7 @@ function SettingsContent() {
         ) : (
           <div className="flex items-center gap-3">
             <p className="text-sm text-red-600 font-medium">
-              Tem certeza? Esta acao nao pode ser desfeita.
+              Tem certeza? Esta ação não pode ser desfeita.
             </p>
             <button
               onClick={handleCleanup}
@@ -169,7 +169,7 @@ function SettingsContent() {
         {cleanupResult && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
             <strong>Resultado:</strong> {cleanupResult.inspections}{" "}
-            inspecao(oes) e {cleanupResult.photos} foto(s) removidas.
+            inspeção(ões) e {cleanupResult.photos} foto(s) removidas.
           </div>
         )}
       </div>

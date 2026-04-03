@@ -16,7 +16,7 @@ export async function createInspection(formData: FormData) {
   }
 
   if (!serviceOrderId) {
-    return { error: "Selecione uma ordem de servico." };
+    return { error: "Selecione uma ordem de serviço." };
   }
 
   const supabase = await createClient();
@@ -29,7 +29,7 @@ export async function createInspection(formData: FormData) {
     .maybeSingle();
 
   if (!equipment) {
-    return { error: "Equipamento nao encontrado." };
+    return { error: "Equipamento não encontrado." };
   }
 
   // Validate service order exists
@@ -40,7 +40,7 @@ export async function createInspection(formData: FormData) {
     .maybeSingle();
 
   if (!serviceOrder) {
-    return { error: "Ordem de servico nao encontrada." };
+    return { error: "Ordem de serviço não encontrada." };
   }
 
   // Validate equipment is part of this service order
@@ -54,7 +54,7 @@ export async function createInspection(formData: FormData) {
   if (!soEquipment) {
     return {
       error:
-        "Este equipamento nao esta associado a ordem de servico selecionada.",
+        "Este equipamento não está associado à ordem de serviço selecionada.",
     };
   }
 
@@ -69,7 +69,7 @@ export async function createInspection(formData: FormData) {
 
   if (existingInspection) {
     return {
-      error: `Ja existe uma inspecao em andamento para este equipamento.`,
+      error: `Já existe uma inspeção em andamento para este equipamento.`,
       existingInspectionId: existingInspection.id,
     };
   }
@@ -87,7 +87,7 @@ export async function createInspection(formData: FormData) {
     .single();
 
   if (error) {
-    return { error: `Erro ao criar inspecao: ${error.message}` };
+    return { error: `Erro ao criar inspeção: ${error.message}` };
   }
 
   revalidatePath("/dashboard/inspecoes");

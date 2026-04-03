@@ -34,10 +34,10 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
       )}
 
       <Input
-        label="Titulo"
+        label="Título"
         name="title"
         required
-        placeholder="Digite o titulo da ordem de servico"
+        placeholder="Digite o título da ordem de serviço"
       />
 
       <Input
@@ -48,9 +48,9 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
       />
 
       <Input
-        label="Localizacao"
+        label="Localização"
         name="location"
-        placeholder="Digite a localizacao (opcional)"
+        placeholder="Digite a localização (opcional)"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -59,7 +59,7 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
             htmlFor="start_date"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Data Inicio
+            Data Início
           </label>
           <input
             type="date"
@@ -86,7 +86,7 @@ export function CreateOrderForm({ inspectors }: CreateOrderFormProps) {
       </div>
 
       <Select
-        label="Inspetor Responsavel"
+        label="Inspetor Responsável"
         name="assigned_to"
         required
         placeholder="Selecione o inspetor"

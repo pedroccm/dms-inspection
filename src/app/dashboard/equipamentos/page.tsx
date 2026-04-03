@@ -80,13 +80,13 @@ export default async function EquipamentosPage({
                   Fabricante
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  N Serie Mecanismo
+                  Nº Série Mecanismo
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
                   Data Cadastro
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Acoes
+                  Ações
                 </th>
               </tr>
             </thead>

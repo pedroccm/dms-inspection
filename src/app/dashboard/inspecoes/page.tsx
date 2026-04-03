@@ -11,7 +11,7 @@ const statusConfig: Record<
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
   submitted: { label: "Enviada", variant: "success" },
   transferred: { label: "Transferida", variant: "neutral" },
 };
@@ -36,12 +36,12 @@ export default async function InspecoesPage({
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-[#1B2B5E]">Inspecoes</h1>
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">Inspeções</h1>
         <Link
           href="/dashboard/inspecoes/nova"
           className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-[#F5A623] rounded-lg hover:bg-[#E8941E] transition-colors min-h-[44px]"
         >
-          Nova Inspecao
+          Nova Inspeção
         </Link>
       </div>
 
@@ -55,10 +55,10 @@ export default async function InspecoesPage({
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Codigo Equipamento
+                  Código Equipamento
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  Ordem de Servico
+                  Ordem de Serviço
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
                   Inspetor
@@ -70,7 +70,7 @@ export default async function InspecoesPage({
                   Data
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Acoes
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -81,7 +81,7 @@ export default async function InspecoesPage({
                     colSpan={6}
                     className="px-6 py-8 text-center text-gray-500"
                   >
-                    Nenhuma inspecao encontrada.
+                    Nenhuma inspeção encontrada.
                   </td>
                 </tr>
               ) : (
@@ -97,7 +97,7 @@ export default async function InspecoesPage({
                         <span className="flex items-center gap-1.5">
                           {inspection.equipment?.copel_ra_code ?? "—"}
                           {lockedIds.has(inspection.id) && (
-                            <span title="Em edicao por outro usuario" className="text-yellow-600">🔒</span>
+                            <span title="Em edição por outro usuário" className="text-yellow-600">🔒</span>
                           )}
                         </span>
                       </td>
@@ -123,7 +123,7 @@ export default async function InspecoesPage({
                             </div>
                             {inspection.updated_at !== inspection.created_at && (
                               <div className="text-xs text-gray-400 mt-0.5">
-                                Ultima edicao:{" "}
+                                Última edição:{" "}
                                 {new Date(
                                   inspection.updated_at
                                 ).toLocaleDateString("pt-BR", {

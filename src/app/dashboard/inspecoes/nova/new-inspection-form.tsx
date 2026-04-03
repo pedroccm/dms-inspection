@@ -47,7 +47,7 @@ export function NewInspectionForm({
               href={`/dashboard/inspecoes/${state.existingInspectionId}`}
               className="ml-2 font-medium text-[#F5A623] hover:text-[#E8941E] underline"
             >
-              Retomar inspecao existente
+              Retomar inspeção existente
             </Link>
           )}
         </div>
@@ -63,16 +63,16 @@ export function NewInspectionForm({
       />
 
       <Select
-        label="Ordem de Servico"
+        label="Ordem de Serviço"
         name="service_order_id"
         required
-        placeholder="Selecione uma ordem de servico"
+        placeholder="Selecione uma ordem de serviço"
         options={serviceOrderOptions}
       />
 
       <div className="flex items-center gap-4 pt-4">
         <Button type="submit" loading={pending}>
-          {pending ? "Criando..." : "Iniciar Inspecao"}
+          {pending ? "Criando..." : "Iniciar Inspeção"}
         </Button>
         <Link href="/dashboard/inspecoes">
           <Button type="button" variant="secondary">

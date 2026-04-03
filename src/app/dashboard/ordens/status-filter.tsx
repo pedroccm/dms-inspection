@@ -7,7 +7,7 @@ const statusOptions: { value: string; label: string }[] = [
   { value: "", label: "Todos os status" },
   { value: "open", label: "Aberta" },
   { value: "in_progress", label: "Em Andamento" },
-  { value: "completed", label: "Concluida" },
+  { value: "completed", label: "Concluída" },
   { value: "cancelled", label: "Cancelada" },
 ];
 

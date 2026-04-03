@@ -23,7 +23,7 @@ export async function updateRetentionPeriod(days: number) {
   await requireAdmin();
 
   if (!VALID_RETENTION_DAYS.includes(days)) {
-    return { success: false, error: "Periodo de retencao invalido." };
+    return { success: false, error: "Período de retenção inválido." };
   }
 
   const supabase = createAdminClient();

@@ -9,7 +9,7 @@ import type { ServiceOrderStatus } from "@/lib/types";
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
   in_progress: "Em Andamento",
-  completed: "Concluida",
+  completed: "Concluída",
   cancelled: "Cancelada",
 };
 
@@ -39,7 +39,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-[#1B2B5E]">Ordens de Servico</h1>
+        <h1 className="text-2xl font-bold text-[#1B2B5E]">Ordens de Serviço</h1>
         <AdminOnly>
           <Link
             href="/dashboard/ordens/nova"
@@ -60,7 +60,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Titulo
+                  Título
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Cliente
@@ -75,10 +75,10 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                   Status
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden lg:table-cell">
-                  Periodo
+                  Período
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Acoes
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -89,7 +89,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                     colSpan={7}
                     className="px-6 py-8 text-center text-gray-500"
                   >
-                    Nenhuma ordem de servico encontrada.
+                    Nenhuma ordem de serviço encontrada.
                   </td>
                 </tr>
               ) : (

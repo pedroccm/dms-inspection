@@ -142,7 +142,7 @@ describe("ChecklistForm - Status Selection (US-302)", () => {
     const rejectButtons = screen.getAllByLabelText(/Reprovado -/);
     fireEvent.click(rejectButtons[0]);
 
-    expect(screen.getByPlaceholderText("Motivo da reprovacao")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Motivo da reprovação")).toBeInTheDocument();
   });
 
   it("clicking NA saves with na status", async () => {
@@ -163,7 +163,7 @@ describe("ChecklistForm - Rejection Reason (US-303)", () => {
     const rejectButtons = screen.getAllByLabelText(/Reprovado -/);
     fireEvent.click(rejectButtons[0]);
 
-    const textarea = screen.getByPlaceholderText("Motivo da reprovacao");
+    const textarea = screen.getByPlaceholderText("Motivo da reprovação");
     fireEvent.change(textarea, { target: { value: "short" } });
     fireEvent.blur(textarea);
 
@@ -178,7 +178,7 @@ describe("ChecklistForm - Rejection Reason (US-303)", () => {
     const rejectButtons = screen.getAllByLabelText(/Reprovado -/);
     fireEvent.click(rejectButtons[0]);
 
-    const textarea = screen.getByPlaceholderText("Motivo da reprovacao");
+    const textarea = screen.getByPlaceholderText("Motivo da reprovação");
     fireEvent.change(textarea, { target: { value: "O equipamento esta com defeito visivel na vedacao" } });
     fireEvent.blur(textarea);
 
@@ -197,13 +197,13 @@ describe("ChecklistForm - Rejection Reason (US-303)", () => {
     // First reject
     const rejectButtons = screen.getAllByLabelText(/Reprovado -/);
     fireEvent.click(rejectButtons[0]);
-    expect(screen.getByPlaceholderText("Motivo da reprovacao")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Motivo da reprovação")).toBeInTheDocument();
 
     // Then approve
     const approveButtons = screen.getAllByLabelText(/Aprovado -/);
     fireEvent.click(approveButtons[0]);
 
-    expect(screen.queryByPlaceholderText("Motivo da reprovacao")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Motivo da reprovação")).not.toBeInTheDocument();
   });
 });
 

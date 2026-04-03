@@ -24,7 +24,7 @@ export function ChecklistSummary({ items }: ChecklistSummaryProps) {
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Resumo da Avaliacao
+        Resumo da Avaliação
       </h2>
 
       {/* Completion bar */}

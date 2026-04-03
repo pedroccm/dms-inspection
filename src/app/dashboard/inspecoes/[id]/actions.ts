@@ -20,7 +20,7 @@ export async function updateChecklistItem(
     .single();
 
   if (itemError || !item) {
-    return { success: false, error: "Item nao encontrado." };
+    return { success: false, error: "Item não encontrado." };
   }
 
   const { data: inspection, error: inspError } = await supabase
@@ -30,15 +30,15 @@ export async function updateChecklistItem(
     .single();
 
   if (inspError || !inspection) {
-    return { success: false, error: "Inspecao nao encontrada." };
+    return { success: false, error: "Inspeção não encontrada." };
   }
 
   if (inspection.inspector_id !== user.id) {
-    return { success: false, error: "Voce nao tem permissao para editar esta inspecao." };
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
   if (inspection.status === "submitted" || inspection.status === "transferred") {
-    return { success: false, error: "Esta inspecao nao pode mais ser editada." };
+    return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
   // Validate rejection reason when status is rejected
@@ -83,15 +83,15 @@ export async function updateInspectionObservations(
     .single();
 
   if (inspError || !inspection) {
-    return { success: false, error: "Inspecao nao encontrada." };
+    return { success: false, error: "Inspeção não encontrada." };
   }
 
   if (inspection.inspector_id !== user.id) {
-    return { success: false, error: "Voce nao tem permissao para editar esta inspecao." };
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
   if (inspection.status === "submitted" || inspection.status === "transferred") {
-    return { success: false, error: "Esta inspecao nao pode mais ser editada." };
+    return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
   const { error: updateError } = await supabase
@@ -120,16 +120,16 @@ export async function updateInspectionStatus(
     .single();
 
   if (inspError || !inspection) {
-    return { success: false, error: "Inspecao nao encontrada." };
+    return { success: false, error: "Inspeção não encontrada." };
   }
 
   if (inspection.inspector_id !== user.id) {
-    return { success: false, error: "Voce nao tem permissao para editar esta inspecao." };
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
   // Only allow draft → in_progress transition
   if (status === "in_progress" && inspection.status !== "draft") {
-    return { success: false, error: "Apenas inspecoes em rascunho podem ser iniciadas." };
+    return { success: false, error: "Apenas inspeções em rascunho podem ser iniciadas." };
   }
 
   const { error: updateError } = await supabase
@@ -158,15 +158,15 @@ export async function completeInspectionEvaluation(inspectionId: string) {
     .single();
 
   if (inspError || !inspection) {
-    return { success: false, error: "Inspecao nao encontrada." };
+    return { success: false, error: "Inspeção não encontrada." };
   }
 
   if (inspection.inspector_id !== user.id) {
-    return { success: false, error: "Voce nao tem permissao para editar esta inspecao." };
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
   if (inspection.status === "submitted" || inspection.status === "transferred") {
-    return { success: false, error: "Esta inspecao nao pode mais ser editada." };
+    return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
   // Check all items are evaluated
@@ -183,7 +183,7 @@ export async function completeInspectionEvaluation(inspectionId: string) {
   if (pendingItems.length > 0) {
     return {
       success: false,
-      error: `Ainda existem ${pendingItems.length} itens pendentes de avaliacao.`,
+      error: `Ainda existem ${pendingItems.length} itens pendentes de avaliação.`,
     };
   }
 
@@ -212,7 +212,7 @@ export async function markAsTransferred(inspectionId: string) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, error: "Nao autenticado." };
+    return { success: false, error: "Não autenticado." };
   }
 
   const { data: profile } = await supabase
@@ -232,11 +232,11 @@ export async function markAsTransferred(inspectionId: string) {
     .single();
 
   if (inspError || !inspection) {
-    return { success: false, error: "Inspecao nao encontrada." };
+    return { success: false, error: "Inspeção não encontrada." };
   }
 
   if (inspection.status !== "submitted") {
-    return { success: false, error: "Apenas inspecoes enviadas podem ser marcadas como transferidas." };
+    return { success: false, error: "Apenas inspeções enviadas podem ser marcadas como transferidas." };
   }
 
   const { error: updateError } = await supabase

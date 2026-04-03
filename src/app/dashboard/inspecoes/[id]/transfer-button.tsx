@@ -14,7 +14,7 @@ function TransferButtonInner({ inspectionId }: TransferButtonProps) {
   const router = useRouter();
 
   async function handleTransfer() {
-    if (!confirm("Deseja marcar esta inspecao como transferida para o Webed?")) {
+    if (!confirm("Deseja marcar esta inspeção como transferida para o Webed?")) {
       return;
     }
 

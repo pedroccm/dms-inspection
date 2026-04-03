@@ -45,7 +45,7 @@ export async function GET(
 
   if (orderError || !order) {
     return NextResponse.json(
-      { error: "Ordem de servico nao encontrada" },
+      { error: "Ordem de serviço não encontrada" },
       { status: 404 }
     );
   }
@@ -61,14 +61,14 @@ export async function GET(
 
   if (inspError) {
     return NextResponse.json(
-      { error: "Erro ao buscar inspecoes" },
+      { error: "Erro ao buscar inspeções" },
       { status: 500 }
     );
   }
 
   if (!inspections || inspections.length === 0) {
     return NextResponse.json(
-      { error: "Nenhuma inspecao encontrada para esta ordem" },
+      { error: "Nenhuma inspeção encontrada para esta ordem" },
       { status: 404 }
     );
   }
@@ -78,7 +78,7 @@ export async function GET(
 
   // Header
   lines.push(
-    "Codigo Copel RA,Fabricante,Item,Resultado,Motivo Reprovacao,Inspetor,Data"
+    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
   );
 
   for (const inspection of inspections) {

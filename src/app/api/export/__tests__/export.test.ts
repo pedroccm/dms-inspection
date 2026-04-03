@@ -44,7 +44,7 @@ function buildInspectionCSV(inspection: {
   const lines: string[] = [];
 
   lines.push(
-    "Codigo Copel RA,Codigo Copel Controle,No Serie Mecanismo,No Serie Caixa Controle,No Serie Rele Protecao,Fabricante"
+    "Código Copel RA,Código Copel Controle,Nº Série Mecanismo,Nº Série Caixa Controle,Nº Série Relé Proteção,Fabricante"
   );
   lines.push(
     [
@@ -58,7 +58,7 @@ function buildInspectionCSV(inspection: {
   );
 
   lines.push("");
-  lines.push("Item de Inspecao,Resultado,Motivo da Reprovacao");
+  lines.push("Item de Inspeção,Resultado,Motivo da Reprovação");
 
   for (const item of inspection.checklist_items) {
     lines.push(
@@ -71,7 +71,7 @@ function buildInspectionCSV(inspection: {
   }
 
   lines.push("");
-  lines.push("Observacoes");
+  lines.push("Observações");
   lines.push(escapeCSV(inspection.observations));
 
   lines.push("");
@@ -96,7 +96,7 @@ function buildOrderCSV(
 ): string {
   const lines: string[] = [];
   lines.push(
-    "Codigo Copel RA,Fabricante,Item,Resultado,Motivo Reprovacao,Inspetor,Data"
+    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
   );
 
   for (const insp of inspections) {
@@ -175,7 +175,7 @@ describe("CSV Export", () => {
 
       const lines = csv.split("\n");
       expect(lines[0]).toBe(
-        "Codigo Copel RA,Codigo Copel Controle,No Serie Mecanismo,No Serie Caixa Controle,No Serie Rele Protecao,Fabricante"
+        "Código Copel RA,Código Copel Controle,Nº Série Mecanismo,Nº Série Caixa Controle,Nº Série Relé Proteção,Fabricante"
       );
     });
 
@@ -196,7 +196,7 @@ describe("CSV Export", () => {
       });
 
       const lines = csv.split("\n");
-      expect(lines[3]).toBe("Item de Inspecao,Resultado,Motivo da Reprovacao");
+      expect(lines[3]).toBe("Item de Inspeção,Resultado,Motivo da Reprovação");
     });
   });
 
@@ -357,7 +357,7 @@ describe("CSV Export", () => {
       const lines = csv.split("\n");
       expect(lines).toHaveLength(3); // header + 2 rows
       expect(lines[0]).toBe(
-        "Codigo Copel RA,Fabricante,Item,Resultado,Motivo Reprovacao,Inspetor,Data"
+        "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
       );
       expect(lines[1]).toBe("RA001,ABB,Item A,Aprovado,,Joao,15/03/2026");
       expect(lines[2]).toBe(

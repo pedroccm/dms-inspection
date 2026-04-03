@@ -16,7 +16,7 @@ const statusConfig: Record<
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
   submitted: { label: "Enviada", variant: "success" },
   transferred: { label: "Transferida", variant: "neutral" },
 };
@@ -69,7 +69,7 @@ export default async function InspecaoDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1B2B5E]">
-            Inspecao: {inspection.equipment?.copel_ra_code ?? "—"}
+            Inspeção: {inspection.equipment?.copel_ra_code ?? "—"}
           </h1>
           {inspection.equipment?.manufacturer && (
             <p className="text-sm text-gray-500 mt-1">

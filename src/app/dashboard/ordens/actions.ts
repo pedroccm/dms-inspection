@@ -16,11 +16,11 @@ export async function createServiceOrder(formData: FormData) {
   const assignedTo = (formData.get("assigned_to") as string)?.trim();
 
   if (!title || !clientName || !assignedTo) {
-    return { error: "Titulo, nome do cliente e inspetor sao obrigatorios." };
+    return { error: "Título, nome do cliente e inspetor são obrigatórios." };
   }
 
   if (startDate && endDate && startDate > endDate) {
-    return { error: "A data de inicio nao pode ser posterior a data de fim." };
+    return { error: "A data de início não pode ser posterior à data de fim." };
   }
 
   const supabase = await createClient();
@@ -41,7 +41,7 @@ export async function createServiceOrder(formData: FormData) {
     .single();
 
   if (error) {
-    return { error: `Erro ao criar ordem de servico: ${error.message}` };
+    return { error: `Erro ao criar ordem de serviço: ${error.message}` };
   }
 
   revalidatePath("/dashboard/ordens");
@@ -62,7 +62,7 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
     .maybeSingle();
 
   if (existing) {
-    return { error: "Este equipamento ja esta nesta ordem de servico." };
+    return { error: "Este equipamento já está nesta ordem de serviço." };
   }
 
   // Check if equipment is in another active (non-completed/cancelled) order
@@ -90,7 +90,7 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
   revalidatePath(`/dashboard/ordens/${orderId}`);
 
   if (inActiveOrder) {
-    return { warning: "Equipamento adicionado. Atenção: este equipamento ja esta em outra ordem de servico ativa." };
+    return { warning: "Equipamento adicionado. Atenção: este equipamento já está em outra ordem de serviço ativa." };
   }
 
   return { success: true };

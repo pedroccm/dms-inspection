@@ -12,7 +12,7 @@ import type { ServiceOrderStatus } from "@/lib/types";
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
   in_progress: "Em Andamento",
-  completed: "Concluida",
+  completed: "Concluída",
   cancelled: "Cancelada",
 };
 
@@ -76,14 +76,14 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             <dd className="mt-1 text-sm text-gray-900">{order.client_name}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Localizacao</dt>
+            <dt className="text-sm font-medium text-gray-500">Localização</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.location ?? "—"}
             </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">
-              Inspetor Responsavel
+              Inspetor Responsável
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.assignee?.full_name ?? "—"}
@@ -98,7 +98,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Data Inicio</dt>
+            <dt className="text-sm font-medium text-gray-500">Data Início</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.start_date
                 ? new Date(order.start_date).toLocaleDateString("pt-BR")
@@ -133,16 +133,16 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
               <thead>
                 <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Codigo Copel RA
+                    Código Copel RA
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Fabricante
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Status Inspecao
+                    Status Inspeção
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Acoes
+                    Ações
                   </th>
                 </tr>
               </thead>
@@ -160,7 +160,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant="neutral">
-                        Nao Iniciada
+                        Não Iniciada
                       </Badge>
                     </td>
                     <td className="px-6 py-4">

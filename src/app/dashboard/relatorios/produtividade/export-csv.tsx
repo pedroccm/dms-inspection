@@ -10,11 +10,11 @@ export function ExportCsv({ rows }: ExportCsvProps) {
   function handleExport() {
     const headers = [
       "Inspetor",
-      "Total Inspecoes",
+      "Total Inspeções",
       "Itens Aprovados",
       "Itens Reprovados",
       "Itens NA",
-      "Taxa Aprovacao (%)",
+      "Taxa Aprovação (%)",
     ];
 
     const csvRows = [

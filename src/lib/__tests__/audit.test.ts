@@ -24,7 +24,7 @@ describe("formatAuditEntry", () => {
     );
     expect(entry.action).toBe("insert");
     expect(entry.description).toContain("criou");
-    expect(entry.description).toContain("inspecao");
+    expect(entry.description).toContain("inspeção");
     expect(entry.userName).toBe("Joao Silva");
   });
 
@@ -73,7 +73,7 @@ describe("formatAuditEntry", () => {
         new_data: { observations: "new note", status: "in_progress" },
       })
     );
-    expect(entry.description).toContain("observacoes");
+    expect(entry.description).toContain("observações");
   });
 
   it("uses 'Sistema' when no user is present", () => {
@@ -94,7 +94,7 @@ describe("formatAuditEntry", () => {
       })
     );
     expect(entry.description).toContain("alterou");
-    expect(entry.description).toContain("inspecao");
+    expect(entry.description).toContain("inspeção");
   });
 
   it("returns correct id and date fields", () => {

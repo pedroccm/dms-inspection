@@ -6,7 +6,7 @@ import type { AuditLog, FormattedAuditEntry, ChecklistItemStatus, InspectionStat
 const STATUS_LABELS: Record<string, string> = {
   draft: "Rascunho",
   in_progress: "Em Andamento",
-  ready_for_review: "Pronta para Revisao",
+  ready_for_review: "Pronta para Revisão",
   submitted: "Enviada",
   transferred: "Transferida",
 };
@@ -19,7 +19,7 @@ const CHECKLIST_STATUS_LABELS: Record<string, string> = {
 };
 
 const TABLE_LABELS: Record<string, string> = {
-  inspections: "inspecao",
+  inspections: "inspeção",
   checklist_items: "item do checklist",
   equipment: "equipamento",
 };
@@ -160,7 +160,7 @@ function buildDescription(log: AuditLog, userName: string): string {
 
   // Inspection observations change
   if (log.table_name === "inspections" && log.old_data.observations !== log.new_data.observations) {
-    changes.push("observacoes");
+    changes.push("observações");
   }
 
   // Checklist item status change
@@ -174,7 +174,7 @@ function buildDescription(log: AuditLog, userName: string): string {
   // Checklist rejection reason
   if (log.table_name === "checklist_items" && log.old_data.rejection_reason !== log.new_data.rejection_reason) {
     const itemLabel = (log.new_data.item_name as string) ?? "item";
-    changes.push(`motivo de rejeicao no item '${itemLabel}'`);
+    changes.push(`motivo de rejeição no item '${itemLabel}'`);
   }
 
   if (changes.length > 0) {

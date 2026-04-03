@@ -33,14 +33,14 @@ export async function GET(
     inspection = await getInspectionById(inspectionId);
   } catch {
     return NextResponse.json(
-      { error: "Inspecao nao encontrada" },
+      { error: "Inspeção não encontrada" },
       { status: 404 }
     );
   }
 
   if (!inspection) {
     return NextResponse.json(
-      { error: "Inspecao nao encontrada" },
+      { error: "Inspeção não encontrada" },
       { status: 404 }
     );
   }
@@ -57,7 +57,7 @@ export async function GET(
 
   // Equipment header
   lines.push(
-    "Codigo Copel RA,Codigo Copel Controle,No Serie Mecanismo,No Serie Caixa Controle,No Serie Rele Protecao,Fabricante"
+    "Código Copel RA,Código Copel Controle,Nº Série Mecanismo,Nº Série Caixa Controle,Nº Série Relé Proteção,Fabricante"
   );
   lines.push(
     [
@@ -74,7 +74,7 @@ export async function GET(
   lines.push("");
 
   // Checklist items header
-  lines.push("Item de Inspecao,Resultado,Motivo da Reprovacao");
+  lines.push("Item de Inspeção,Resultado,Motivo da Reprovação");
 
   const statusLabels: Record<string, string> = {
     approved: "Aprovado",
@@ -97,7 +97,7 @@ export async function GET(
   lines.push("");
 
   // Observations
-  lines.push("Observacoes");
+  lines.push("Observações");
   lines.push(escapeCSV(inspection.observations));
 
   // Blank line separator

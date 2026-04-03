@@ -37,7 +37,7 @@ describe("OrderStatusFilter", () => {
     expect(screen.getByText("Todos os status")).toBeInTheDocument();
     expect(screen.getByText("Aberta")).toBeInTheDocument();
     expect(screen.getByText("Em Andamento")).toBeInTheDocument();
-    expect(screen.getByText("Concluida")).toBeInTheDocument();
+    expect(screen.getByText("Concluída")).toBeInTheDocument();
     expect(screen.getByText("Cancelada")).toBeInTheDocument();
   });
 
@@ -60,19 +60,19 @@ describe("CreateOrderForm", () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
     render(<CreateOrderForm inspectors={inspectors} />);
 
-    expect(screen.getByLabelText(/Titulo/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Título/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Nome do Cliente/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Localizacao/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Data Inicio/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Localização/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Data Início/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Data Fim/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Inspetor Responsavel/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Inspetor Responsável/)).toBeInTheDocument();
   });
 
   it("title and client name are required", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
     render(<CreateOrderForm inspectors={inspectors} />);
 
-    expect(screen.getByLabelText(/Titulo/)).toBeRequired();
+    expect(screen.getByLabelText(/Título/)).toBeRequired();
     expect(screen.getByLabelText(/Nome do Cliente/)).toBeRequired();
   });
 
@@ -100,7 +100,7 @@ describe("AddEquipmentSection", () => {
 
     expect(screen.getByText("Adicionar Equipamento")).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("Digite o codigo para buscar...")
+      screen.getByPlaceholderText("Digite o código para buscar...")
     ).toBeInTheDocument();
     expect(screen.getByText("Buscar")).toBeInTheDocument();
   });
@@ -130,7 +130,7 @@ describe("Status Badge rendering", () => {
     expect(yellowContainer.querySelector(".bg-yellow-100")).toBeInTheDocument();
 
     const { container: greenContainer } = render(
-      <Badge variant="success">Concluida</Badge>
+      <Badge variant="success">Concluída</Badge>
     );
     expect(greenContainer.querySelector(".bg-green-100")).toBeInTheDocument();
   });
