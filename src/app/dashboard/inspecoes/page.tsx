@@ -7,12 +7,14 @@ import { InspectionStatusFilter } from "./status-filter";
 
 const statusConfig: Record<
   InspectionStatus,
-  { label: string; variant: "neutral" | "info" | "warning" | "success" }
+  { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
-  submitted: { label: "Enviada", variant: "success" },
+  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  aprovado: { label: "Aprovado", variant: "success" },
+  relatorio_reprovado: { label: "Relatorio Reprovado", variant: "danger" },
+  equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
   transferred: { label: "Transferida", variant: "neutral" },
 };
 

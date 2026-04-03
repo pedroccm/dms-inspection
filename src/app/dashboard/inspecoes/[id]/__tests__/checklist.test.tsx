@@ -225,13 +225,13 @@ describe("ChecklistForm - Progress Bar Updates", () => {
 });
 
 describe("ChecklistForm - Read-only Mode", () => {
-  it("shows status text instead of buttons when inspection is submitted", async () => {
+  it("shows status text instead of buttons when inspection is aprovado", async () => {
     const items = makeItems();
     items[0].status = "approved";
     items[1].status = "rejected";
     items[1].rejection_reason = "Problema encontrado na vedacao do equipamento";
 
-    await renderChecklist(items, "submitted");
+    await renderChecklist(items, "aprovado");
 
     // Should show status text, not buttons
     expect(screen.queryAllByLabelText(/Aprovado -/)).toHaveLength(0);
@@ -252,18 +252,18 @@ describe("ChecklistForm - Read-only Mode", () => {
     expect(screen.queryAllByLabelText(/Aprovado -/)).toHaveLength(0);
   });
 
-  it("shows rejection reason as read-only text in submitted state", async () => {
+  it("shows rejection reason as read-only text in aprovado state", async () => {
     const items = makeItems();
     items[0].status = "rejected";
     items[0].rejection_reason = "Defeito na vedacao do equipamento";
 
-    await renderChecklist(items, "submitted");
+    await renderChecklist(items, "aprovado");
 
     expect(screen.getByText(/Defeito na vedacao do equipamento/)).toBeInTheDocument();
   });
 
-  it("does not show Concluir Avaliacao button when submitted", async () => {
-    await renderChecklist(makeItems(), "submitted");
+  it("does not show Concluir Avaliacao button when aprovado", async () => {
+    await renderChecklist(makeItems(), "aprovado");
 
     expect(screen.queryByText("Concluir Avaliação")).not.toBeInTheDocument();
   });
@@ -372,7 +372,7 @@ describe("ChecklistForm - Checklist Validation (US-306)", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("photo-warning")).toBeInTheDocument();
-      expect(screen.getByText(/apenas 3 de 6 fotos foram enviadas/)).toBeInTheDocument();
+      expect(screen.getByText(/apenas 3 de 6 fotos obrigatórias foram enviadas/)).toBeInTheDocument();
     });
   });
 

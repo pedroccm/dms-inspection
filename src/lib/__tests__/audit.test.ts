@@ -43,11 +43,11 @@ describe("formatAuditEntry", () => {
         action: "update",
         table_name: "inspections",
         old_data: { status: "draft" },
-        new_data: { status: "submitted" },
+        new_data: { status: "aprovado" },
       })
     );
     expect(entry.description).toContain("Rascunho");
-    expect(entry.description).toContain("Enviada");
+    expect(entry.description).toContain("Aprovado");
   });
 
   it("formats a checklist item status update", () => {

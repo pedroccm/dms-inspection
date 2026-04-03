@@ -7,8 +7,10 @@ const statusOptions: { value: string; label: string }[] = [
   { value: "", label: "Todos os status" },
   { value: "draft", label: "Rascunho" },
   { value: "in_progress", label: "Em Andamento" },
-  { value: "ready_for_review", label: "Pronta para Revisão" },
-  { value: "submitted", label: "Enviada" },
+  { value: "ready_for_review", label: "Pronta para Revisao" },
+  { value: "aprovado", label: "Aprovado" },
+  { value: "relatorio_reprovado", label: "Relatorio Reprovado" },
+  { value: "equipamento_reprovado", label: "Equipamento Reprovado" },
   { value: "transferred", label: "Transferida" },
 ];
 

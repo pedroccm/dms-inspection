@@ -1,16 +1,18 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Photo, PhotoType } from "@/lib/types";
+import type { Photo } from "@/lib/types";
 
 const BUCKET = "inspection-photos";
 
 /**
  * Upload a photo to Supabase Storage and insert a record in the photos table.
+ * Accepts any photo_type string (fixed or dynamic) and an optional custom label.
  */
 export async function uploadInspectionPhoto(
   inspectionId: string,
-  photoType: PhotoType,
+  photoType: string,
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  label?: string | null
 ): Promise<Photo> {
   const supabase = createClient();
 
@@ -42,6 +44,7 @@ export async function uploadInspectionPhoto(
       photo_type: photoType,
       storage_path: storagePath,
       file_size: file.size,
+      label: label ?? null,
     })
     .select()
     .single();

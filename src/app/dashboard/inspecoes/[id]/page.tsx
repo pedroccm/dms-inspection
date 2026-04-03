@@ -7,17 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
 import { ExportButton } from "./export-button";
 import { TransferButton } from "./transfer-button";
+import { ApprovalPanel } from "./approval-panel";
+import { RejectionBanner } from "./rejection-banner";
 import { AuditLog } from "./audit-log";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
   InspectionStatus,
-  { label: string; variant: "neutral" | "info" | "warning" | "success" }
+  { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
-  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
-  submitted: { label: "Enviada", variant: "success" },
+  ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+  aprovado: { label: "Aprovado", variant: "success" },
+  relatorio_reprovado: { label: "Relatorio Reprovado", variant: "danger" },
+  equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
   transferred: { label: "Transferida", variant: "neutral" },
 };
 
@@ -46,6 +50,7 @@ export default async function InspecaoDetailPage({
   }
 
   const isAdmin = profile?.role === "admin";
+  const isExecutor = !isAdmin;
   let auditEntries: Awaited<ReturnType<typeof getInspectionAuditLogs>> = [];
   if (isAdmin) {
     try {
@@ -58,7 +63,11 @@ export default async function InspecaoDetailPage({
   const checklistItems = inspection.checklist_items ?? [];
   const photos = inspection.photos ?? [];
   const isEditable =
-    inspection.status !== "submitted" && inspection.status !== "transferred";
+    inspection.status !== "aprovado" &&
+    inspection.status !== "equipamento_reprovado" &&
+    inspection.status !== "transferred" &&
+    inspection.status !== "ready_for_review" &&
+    inspection.status !== "relatorio_reprovado";
 
   const config =
     statusConfig[inspection.status] ?? statusConfig.draft;
@@ -69,7 +78,7 @@ export default async function InspecaoDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1B2B5E]">
-            Inspeção: {inspection.equipment?.copel_ra_code ?? "—"}
+            Inspecao: {inspection.equipment?.copel_ra_code ?? "\u2014"}
           </h1>
           {inspection.equipment?.manufacturer && (
             <p className="text-sm text-gray-500 mt-1">
@@ -78,11 +87,11 @@ export default async function InspecaoDetailPage({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {(inspection.status === "submitted" ||
+          {(inspection.status === "aprovado" ||
             inspection.status === "transferred") && (
             <ExportButton inspectionId={inspection.id} />
           )}
-          {inspection.status === "submitted" && (
+          {inspection.status === "aprovado" && (
             <TransferButton inspectionId={inspection.id} />
           )}
           <Badge variant={config.variant}>{config.label}</Badge>
@@ -94,6 +103,36 @@ export default async function InspecaoDetailPage({
           </Link>
         </div>
       </div>
+
+      {/* Rejection banner for executor when report is rejected */}
+      {isExecutor && inspection.status === "relatorio_reprovado" && (
+        <RejectionBanner
+          inspectionId={inspection.id}
+          rejectionReason={inspection.rejection_reason}
+        />
+      )}
+
+      {/* Equipment rejection reason display */}
+      {inspection.status === "equipamento_reprovado" && inspection.rejection_reason && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg" data-testid="equipment-rejection-display">
+          <div className="flex items-start gap-3">
+            <span className="text-red-600 text-xl mt-0.5">&#10060;</span>
+            <div>
+              <h3 className="text-sm font-semibold text-red-800 mb-1">
+                Equipamento Reprovado - Defeito de Fabricacao
+              </h3>
+              <p className="text-sm text-red-700">
+                <span className="font-medium">Motivo:</span> {inspection.rejection_reason}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approval Panel for Master when ready for review */}
+      {isAdmin && inspection.status === "ready_for_review" && (
+        <ApprovalPanel inspectionId={inspection.id} />
+      )}
 
       {/* Client-side wrapper with form lock + summary + checklist + photos */}
       <InspectionDetailClient

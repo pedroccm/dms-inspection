@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { Photo, PhotoType } from "@/lib/types";
-import { PHOTO_TYPE_LABELS } from "@/lib/types";
+import type { Photo } from "@/lib/types";
+import {
+  DEFAULT_PHOTO_TYPES,
+  MIN_PHOTOS,
+  MAX_PHOTOS,
+  getPhotoLabel,
+} from "@/lib/types";
 import {
   uploadInspectionPhoto,
   deleteInspectionPhoto,
@@ -19,6 +24,12 @@ interface PhotoSectionProps {
   isEditable: boolean;
 }
 
+interface PhotoSlot {
+  key: string; // photo_type value used as unique key
+  label: string;
+  required: boolean; // first 6 are required
+}
+
 interface SlotState {
   uploading: boolean;
   progress: number;
@@ -30,14 +41,40 @@ interface GalleryState {
   currentIndex: number;
 }
 
-const PHOTO_TYPES: PhotoType[] = [
-  "mechanism_front",
-  "mechanism_back",
-  "control_front_closed",
-  "control_mirror_closed",
-  "relay_front",
-  "control_internal",
-];
+/** Build the initial list of slots from defaults + any existing dynamic photos */
+function buildInitialSlots(existingPhotos: Photo[]): PhotoSlot[] {
+  // Start with the 6 default required slots
+  const slots: PhotoSlot[] = DEFAULT_PHOTO_TYPES.map((type) => ({
+    key: type,
+    label: getPhotoLabel(type),
+    required: true,
+  }));
+
+  // Add slots for any existing dynamic photos (photo_7, photo_8, etc.)
+  for (const photo of existingPhotos) {
+    if (!DEFAULT_PHOTO_TYPES.includes(photo.photo_type)) {
+      slots.push({
+        key: photo.photo_type,
+        label: getPhotoLabel(photo.photo_type, photo.label),
+        required: false,
+      });
+    }
+  }
+
+  return slots;
+}
+
+/** Get the next available dynamic photo key */
+function getNextPhotoKey(slots: PhotoSlot[]): string {
+  let maxNum = 6;
+  for (const slot of slots) {
+    const match = slot.key.match(/^photo_(\d+)$/);
+    if (match) {
+      maxNum = Math.max(maxNum, parseInt(match[1], 10));
+    }
+  }
+  return `photo_${maxNum + 1}`;
+}
 
 // ─── Component ─────────────────────────────────────────────
 
@@ -46,6 +83,10 @@ export function PhotoSection({
   existingPhotos,
   isEditable,
 }: PhotoSectionProps) {
+  const [slots, setSlots] = useState<PhotoSlot[]>(() =>
+    buildInitialSlots(existingPhotos)
+  );
+
   const [photos, setPhotos] = useState<Record<string, Photo>>(() => {
     const map: Record<string, Photo> = {};
     for (const photo of existingPhotos) {
@@ -56,6 +97,7 @@ export function PhotoSection({
 
   const [slotStates, setSlotStates] = useState<Record<string, SlotState>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const capturedCount = Object.keys(photos).length;
@@ -67,16 +109,21 @@ export function PhotoSection({
   });
 
   // Build ordered list of photos that exist (for gallery navigation)
-  const availablePhotos = PHOTO_TYPES.filter((t) => photos[t] && signedUrls[t]);
+  const availablePhotos = slots
+    .map((s) => s.key)
+    .filter((key) => photos[key] && signedUrls[key]);
 
-  const viewerPhotos: PhotoViewerItem[] = availablePhotos.map((t) => ({
-    url: signedUrls[t],
-    label: PHOTO_TYPE_LABELS[t],
-  }));
+  const viewerPhotos: PhotoViewerItem[] = availablePhotos.map((key) => {
+    const slot = slots.find((s) => s.key === key);
+    return {
+      url: signedUrls[key],
+      label: slot?.label ?? key,
+    };
+  });
 
   const openGallery = useCallback(
-    (photoType: PhotoType) => {
-      const index = availablePhotos.indexOf(photoType);
+    (photoKey: string) => {
+      const index = availablePhotos.indexOf(photoKey);
       if (index >= 0) {
         setGallery({ open: true, currentIndex: index });
       }
@@ -109,93 +156,164 @@ export function PhotoSection({
     (type: string, state: Partial<SlotState>) => {
       setSlotStates((prev) => ({
         ...prev,
-        [type]: { ...(prev[type] ?? { uploading: false, progress: 0, error: null }), ...state },
+        [type]: {
+          ...(prev[type] ?? { uploading: false, progress: 0, error: null }),
+          ...state,
+        },
       }));
     },
     []
   );
 
   const handleFileSelect = useCallback(
-    async (photoType: PhotoType, file: File) => {
+    async (photoKey: string, file: File) => {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setSlotState(photoType, { error: "Selecione um arquivo de imagem." });
+        setSlotState(photoKey, { error: "Selecione um arquivo de imagem." });
         return;
       }
 
       // Validate file size (max 10 MB)
       if (file.size > 10 * 1024 * 1024) {
-        setSlotState(photoType, { error: "Imagem deve ter no maximo 10 MB." });
+        setSlotState(photoKey, {
+          error: "Imagem deve ter no maximo 10 MB.",
+        });
         return;
       }
 
-      setSlotState(photoType, { uploading: true, progress: 0, error: null });
+      setSlotState(photoKey, { uploading: true, progress: 0, error: null });
 
       try {
         // If replacing, delete old photo first
-        const existing = photos[photoType];
+        const existing = photos[photoKey];
         if (existing) {
           await deleteInspectionPhoto(existing.id, existing.storage_path);
         }
 
+        // Find custom label for dynamic slots
+        const slot = slots.find((s) => s.key === photoKey);
+        const customLabel = slot && !slot.required ? slot.label : null;
+
         const photo = await uploadInspectionPhoto(
           inspectionId,
-          photoType,
+          photoKey,
           file,
-          (percent) => setSlotState(photoType, { progress: percent })
+          (percent) => setSlotState(photoKey, { progress: percent }),
+          customLabel
         );
 
-        setPhotos((prev) => ({ ...prev, [photoType]: photo }));
-        setSlotState(photoType, { uploading: false, progress: 100, error: null });
+        setPhotos((prev) => ({ ...prev, [photoKey]: photo }));
+        setSlotState(photoKey, {
+          uploading: false,
+          progress: 100,
+          error: null,
+        });
 
         // Load signed URL for new photo
         try {
           const url = await getPhotoUrl(photo.storage_path);
-          setSignedUrls((prev) => ({ ...prev, [photoType]: url }));
+          setSignedUrls((prev) => ({ ...prev, [photoKey]: url }));
         } catch {
           // Non-critical
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erro ao enviar foto.";
-        setSlotState(photoType, { uploading: false, progress: 0, error: message });
+        const message =
+          err instanceof Error ? err.message : "Erro ao enviar foto.";
+        setSlotState(photoKey, {
+          uploading: false,
+          progress: 0,
+          error: message,
+        });
       }
     },
-    [inspectionId, photos, setSlotState]
+    [inspectionId, photos, slots, setSlotState]
   );
 
   const handleRemove = useCallback(
-    async (photoType: PhotoType) => {
-      const photo = photos[photoType];
+    async (photoKey: string) => {
+      const photo = photos[photoKey];
       if (!photo) return;
 
-      setSlotState(photoType, { uploading: true, progress: 0, error: null });
+      setSlotState(photoKey, { uploading: true, progress: 0, error: null });
 
       try {
         await deleteInspectionPhoto(photo.id, photo.storage_path);
         setPhotos((prev) => {
           const next = { ...prev };
-          delete next[photoType];
+          delete next[photoKey];
           return next;
         });
         setSignedUrls((prev) => {
           const next = { ...prev };
-          delete next[photoType];
+          delete next[photoKey];
           return next;
         });
-        setSlotState(photoType, { uploading: false, progress: 0, error: null });
+        setSlotState(photoKey, {
+          uploading: false,
+          progress: 0,
+          error: null,
+        });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erro ao remover foto.";
-        setSlotState(photoType, { uploading: false, progress: 0, error: message });
+        const message =
+          err instanceof Error ? err.message : "Erro ao remover foto.";
+        setSlotState(photoKey, {
+          uploading: false,
+          progress: 0,
+          error: message,
+        });
       }
     },
     [photos, setSlotState]
   );
 
+  /** Remove a dynamic slot (only for non-required slots without an uploaded photo) */
+  const handleRemoveSlot = useCallback(
+    async (photoKey: string) => {
+      const photo = photos[photoKey];
+
+      // If there's a photo uploaded, delete it first
+      if (photo) {
+        setSlotState(photoKey, { uploading: true, progress: 0, error: null });
+        try {
+          await deleteInspectionPhoto(photo.id, photo.storage_path);
+          setPhotos((prev) => {
+            const next = { ...prev };
+            delete next[photoKey];
+            return next;
+          });
+          setSignedUrls((prev) => {
+            const next = { ...prev };
+            delete next[photoKey];
+            return next;
+          });
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Erro ao remover foto.";
+          setSlotState(photoKey, {
+            uploading: false,
+            progress: 0,
+            error: message,
+          });
+          return;
+        }
+      }
+
+      // Remove the slot
+      setSlots((prev) => prev.filter((s) => s.key !== photoKey));
+      setSlotStates((prev) => {
+        const next = { ...prev };
+        delete next[photoKey];
+        return next;
+      });
+    },
+    [photos, setSlotState]
+  );
+
   const handleInputChange = useCallback(
-    (photoType: PhotoType, e: React.ChangeEvent<HTMLInputElement>) => {
+    (photoKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        handleFileSelect(photoType, file);
+        handleFileSelect(photoKey, file);
       }
       // Reset input so the same file can be selected again
       e.target.value = "";
@@ -203,9 +321,53 @@ export function PhotoSection({
     [handleFileSelect]
   );
 
-  const triggerFileInput = useCallback((photoType: PhotoType) => {
-    fileInputRefs.current[photoType]?.click();
+  const triggerFileInput = useCallback((photoKey: string) => {
+    fileInputRefs.current[photoKey]?.click();
   }, []);
+
+  const handleAddSlot = useCallback(() => {
+    if (slots.length >= MAX_PHOTOS) return;
+    const key = getNextPhotoKey(slots);
+    const num = key.replace("photo_", "");
+    setSlots((prev) => [
+      ...prev,
+      { key, label: `Foto ${num}`, required: false },
+    ]);
+  }, [slots]);
+
+  const handleLabelChange = useCallback(
+    (photoKey: string, newLabel: string) => {
+      setSlots((prev) =>
+        prev.map((s) => (s.key === photoKey ? { ...s, label: newLabel } : s))
+      );
+    },
+    []
+  );
+
+  const handleLabelBlur = useCallback(
+    (photoKey: string) => {
+      setEditingLabel(null);
+      // If the label is empty, reset to default
+      const slot = slots.find((s) => s.key === photoKey);
+      if (slot && !slot.label.trim()) {
+        const num = photoKey.replace("photo_", "");
+        handleLabelChange(photoKey, `Foto ${num}`);
+      }
+    },
+    [slots, handleLabelChange]
+  );
+
+  // ─── Progress ────────────────────────────────────────────
+
+  const progressPercent =
+    capturedCount >= MIN_PHOTOS
+      ? 100
+      : Math.round((capturedCount / MIN_PHOTOS) * 100);
+
+  const progressLabel =
+    capturedCount < MIN_PHOTOS
+      ? `${capturedCount} de ${MIN_PHOTOS} fotos obrigatórias`
+      : `${capturedCount} foto${capturedCount !== 1 ? "s" : ""} capturada${capturedCount !== 1 ? "s" : ""}`;
 
   // ─── Render ────────────────────────────────────────────────
 
@@ -217,7 +379,7 @@ export function PhotoSection({
           Coleta de Imagens do Equipamento
         </h2>
         <span className="text-sm font-medium text-gray-500">
-          {capturedCount} de 6 fotos capturadas
+          {progressLabel}
         </span>
       </div>
 
@@ -225,49 +387,115 @@ export function PhotoSection({
       <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
         <div
           className="bg-[#F5A623] h-2 rounded-full transition-all duration-300"
-          style={{ width: `${Math.round((capturedCount / 6) * 100)}%` }}
+          style={{ width: `${progressPercent}%` }}
         />
       </div>
 
       {/* Photo grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {PHOTO_TYPES.map((photoType) => {
-          const photo = photos[photoType];
-          const slotState = slotStates[photoType];
-          const signedUrl = signedUrls[photoType];
+        {slots.map((slot) => {
+          const photo = photos[slot.key];
+          const slotState = slotStates[slot.key];
+          const signedUrl = signedUrls[slot.key];
+          const isEditingThisLabel = editingLabel === slot.key;
 
           return (
-            <div key={photoType} className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-gray-700">
-                {PHOTO_TYPE_LABELS[photoType]}
-              </span>
+            <div key={slot.key} className="flex flex-col gap-2">
+              {/* Label - editable for dynamic slots */}
+              <div className="flex items-center gap-2">
+                {!slot.required && isEditable && isEditingThisLabel ? (
+                  <input
+                    type="text"
+                    value={slot.label}
+                    onChange={(e) =>
+                      handleLabelChange(slot.key, e.target.value)
+                    }
+                    onBlur={() => handleLabelBlur(slot.key)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleLabelBlur(slot.key);
+                    }}
+                    className="text-sm font-medium text-gray-700 border border-gray-300 rounded px-2 py-0.5 focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] focus:outline-none flex-1"
+                    autoFocus
+                    data-testid={`label-input-${slot.key}`}
+                  />
+                ) : (
+                  <span
+                    className={`text-sm font-medium text-gray-700 ${
+                      !slot.required && isEditable
+                        ? "cursor-pointer hover:text-[#F5A623]"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (!slot.required && isEditable) {
+                        setEditingLabel(slot.key);
+                      }
+                    }}
+                    title={
+                      !slot.required && isEditable
+                        ? "Clique para editar o nome"
+                        : undefined
+                    }
+                  >
+                    {slot.label}
+                  </span>
+                )}
+                {slot.required && (
+                  <span className="text-xs text-red-500" title="Obrigatória">
+                    *
+                  </span>
+                )}
+              </div>
 
               {photo && signedUrl ? (
                 /* ── Photo exists ── */
-                <div className="relative rounded-lg overflow-hidden border border-gray-200 cursor-pointer" style={{ height: 200 }} onClick={() => openGallery(photoType)}>
+                <div
+                  className="relative rounded-lg overflow-hidden border border-gray-200 cursor-pointer"
+                  style={{ height: 200 }}
+                  onClick={() => openGallery(slot.key)}
+                >
                   <img
                     src={signedUrl}
-                    alt={PHOTO_TYPE_LABELS[photoType]}
+                    alt={slot.label}
                     className="w-full h-full object-cover"
                   />
                   {isEditable && (
                     <div className="absolute bottom-0 inset-x-0 flex gap-2 p-2 bg-gradient-to-t from-black/60 to-transparent">
                       <button
                         type="button"
-                        onClick={() => triggerFileInput(photoType)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerFileInput(slot.key);
+                        }}
                         disabled={slotState?.uploading}
                         className="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#F5A623] rounded-md hover:bg-[#E8941E] disabled:opacity-50 transition-colors"
                       >
                         Substituir
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(photoType)}
-                        disabled={slotState?.uploading}
-                        className="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
-                      >
-                        Remover
-                      </button>
+                      {slot.required ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemove(slot.key);
+                          }}
+                          disabled={slotState?.uploading}
+                          className="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+                        >
+                          Remover
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveSlot(slot.key);
+                          }}
+                          disabled={slotState?.uploading}
+                          className="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+                        >
+                          Remover
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -285,8 +513,19 @@ export function PhotoSection({
                         fill="none"
                         viewBox="0 0 24 24"
                       >
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
@@ -318,15 +557,28 @@ export function PhotoSection({
                           d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"
                         />
                       </svg>
-                      {isEditable && (
-                        <button
-                          type="button"
-                          onClick={() => triggerFileInput(photoType)}
-                          className="px-4 py-2 text-sm font-medium text-[#F5A623] bg-white border border-[#F5A623] rounded-lg hover:bg-[#FFF4E0] transition-colors min-h-[44px]"
-                        >
-                          Tirar Foto
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        {isEditable && (
+                          <button
+                            type="button"
+                            onClick={() => triggerFileInput(slot.key)}
+                            className="px-4 py-2 text-sm font-medium text-[#F5A623] bg-white border border-[#F5A623] rounded-lg hover:bg-[#FFF4E0] transition-colors min-h-[44px]"
+                          >
+                            Tirar Foto
+                          </button>
+                        )}
+                        {!slot.required && isEditable && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSlot(slot.key)}
+                            className="px-3 py-2 text-sm font-medium text-red-500 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors min-h-[44px]"
+                            title="Remover slot"
+                            data-testid={`remove-slot-${slot.key}`}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -341,18 +593,48 @@ export function PhotoSection({
 
               {/* Hidden file input */}
               <input
-                ref={(el) => { fileInputRefs.current[photoType] = el; }}
+                ref={(el) => {
+                  fileInputRefs.current[slot.key] = el;
+                }}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 className="hidden"
-                onChange={(e) => handleInputChange(photoType, e)}
-                data-testid={`file-input-${photoType}`}
+                onChange={(e) => handleInputChange(slot.key, e)}
+                data-testid={`file-input-${slot.key}`}
               />
             </div>
           );
         })}
       </div>
+
+      {/* Add photo button */}
+      {isEditable && slots.length < MAX_PHOTOS && (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={handleAddSlot}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            data-testid="add-photo-btn"
+          >
+            <svg
+              className="h-5 w-5 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Adicionar Foto ({slots.length}/{MAX_PHOTOS})
+          </button>
+        </div>
+      )}
 
       {/* Full-screen photo viewer (US-403) */}
       {gallery.open && viewerPhotos.length > 0 && (
@@ -360,7 +642,9 @@ export function PhotoSection({
           photos={viewerPhotos}
           currentIndex={gallery.currentIndex}
           onClose={closeGallery}
-          onNavigate={(index) => setGallery({ open: true, currentIndex: index })}
+          onNavigate={(index) =>
+            setGallery({ open: true, currentIndex: index })
+          }
         />
       )}
     </div>

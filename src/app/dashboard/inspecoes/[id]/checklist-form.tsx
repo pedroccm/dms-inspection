@@ -70,7 +70,12 @@ function groupItemsByCategory(items: ChecklistItem[]) {
 }
 
 function isEditable(status: InspectionStatus) {
-  return status !== "submitted" && status !== "transferred";
+  return (
+    status !== "aprovado" &&
+    status !== "equipamento_reprovado" &&
+    status !== "transferred" &&
+    status !== "ready_for_review"
+  );
 }
 
 function getStatusDisplay(status: ChecklistItemStatus) {
@@ -622,7 +627,7 @@ export function ChecklistForm({
           {/* Photo warning (US-306) */}
           {photoCount < 6 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm" data-testid="photo-warning">
-              <span className="font-medium">Atenção:</span> apenas {photoCount} de 6 fotos foram enviadas
+              <span className="font-medium">Atenção:</span> apenas {photoCount} de 6 fotos obrigatórias foram enviadas
             </div>
           )}
         </div>

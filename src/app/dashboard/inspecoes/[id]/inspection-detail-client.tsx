@@ -57,7 +57,7 @@ export function InspectionDetailClient({
         checklistItems={checklistItems}
         inspectionId={inspectionId}
         inspectionStatus={
-          effectiveEditable ? inspectionStatus : "submitted"
+          effectiveEditable ? inspectionStatus : "aprovado"
         }
         inspectionNotes={inspectionNotes}
         photoCount={photos.length}

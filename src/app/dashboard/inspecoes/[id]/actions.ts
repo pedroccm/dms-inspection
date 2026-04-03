@@ -37,7 +37,7 @@ export async function updateChecklistItem(
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
-  if (inspection.status === "submitted" || inspection.status === "transferred") {
+  if (inspection.status === "aprovado" || inspection.status === "equipamento_reprovado" || inspection.status === "transferred") {
     return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
@@ -90,7 +90,7 @@ export async function updateInspectionObservations(
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
-  if (inspection.status === "submitted" || inspection.status === "transferred") {
+  if (inspection.status === "aprovado" || inspection.status === "equipamento_reprovado" || inspection.status === "transferred") {
     return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
@@ -165,7 +165,7 @@ export async function completeInspectionEvaluation(inspectionId: string) {
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
-  if (inspection.status === "submitted" || inspection.status === "transferred") {
+  if (inspection.status === "aprovado" || inspection.status === "equipamento_reprovado" || inspection.status === "transferred") {
     return { success: false, error: "Esta inspeção não pode mais ser editada." };
   }
 
@@ -235,14 +235,201 @@ export async function markAsTransferred(inspectionId: string) {
     return { success: false, error: "Inspeção não encontrada." };
   }
 
-  if (inspection.status !== "submitted") {
-    return { success: false, error: "Apenas inspeções enviadas podem ser marcadas como transferidas." };
+  if (inspection.status !== "aprovado") {
+    return { success: false, error: "Apenas inspeções aprovadas podem ser marcadas como transferidas." };
   }
 
   const { error: updateError } = await supabase
     .from("inspections")
     .update({
       status: "transferred",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
+
+// ─── Approval Flow Actions (RF-10) ────────────────────────────
+
+async function requireAdminUser() {
+  await requireAuth();
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Não autenticado.", user: null, supabase: null, profile: null };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "admin") {
+    return { error: "Apenas o Master pode realizar esta ação.", user: null, supabase: null, profile: null };
+  }
+
+  return { error: null, user, supabase, profile };
+}
+
+export async function approveInspection(inspectionId: string) {
+  const { error: authError, supabase, profile } = await requireAdminUser();
+  if (authError || !supabase || !profile) {
+    return { success: false, error: authError ?? "Erro de autenticação." };
+  }
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  if (inspection.status !== "ready_for_review") {
+    return { success: false, error: "Apenas inspeções prontas para revisão podem ser aprovadas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status: "aprovado",
+      reviewed_by: profile.id,
+      reviewed_at: new Date().toISOString(),
+      rejection_reason: null,
+      rejection_type: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
+
+export async function rejectReport(inspectionId: string, reason: string) {
+  const { error: authError, supabase, profile } = await requireAdminUser();
+  if (authError || !supabase || !profile) {
+    return { success: false, error: authError ?? "Erro de autenticação." };
+  }
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  if (inspection.status !== "ready_for_review") {
+    return { success: false, error: "Apenas inspeções prontas para revisão podem ser reprovadas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status: "relatorio_reprovado",
+      rejection_reason: reason.trim(),
+      rejection_type: "relatorio",
+      reviewed_by: profile.id,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
+
+export async function rejectEquipment(inspectionId: string, reason: string) {
+  const { error: authError, supabase, profile } = await requireAdminUser();
+  if (authError || !supabase || !profile) {
+    return { success: false, error: authError ?? "Erro de autenticação." };
+  }
+
+  if (!reason || reason.trim().length < 10) {
+    return { success: false, error: "O motivo da reprovação do equipamento deve ter pelo menos 10 caracteres." };
+  }
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  if (inspection.status !== "ready_for_review") {
+    return { success: false, error: "Apenas inspeções prontas para revisão podem ser reprovadas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status: "equipamento_reprovado",
+      rejection_reason: reason.trim(),
+      rejection_type: "equipamento",
+      reviewed_by: profile.id,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  return { success: true };
+}
+
+export async function resumeInspection(inspectionId: string) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, inspector_id, status")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  if (inspection.inspector_id !== user.id) {
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
+  }
+
+  if (inspection.status !== "relatorio_reprovado") {
+    return { success: false, error: "Apenas inspeções com relatório reprovado podem ser retomadas." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({
+      status: "in_progress",
+      rejection_reason: null,
+      rejection_type: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", inspectionId);

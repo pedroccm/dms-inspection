@@ -14,7 +14,9 @@ export type InspectionStatus =
   | "draft"
   | "in_progress"
   | "ready_for_review"
-  | "submitted"
+  | "aprovado"
+  | "relatorio_reprovado"
+  | "equipamento_reprovado"
   | "transferred";
 
 export interface Inspection {
@@ -27,6 +29,10 @@ export interface Inspection {
   created_at: string;
   updated_at: string;
   submitted_at: string | null;
+  rejection_reason: string | null;
+  rejection_type: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   // Joined relations (optional)
   equipment?: Equipment;
   checklist_items?: ChecklistItem[];
@@ -47,24 +53,32 @@ export interface ChecklistItem {
   updated_at: string;
 }
 
-export type PhotoType =
-  | "mechanism_front"
-  | "mechanism_back"
-  | "control_front_closed"
-  | "control_mirror_closed"
-  | "relay_front"
-  | "control_internal";
+export type PhotoType = string; // Accepts fixed types or dynamic labels like "photo_7", "photo_8", etc.
+
+/** The 6 required default photo types */
+export const DEFAULT_PHOTO_TYPES: string[] = [
+  "mechanism_front",
+  "mechanism_back",
+  "control_front_closed",
+  "control_mirror_closed",
+  "relay_front",
+  "control_internal",
+];
+
+export const MIN_PHOTOS = 6;
+export const MAX_PHOTOS = 20;
 
 export interface Photo {
   id: string;
   inspection_id: string;
   photo_type: PhotoType;
+  label: string | null;
   storage_path: string;
   file_size: number;
   uploaded_at: string;
 }
 
-export const PHOTO_TYPE_LABELS: Record<PhotoType, string> = {
+export const PHOTO_TYPE_LABELS: Record<string, string> = {
   mechanism_front: "Foto Mecanismo Frente",
   mechanism_back: "Foto Mecanismo Traseira",
   control_front_closed: "Foto Controle Frente Fechado",
@@ -72,6 +86,16 @@ export const PHOTO_TYPE_LABELS: Record<PhotoType, string> = {
   relay_front: "Foto Frente Rele",
   control_internal: "Foto Interna Controle",
 };
+
+/** Get display label for a photo slot */
+export function getPhotoLabel(photoType: string, customLabel?: string | null): string {
+  if (customLabel) return customLabel;
+  if (PHOTO_TYPE_LABELS[photoType]) return PHOTO_TYPE_LABELS[photoType];
+  // Dynamic slots: "photo_7" → "Foto 7"
+  const match = photoType.match(/^photo_(\d+)$/);
+  if (match) return `Foto ${match[1]}`;
+  return photoType;
+}
 
 export type ServiceOrderStatus = "open" | "in_progress" | "completed" | "cancelled";
 
