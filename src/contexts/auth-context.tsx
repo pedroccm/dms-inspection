@@ -89,16 +89,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, fetchProfile, router]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore signOut errors
+    }
     setUser(null);
     setProfile(null);
-    router.push("/login");
-    router.refresh();
-    // Fallback: force full page reload after a short delay
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 500);
-  }, [supabase, router]);
+    // Force full page reload to clear all state
+    window.location.href = "/login";
+  }, [supabase]);
 
   const role = profile?.role ?? null;
   const isAdmin = role === "admin";

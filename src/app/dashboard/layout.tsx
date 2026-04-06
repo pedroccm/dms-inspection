@@ -129,9 +129,9 @@ function Sidebar({
           )}
           <button
             onClick={signOut}
-            className="w-full px-4 py-2 text-sm text-white/60 hover:text-white text-left min-h-[44px]"
+            className="w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/10 rounded-lg text-left min-h-[44px] transition-colors cursor-pointer"
           >
-            Sair
+            ← Sair
           </button>
           <p className="px-4 pt-1 text-[10px] text-white/20">v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
         </div>
