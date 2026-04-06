@@ -5,6 +5,7 @@ import type { InspectionStatus } from "@/lib/types";
 
 const statusOptions: { value: string; label: string }[] = [
   { value: "", label: "Todos os status" },
+  { value: "disponivel", label: "Disponível" },
   { value: "draft", label: "Rascunho" },
   { value: "in_progress", label: "Em Andamento" },
   { value: "ready_for_review", label: "Pronta para Revisão" },

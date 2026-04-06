@@ -4,6 +4,7 @@ import type { AuditLog, FormattedAuditEntry, ChecklistItemStatus, InspectionStat
 // ─── Status label maps ─────────────────────────────────────────
 
 const STATUS_LABELS: Record<string, string> = {
+  disponivel: "Disponível",
   draft: "Rascunho",
   in_progress: "Em Andamento",
   ready_for_review: "Pronta para Revisão",

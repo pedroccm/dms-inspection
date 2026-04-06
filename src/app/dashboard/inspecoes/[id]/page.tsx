@@ -11,12 +11,15 @@ import { TransferButton } from "./transfer-button";
 import { ApprovalPanel } from "./approval-panel";
 import { RejectionBanner } from "./rejection-banner";
 import { AuditLog } from "./audit-log";
+import { ClaimButton } from "./claim-button";
+import { QrDataSection } from "./qr-data-section";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
   InspectionStatus,
   { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
+  disponivel: { label: "Disponível", variant: "info" },
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
   ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
@@ -63,7 +66,9 @@ export default async function InspecaoDetailPage({
 
   const checklistItems = inspection.checklist_items ?? [];
   const photos = inspection.photos ?? [];
+  const isDisponivel = inspection.status === "disponivel";
   const isEditable =
+    inspection.status !== "disponivel" &&
     inspection.status !== "aprovado" &&
     inspection.status !== "equipamento_reprovado" &&
     inspection.status !== "transferred" &&
@@ -79,7 +84,7 @@ export default async function InspecaoDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1B2B5E]">
-            Inspecao: {inspection.equipment?.copel_ra_code ?? "\u2014"}
+            Inspeção: {inspection.equipment?.copel_ra_code ?? "Ficha de Inspeção"}
           </h1>
           {inspection.equipment?.manufacturer && (
             <p className="text-sm text-gray-500 mt-1">
@@ -107,6 +112,62 @@ export default async function InspecaoDetailPage({
           </Link>
         </div>
       </div>
+
+      {/* 052R and 300 Numbers */}
+      {(inspection.numero_052r || inspection.numero_300) && (
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Números de Identificação</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {inspection.numero_052r && (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-sm font-medium text-blue-700">052R:</span>
+                <span className="text-lg font-bold text-blue-900">{inspection.numero_052r}</span>
+              </div>
+            )}
+            {inspection.numero_300 && (
+              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <span className="text-sm font-medium text-green-700">300:</span>
+                <span className="text-lg font-bold text-green-900">{inspection.numero_300}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* QR Data Display */}
+      {inspection.qr_data && Object.keys(inspection.qr_data).length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados do QR Code</h2>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+            {Object.entries(inspection.qr_data).map(([key, value]) => (
+              <div key={key}>
+                <dt className="text-xs font-medium text-gray-500 uppercase">{key}</dt>
+                <dd className="mt-0.5 text-sm text-gray-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
+      {/* Claim button for executor when status is disponivel */}
+      {isDisponivel && isExecutor && (
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Esta ficha está disponível para reivindicação. Clique abaixo para iniciar a inspeção.
+            </p>
+            <ClaimButton inspectionId={inspection.id} />
+          </div>
+        </div>
+      )}
+
+      {/* QR Data input section (for executor after claiming, before completing) */}
+      {!isDisponivel && isEditable && isExecutor && (
+        <QrDataSection
+          inspectionId={inspection.id}
+          existingQrData={inspection.qr_data}
+        />
+      )}
 
       {/* Rejection banner for executor when report is rejected */}
       {isExecutor && inspection.status === "relatorio_reprovado" && (
@@ -139,14 +200,16 @@ export default async function InspecaoDetailPage({
       )}
 
       {/* Client-side wrapper with form lock + summary + checklist + photos */}
-      <InspectionDetailClient
-        inspectionId={inspection.id}
-        inspectionStatus={inspection.status}
-        inspectionNotes={inspection.observations}
-        checklistItems={checklistItems}
-        photos={photos}
-        isEditable={isEditable}
-      />
+      {!isDisponivel && (
+        <InspectionDetailClient
+          inspectionId={inspection.id}
+          inspectionStatus={inspection.status}
+          inspectionNotes={inspection.observations}
+          checklistItems={checklistItems}
+          photos={photos}
+          isEditable={isEditable}
+        />
+      )}
 
       {/* Audit log - admin only */}
       {isAdmin && (

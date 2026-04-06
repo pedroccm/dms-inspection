@@ -95,9 +95,9 @@ describe("InspectionStatusFilter", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Rascunho")).toBeInTheDocument();
     expect(screen.getByText("Em Andamento")).toBeInTheDocument();
-    expect(screen.getByText("Pronta para Revisao")).toBeInTheDocument();
+    expect(screen.getByText("Pronta para Revisão")).toBeInTheDocument();
     expect(screen.getByText("Aprovado")).toBeInTheDocument();
-    expect(screen.getByText("Relatorio Reprovado")).toBeInTheDocument();
+    expect(screen.getByText("Relatório Reprovado")).toBeInTheDocument();
     expect(screen.getByText("Equipamento Reprovado")).toBeInTheDocument();
     expect(screen.getByText("Transferida")).toBeInTheDocument();
   });
@@ -175,9 +175,9 @@ describe("Status badge rendering", () => {
   const statusConfig = {
     draft: { label: "Rascunho", variant: "neutral" },
     in_progress: { label: "Em Andamento", variant: "info" },
-    ready_for_review: { label: "Pronta para Revisao", variant: "warning" },
+    ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
     aprovado: { label: "Aprovado", variant: "success" },
-    relatorio_reprovado: { label: "Relatorio Reprovado", variant: "danger" },
+    relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
     equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
     transferred: { label: "Transferida", variant: "neutral" },
   } as const;
@@ -185,9 +185,9 @@ describe("Status badge rendering", () => {
   it("maps all statuses to correct labels", () => {
     expect(statusConfig.draft.label).toBe("Rascunho");
     expect(statusConfig.in_progress.label).toBe("Em Andamento");
-    expect(statusConfig.ready_for_review.label).toBe("Pronta para Revisao");
+    expect(statusConfig.ready_for_review.label).toBe("Pronta para Revisão");
     expect(statusConfig.aprovado.label).toBe("Aprovado");
-    expect(statusConfig.relatorio_reprovado.label).toBe("Relatorio Reprovado");
+    expect(statusConfig.relatorio_reprovado.label).toBe("Relatório Reprovado");
     expect(statusConfig.equipamento_reprovado.label).toBe("Equipamento Reprovado");
     expect(statusConfig.transferred.label).toBe("Transferida");
   });

@@ -8,6 +8,8 @@ import type {
   Equipment,
   EquipmentFilters,
   PaginatedResult,
+  InspectionLocation,
+  Team,
 } from "@/lib/types";
 
 // ─── Inspections ────────────────────────────────────────────
@@ -107,13 +109,26 @@ export async function getServiceOrderById(id: string) {
   const { data, error } = await supabase
     .from("service_orders")
     .select(
-      "*, assignee:profiles!assigned_to(full_name), service_order_equipment(*, equipment(*))"
+      "*, assignee:profiles!assigned_to(full_name), service_order_equipment(*, equipment(*)), inspection_location:inspection_locations!location_id(id, name, address), team:teams!assigned_team_id(id, name, members:team_members(id, user_id, user:profiles!user_id(id, full_name)))"
     )
     .eq("id", id)
     .single();
 
   if (error) throw error;
   return data as ServiceOrder;
+}
+
+export async function getInspectionsByServiceOrderId(serviceOrderId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("inspections")
+    .select("*, inspector:profiles!inspector_id(full_name), claimed_user:profiles!claimed_by(full_name)")
+    .eq("service_order_id", serviceOrderId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as (Inspection & { claimed_user?: { full_name: string } | null })[];
 }
 
 export async function getInspectors() {
@@ -253,4 +268,57 @@ export async function getDashboardCounts() {
     equipmentCount: equipmentCount.count ?? 0,
     pendingReviews: pendingReviews.count ?? 0,
   };
+}
+
+// ─── Inspection Locations ──────────────────────────────────
+
+export async function getInspectionLocations() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("inspection_locations")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as import("@/lib/types").InspectionLocation[];
+}
+
+// ─── Teams ─────────────────────────────────────────────────
+
+export async function getTeams() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("teams")
+    .select("*, members:team_members(*, user:profiles!user_id(id, full_name))")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as import("@/lib/types").Team[];
+}
+
+// ─── Next Order Number ─────────────────────────────────────
+
+export async function getNextOrderNumber(): Promise<string> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("service_orders")
+    .select("order_number")
+    .not("order_number", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+
+  let nextSeq = 1;
+  if (data && data.length > 0 && data[0].order_number) {
+    const match = data[0].order_number.match(/(\d+)$/);
+    if (match) {
+      nextSeq = parseInt(match[1], 10) + 1;
+    }
+  }
+
+  return `DS-CP-INSP-RA-${String(nextSeq).padStart(3, "0")}`;
 }

@@ -56,29 +56,42 @@ describe("CreateOrderForm", () => {
     { id: "i2", full_name: "Maria Santos" },
   ];
 
+  const locations = [
+    { id: "loc1", name: "Subestação Norte", address: null, created_at: "2024-01-01" },
+  ];
+
+  const teams = [
+    { id: "t1", name: "Equipe A", created_at: "2024-01-01" },
+  ];
+
+  const defaultProps = {
+    inspectors,
+    locations,
+    teams,
+    nextOrderNumber: "DS-CP-INSP-RA-001",
+  };
+
   it("renders all form fields", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
-    render(<CreateOrderForm inspectors={inspectors} />);
+    render(<CreateOrderForm {...defaultProps} />);
 
-    expect(screen.getByLabelText(/Título/)).toBeInTheDocument();
+    expect(screen.getByText(/DS-CP-INSP-RA-001/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Nome do Cliente/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Localização/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Quantidade de Equipamentos/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Data Início/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Data Fim/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Executor Responsável/)).toBeInTheDocument();
   });
 
-  it("title and client name are required", async () => {
+  it("client name is required", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
-    render(<CreateOrderForm inspectors={inspectors} />);
+    render(<CreateOrderForm {...defaultProps} />);
 
-    expect(screen.getByLabelText(/Título/)).toBeRequired();
     expect(screen.getByLabelText(/Nome do Cliente/)).toBeRequired();
   });
 
   it("renders Criar Ordem and Cancelar buttons", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
-    render(<CreateOrderForm inspectors={inspectors} />);
+    render(<CreateOrderForm {...defaultProps} />);
 
     expect(screen.getByText("Criar Ordem")).toBeInTheDocument();
     expect(screen.getByText("Cancelar")).toBeInTheDocument();
@@ -86,7 +99,7 @@ describe("CreateOrderForm", () => {
 
   it("renders inspector options in the select", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
-    render(<CreateOrderForm inspectors={inspectors} />);
+    render(<CreateOrderForm {...defaultProps} />);
 
     expect(screen.getByText("Joao Silva")).toBeInTheDocument();
     expect(screen.getByText("Maria Santos")).toBeInTheDocument();

@@ -67,9 +67,9 @@ describe("Server-side queries (queries.ts)", () => {
     mockFrom.mockReturnValue(qb);
 
     const { getInspections } = await import("@/lib/queries");
-    await getInspections({ status: "pending" });
+    await getInspections({ status: "draft" });
 
-    expect(qb.eq).toHaveBeenCalledWith("status", "pending");
+    expect(qb.eq).toHaveBeenCalledWith("status", "draft");
   });
 
   it("getInspectionById calls single with correct id", async () => {

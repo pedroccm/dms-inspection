@@ -11,6 +11,7 @@ export interface Profile {
 
 // Inspection status flow
 export type InspectionStatus =
+  | "disponivel" // Available for claiming by executor
   | "draft"
   | "in_progress"
   | "ready_for_review"
@@ -33,6 +34,11 @@ export interface Inspection {
   rejection_type: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
+  numero_052r: string | null;
+  numero_300: string | null;
+  claimed_by: string | null;
+  claimed_at: string | null;
+  qr_data: Record<string, string> | null;
   // Joined relations (optional)
   equipment?: Equipment;
   checklist_items?: ChecklistItem[];
@@ -97,6 +103,31 @@ export function getPhotoLabel(photoType: string, customLabel?: string | null): s
   return photoType;
 }
 
+// ─── Inspection Locations ────────────────────────────────────────
+
+export interface InspectionLocation {
+  id: string;
+  name: string;
+  address: string | null;
+  created_at: string;
+}
+
+// ─── Teams ───────────────────────────────────────────────────────
+
+export interface Team {
+  id: string;
+  name: string;
+  created_at: string;
+  members?: TeamMember[];
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  user?: Pick<Profile, "id" | "full_name">;
+}
+
 export type ServiceOrderStatus = "open" | "in_progress" | "completed" | "cancelled";
 
 export interface ServiceOrder {
@@ -111,10 +142,17 @@ export interface ServiceOrder {
   created_by: string;
   created_at: string;
   updated_at: string;
+  order_number: string | null;
+  client_request_date: string | null;
+  location_id: string | null;
+  equipment_count: number;
+  assigned_team_id: string | null;
   // Joined relations (optional)
   equipment?: Equipment;
   assignee?: Profile;
   service_order_equipment?: ServiceOrderEquipment[];
+  inspection_location?: InspectionLocation;
+  team?: Team;
 }
 
 export interface ServiceOrderEquipment {

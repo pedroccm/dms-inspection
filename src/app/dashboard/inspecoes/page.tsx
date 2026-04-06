@@ -9,6 +9,7 @@ const statusConfig: Record<
   InspectionStatus,
   { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
+  disponivel: { label: "Disponível", variant: "info" },
   draft: { label: "Rascunho", variant: "neutral" },
   in_progress: { label: "Em Andamento", variant: "info" },
   ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
@@ -57,7 +58,10 @@ export default async function InspecoesPage({
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Código Equipamento
+                  Código / 052R
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
+                  300
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                   Ordem de Serviço
@@ -80,7 +84,7 @@ export default async function InspecoesPage({
               {inspections.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     Nenhuma inspeção encontrada.
@@ -96,12 +100,20 @@ export default async function InspecoesPage({
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        <span className="flex items-center gap-1.5">
-                          {inspection.equipment?.copel_ra_code ?? "—"}
-                          {lockedIds.has(inspection.id) && (
-                            <span title="Em edição por outro usuário" className="text-yellow-600">🔒</span>
+                        <span className="flex flex-col gap-0.5">
+                          <span className="flex items-center gap-1.5">
+                            {inspection.equipment?.copel_ra_code ?? inspection.numero_052r ?? "—"}
+                            {lockedIds.has(inspection.id) && (
+                              <span title="Em edição por outro usuário" className="text-yellow-600">🔒</span>
+                            )}
+                          </span>
+                          {inspection.numero_052r && inspection.equipment?.copel_ra_code && (
+                            <span className="text-xs text-gray-500">{inspection.numero_052r}</span>
                           )}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
+                        {inspection.numero_300 ?? "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
                         {inspection.service_order_id
