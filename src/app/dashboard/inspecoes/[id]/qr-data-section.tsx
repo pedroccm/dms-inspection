@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { saveQrData } from "./claim-action";
 
@@ -18,6 +18,10 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualKey, setManualKey] = useState("");
   const [manualValue, setManualValue] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const parseQrData = useCallback((rawData: string): Record<string, string> => {
     const result: Record<string, string> = {};
@@ -78,6 +82,79 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
     });
   }, []);
 
+  // Camera QR scanning
+  const stopScanning = useCallback(() => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setScanning(false);
+  }, []);
+
+  const startScanning = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      setScanning(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      // Use BarcodeDetector API if available (Chrome Android)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const BD = (window as any).BarcodeDetector;
+      if (BD) {
+        const detector = new BD({ formats: ["qr_code"] });
+        scanIntervalRef.current = setInterval(async () => {
+          if (!videoRef.current) return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            if (barcodes.length > 0) {
+              const raw = barcodes[0].rawValue;
+              const parsed = parseQrData(raw);
+              setQrData((prev) => ({ ...prev, ...parsed }));
+              stopScanning();
+            }
+          } catch { /* ignore detection errors */ }
+        }, 500);
+      } else {
+        // Fallback: try jsQR
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        scanIntervalRef.current = setInterval(async () => {
+          if (!videoRef.current || !ctx) return;
+          canvas.width = videoRef.current.videoWidth;
+          canvas.height = videoRef.current.videoHeight;
+          ctx.drawImage(videoRef.current, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          try {
+            const jsQR = (await import("jsqr")).default;
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code) {
+              const parsed = parseQrData(code.data);
+              setQrData((prev) => ({ ...prev, ...parsed }));
+              stopScanning();
+            }
+          } catch { /* jsQR not available */ }
+        }, 500);
+      }
+    } catch {
+      setError("Não foi possível acessar a câmera.");
+    }
+  }, [parseQrData, stopScanning]);
+
+  useEffect(() => {
+    return () => stopScanning();
+  }, [stopScanning]);
+
   const handleSave = useCallback(async () => {
     setSaving(true);
     setError(null);
@@ -99,11 +176,31 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
     <div className="bg-white rounded-lg shadow p-6 mb-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados do QR Code</h2>
 
-      {/* QR Input */}
+      {/* Camera Scanner */}
+      {scanning ? (
+        <div className="relative mb-4 rounded-lg overflow-hidden bg-black" style={{ maxHeight: 320 }}>
+          <video ref={videoRef} className="w-full" autoPlay playsInline muted style={{ maxHeight: 320, objectFit: "cover" }} />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-48 h-48 border-2 border-[#F5A623] rounded-lg opacity-70" />
+          </div>
+          <div className="absolute bottom-3 left-0 right-0 text-center">
+            <Button size="sm" variant="danger" onClick={stopScanning}>Fechar Câmera</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 mb-4">
+          <Button onClick={startScanning}>
+            📷 Escanear QR Code
+          </Button>
+          <span className="text-sm text-gray-500">ou cole os dados abaixo</span>
+        </div>
+      )}
+
+      {/* QR Input (paste/manual) */}
       <div className="space-y-3 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cole ou escaneie os dados do QR Code
+            Dados do QR Code (colar texto)
           </label>
           <textarea
             value={qrInput}
@@ -115,7 +212,7 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={handleProcessQr} disabled={!qrInput.trim()}>
-            Processar QR
+            Processar
           </Button>
           <Button
             size="sm"
