@@ -251,6 +251,14 @@ test.describe.serial('Inspector Workflow', () => {
     // Verify redirect to login
     await expect(page).toHaveURL(/\/login/);
 
+    // Verify login form is visible (session invalidated)
+    await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 5000 });
+
+    // Verify accessing dashboard redirects back to login
+    await page.goto('/dashboard');
+    await page.waitForTimeout(3000);
+    await expect(page).toHaveURL(/\/login/);
+
     await page.screenshot({ path: 'e2e/results/02-inspector-logout.png' });
   });
 });

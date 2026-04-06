@@ -31,8 +31,8 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-function TestConsumer() {
-  const { user, profile, role, isAdmin, loading } = useAuth();
+function TestConsumer({ onSignOut }: { onSignOut?: () => void } = {}) {
+  const { user, profile, role, isAdmin, loading, signOut } = useAuth();
 
   if (loading) return <div>Loading...</div>;
 
@@ -42,6 +42,7 @@ function TestConsumer() {
       <span data-testid="profile">{profile?.full_name ?? "no-profile"}</span>
       <span data-testid="role">{role ?? "no-role"}</span>
       <span data-testid="is-admin">{isAdmin ? "yes" : "no"}</span>
+      <button data-testid="sign-out" onClick={() => { signOut(); onSignOut?.(); }}>Sair</button>
     </div>
   );
 }
@@ -115,6 +116,47 @@ describe("AuthContext", () => {
 
     expect(screen.getByTestId("role").textContent).toBe("inspector");
     expect(screen.getByTestId("is-admin").textContent).toBe("no");
+  });
+
+  it("should call signOut and clear user state", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-1", email: "admin@dms.eng.br" } },
+    });
+    mockSingle.mockResolvedValue({
+      data: {
+        id: "user-1",
+        full_name: "Admin User",
+        role: "admin",
+        active: true,
+        created_at: "2026-01-01",
+        updated_at: "2026-01-01",
+      },
+    });
+    mockSignOut.mockResolvedValue({ error: null });
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("user").textContent).toBe("user-1");
+    });
+
+    // Click sign out button
+    screen.getByTestId("sign-out").click();
+
+    // Verify supabase signOut was called
+    await waitFor(() => {
+      expect(mockSignOut).toHaveBeenCalled();
+    });
+
+    // Verify user state is cleared
+    await waitFor(() => {
+      expect(screen.getByTestId("user").textContent).toBe("no-user");
+      expect(screen.getByTestId("profile").textContent).toBe("no-profile");
+    });
   });
 
   it("should handle no user (unauthenticated)", async () => {

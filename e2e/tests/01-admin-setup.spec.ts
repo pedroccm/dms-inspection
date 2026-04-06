@@ -303,6 +303,14 @@ test.describe.serial('Admin Setup', () => {
     // Verify redirect to login
     await expect(page).toHaveURL(/\/login/);
 
+    // Verify login form is visible (session was actually invalidated)
+    await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 5000 });
+
+    // Verify accessing dashboard redirects back to login (session invalidated)
+    await page.goto('/dashboard');
+    await page.waitForTimeout(3000);
+    await expect(page).toHaveURL(/\/login/);
+
     await page.screenshot({ path: 'e2e/results/01-admin-logout.png' });
   });
 });
