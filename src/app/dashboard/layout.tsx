@@ -128,7 +128,15 @@ function Sidebar({
             </div>
           )}
           <button
-            onClick={signOut}
+            type="button"
+            onClick={async () => {
+              try {
+                const { createClient } = await import("@/lib/supabase/client");
+                const supabase = createClient();
+                await supabase.auth.signOut();
+              } catch {}
+              window.location.href = "/login";
+            }}
             className="w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/10 rounded-lg text-left min-h-[44px] transition-colors cursor-pointer"
           >
             ← Sair
