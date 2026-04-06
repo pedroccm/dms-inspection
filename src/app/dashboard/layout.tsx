@@ -133,6 +133,7 @@ function Sidebar({
           >
             Sair
           </button>
+          <p className="px-4 pt-1 text-[10px] text-white/20">v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
         </div>
       </aside>
     </>
