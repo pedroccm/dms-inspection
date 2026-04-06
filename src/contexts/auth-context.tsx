@@ -93,6 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     router.push("/login");
+    router.refresh();
+    // Fallback: force full page reload after a short delay
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 500);
   }, [supabase, router]);
 
   const role = profile?.role ?? null;
