@@ -68,17 +68,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const init = async () => {
-      // First ensure we have a valid session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Refresh session to ensure token is valid and PostgREST can use it
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (!session || sessionError) {
+        // No session — try refreshing
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        if (!refreshData.session) {
+          if (mounted) setLoading(false);
+          return;
+        }
+      }
+
       const {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
 
       if (!mounted) return;
-      setUser(currentUser ?? session?.user ?? null);
-      const uid = currentUser?.id ?? session?.user?.id;
-      if (uid) {
-        await fetchProfile(uid);
+
+      if (currentUser) {
+        setUser(currentUser);
+        await fetchProfile(currentUser.id);
       }
       setLoading(false);
     };
