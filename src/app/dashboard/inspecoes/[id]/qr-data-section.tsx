@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { parseEquipmentQR, QR_FIELD_ORDER } from "@/lib/qr-parser";
 import { saveQrData } from "./claim-action";
 
 interface QrDataSectionProps {
@@ -10,74 +11,39 @@ interface QrDataSectionProps {
 }
 
 export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionProps) {
-  const [qrInput, setQrInput] = useState("");
-  const [qrData, setQrData] = useState<Record<string, string>>(existingQrData ?? {});
+  // Initialize fields from existing data or empty
+  const buildFields = (data: Record<string, string> | null): Record<string, string> => {
+    const fields: Record<string, string> = {};
+    for (const field of QR_FIELD_ORDER) {
+      fields[field.key] = data?.[field.key] ?? "";
+    }
+    return fields;
+  };
+
+  const [fields, setFields] = useState<Record<string, string>>(() => buildFields(existingQrData));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [showManualEntry, setShowManualEntry] = useState(false);
-  const [manualKey, setManualKey] = useState("");
-  const [manualValue, setManualValue] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [debugRaw, setDebugRaw] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const parseQrData = useCallback((rawData: string): Record<string, string> => {
-    const result: Record<string, string> = {};
-
-    // Try JSON parsing first
-    try {
-      const parsed = JSON.parse(rawData);
-      if (typeof parsed === "object" && parsed !== null) {
-        for (const [k, v] of Object.entries(parsed)) {
-          result[k] = String(v);
-        }
-        return result;
-      }
-    } catch {
-      // Not JSON, try key=value parsing
-    }
-
-    // Try key=value pairs (separated by newlines, semicolons, or commas)
-    const lines = rawData.split(/[\n;,]+/).filter(Boolean);
-    for (const line of lines) {
-      const eqIdx = line.indexOf("=");
-      const colonIdx = line.indexOf(":");
-      const separatorIdx = eqIdx > -1 ? eqIdx : colonIdx;
-
-      if (separatorIdx > 0) {
-        const key = line.slice(0, separatorIdx).trim();
-        const value = line.slice(separatorIdx + 1).trim();
-        if (key) result[key] = value;
-      } else {
-        // Single value, store as raw
-        result[`campo_${Object.keys(result).length + 1}`] = line.trim();
-      }
-    }
-
-    return result;
+  const handleFieldChange = useCallback((key: string, value: string) => {
+    setFields((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const handleProcessQr = useCallback(() => {
-    if (!qrInput.trim()) return;
-
-    const parsed = parseQrData(qrInput.trim());
-    setQrData((prev) => ({ ...prev, ...parsed }));
-    setQrInput("");
-  }, [qrInput, parseQrData]);
-
-  const handleAddManual = useCallback(() => {
-    if (!manualKey.trim() || !manualValue.trim()) return;
-    setQrData((prev) => ({ ...prev, [manualKey.trim()]: manualValue.trim() }));
-    setManualKey("");
-    setManualValue("");
-  }, [manualKey, manualValue]);
-
-  const handleRemoveField = useCallback((key: string) => {
-    setQrData((prev) => {
+  const applyQrData = useCallback((raw: string) => {
+    setDebugRaw(raw);
+    const parsed = parseEquipmentQR(raw);
+    setFields((prev) => {
       const next = { ...prev };
-      delete next[key];
+      for (const field of QR_FIELD_ORDER) {
+        if (parsed[field.key]) {
+          next[field.key] = parsed[field.key];
+        }
+      }
       return next;
     });
   }, []);
@@ -108,7 +74,6 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
         await videoRef.current.play();
       }
 
-      // Use BarcodeDetector API if available (Chrome Android)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const BD = (window as any).BarcodeDetector;
       if (BD) {
@@ -118,15 +83,12 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
           try {
             const barcodes = await detector.detect(videoRef.current);
             if (barcodes.length > 0) {
-              const raw = barcodes[0].rawValue;
-              const parsed = parseQrData(raw);
-              setQrData((prev) => ({ ...prev, ...parsed }));
+              applyQrData(barcodes[0].rawValue);
               stopScanning();
             }
           } catch { /* ignore detection errors */ }
         }, 500);
       } else {
-        // Fallback: try jsQR
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         scanIntervalRef.current = setInterval(async () => {
@@ -139,8 +101,7 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
             const jsQR = (await import("jsqr")).default;
             const code = jsQR(imageData.data, canvas.width, canvas.height);
             if (code) {
-              const parsed = parseQrData(code.data);
-              setQrData((prev) => ({ ...prev, ...parsed }));
+              applyQrData(code.data);
               stopScanning();
             }
           } catch { /* jsQR not available */ }
@@ -149,18 +110,34 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
     } catch {
       setError("Não foi possível acessar a câmera.");
     }
-  }, [parseQrData, stopScanning]);
+  }, [applyQrData, stopScanning]);
 
   useEffect(() => {
     return () => stopScanning();
   }, [stopScanning]);
+
+  // Paste raw QR data
+  const [qrInput, setQrInput] = useState("");
+  const handleProcessQr = useCallback(() => {
+    if (!qrInput.trim()) return;
+    applyQrData(qrInput.trim());
+    setQrInput("");
+  }, [qrInput, applyQrData]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
     setError(null);
     setSaved(false);
 
-    const result = await saveQrData(inspectionId, qrData);
+    // Only save non-empty fields
+    const dataToSave: Record<string, string> = {};
+    for (const [key, value] of Object.entries(fields)) {
+      if (value.trim()) {
+        dataToSave[key] = value.trim();
+      }
+    }
+
+    const result = await saveQrData(inspectionId, dataToSave);
 
     if (result.success) {
       setSaved(true);
@@ -170,7 +147,9 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
     }
 
     setSaving(false);
-  }, [inspectionId, qrData]);
+  }, [inspectionId, fields]);
+
+  const hasAnyData = Object.values(fields).some((v) => v.trim() !== "");
 
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -190,13 +169,13 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
       ) : (
         <div className="flex items-center gap-3 mb-4">
           <Button onClick={startScanning}>
-            📷 Escanear QR Code
+            Escanear QR Code
           </Button>
           <span className="text-sm text-gray-500">ou cole os dados abaixo</span>
         </div>
       )}
 
-      {/* QR Input (paste/manual) */}
+      {/* QR Input (paste) */}
       <div className="space-y-3 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -205,91 +184,66 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
           <textarea
             value={qrInput}
             onChange={(e) => setQrInput(e.target.value)}
-            placeholder="Cole aqui os dados do QR Code (JSON, key=value, ou key:value)"
+            placeholder="Cole aqui os dados brutos do QR Code (16 linhas posicionais)"
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" onClick={handleProcessQr} disabled={!qrInput.trim()}>
-            Processar
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => setShowManualEntry(!showManualEntry)}
-          >
-            {showManualEntry ? "Ocultar Entrada Manual" : "Entrada Manual"}
-          </Button>
-        </div>
+        <Button size="sm" onClick={handleProcessQr} disabled={!qrInput.trim()}>
+          Processar
+        </Button>
       </div>
 
-      {/* Manual Entry */}
-      {showManualEntry && (
-        <div className="flex items-end gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Campo</label>
-            <input
-              type="text"
-              value={manualKey}
-              onChange={(e) => setManualKey(e.target.value)}
-              placeholder="Nome do campo"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
-            />
+      {/* Debug: raw QR data */}
+      {debugRaw && (
+        <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
+          <p className="text-xs font-semibold text-gray-500 mb-1">Dados brutos do QR Code:</p>
+          <pre className="text-xs text-gray-800 whitespace-pre-wrap break-all font-mono bg-white p-2 rounded border max-h-48 overflow-auto">{debugRaw}</pre>
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(debugRaw)}
+              className="px-3 py-1.5 text-xs font-medium bg-[#1B2B5E] text-white rounded hover:bg-[#152349] transition-colors"
+            >
+              Copiar
+            </button>
+            <button
+              type="button"
+              onClick={() => setDebugRaw(null)}
+              className="px-3 py-1.5 text-xs font-medium bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            >
+              Limpar
+            </button>
           </div>
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Valor</label>
-            <input
-              type="text"
-              value={manualValue}
-              onChange={(e) => setManualValue(e.target.value)}
-              placeholder="Valor"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
-            />
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleAddManual}
-            disabled={!manualKey.trim() || !manualValue.trim()}
-          >
-            Adicionar
-          </Button>
         </div>
       )}
 
-      {/* Current QR Data */}
-      {Object.keys(qrData).length > 0 && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-500 uppercase">Campo</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-500 uppercase">Valor</th>
-                <th className="px-4 py-2 w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(qrData).map(([key, value]) => (
-                <tr key={key} className="border-b border-gray-100">
-                  <td className="px-4 py-2 text-sm font-medium text-gray-700">{key}</td>
-                  <td className="px-4 py-2 text-sm text-gray-900">{value}</td>
-                  <td className="px-4 py-2">
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveField(key)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                      title="Remover"
-                    >
-                      &#10005;
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Editable Fields - 16 fields from QR_FIELD_ORDER */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase">Campos do Equipamento</p>
         </div>
-      )}
+        <div className="p-4 space-y-3">
+          {QR_FIELD_ORDER.map((field) => (
+            <div key={field.key} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+              <label
+                htmlFor={`qr-${field.key}`}
+                className="text-sm font-medium text-gray-700 sm:w-48 sm:flex-shrink-0"
+              >
+                {field.label}
+              </label>
+              <input
+                id={`qr-${field.key}`}
+                type="text"
+                value={fields[field.key] ?? ""}
+                onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
+                placeholder={field.label}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Save */}
       <div className="flex items-center gap-3">
@@ -297,9 +251,9 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
           size="sm"
           onClick={handleSave}
           loading={saving}
-          disabled={Object.keys(qrData).length === 0}
+          disabled={!hasAnyData}
         >
-          Salvar Dados do QR
+          Salvar
         </Button>
         {saved && <span className="text-sm text-green-600">Salvo com sucesso!</span>}
         {error && <span className="text-sm text-red-600">{error}</span>}

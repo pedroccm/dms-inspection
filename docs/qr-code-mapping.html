@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code — Mapeamento de Campos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; line-height: 1.5; padding: 48px 56px; max-width: 780px; margin: 0 auto; font-size: 13px; }
+
+    .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #111; }
+    .header-left { font-weight: 700; font-size: 14px; }
+    .header-right { text-align: right; font-size: 11px; color: #555; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #555; margin-bottom: 24px; }
+    h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+
+    p { margin-bottom: 10px; }
+
+    .qr-data { background: #f5f5f5; border: 1px solid #ddd; padding: 12px 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; margin-bottom: 20px; white-space: pre-line; }
+    .ln { color: #999; margin-right: 10px; display: inline-block; width: 20px; text-align: right; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+    th { background: #f0f0f0; text-align: left; padding: 6px 10px; font-weight: 700; border: 1px solid #ccc; }
+    td { padding: 5px 10px; border: 1px solid #ddd; }
+    .c { text-align: center; }
+    .mono { font-family: 'Courier New', monospace; }
+
+    .questions { border: 1px solid #111; padding: 16px 20px; margin: 20px 0; }
+    .questions h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .questions ol { padding-left: 18px; }
+    .questions li { margin-bottom: 6px; }
+
+    .note { font-size: 11px; color: #777; margin-top: 20px; }
+
+    .footer { margin-top: 32px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 10px; color: #999; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 0; font-size: 12px; }
+      .questions { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">DIEN Soluções em Engenharia</div>
+    <div class="header-right">DMS Inspection<br>07/04/2026</div>
+  </div>
+
+  <h1>Mapeamento de Campos do QR Code</h1>
+  <p class="subtitle"></p>
+
+  <h2>Contexto</h2>
+  <p>O sistema DMS Inspection lê o QR Code presente na placa do equipamento para pré-preencher automaticamente os dados técnicos na ficha de inspeção. Ao decodificar os QR Codes de amostra, identificamos que os dados são retornados como <strong>valores em linhas separadas, sem identificação de campo</strong>. É necessário confirmar o significado de cada linha.</p>
+
+  <h2>Dados Brutos do QR Code (amostra)</h2>
+  <div class="qr-data"><span class="ln">01</span>RA
+<span class="ln">02</span>15,5kV
+<span class="ln">03</span>630A
+<span class="ln">04</span>3F
+<span class="ln">05</span>AUT
+<span class="ln">06</span>12,5kA
+<span class="ln">07</span>125kV
+<span class="ln">08</span>600:1
+<span class="ln">09</span>2223:1
+<span class="ln">10</span>O-0,25s-CO-2s-CO-5s-CO
+<span class="ln">11</span>Arteche
+<span class="ln">12</span>smART RC PLUS
+<span class="ln">13</span>23021833051
+<span class="ln">14</span>23021833051
+<span class="ln">15</span>145kg
+<span class="ln">16</span>47kgTEXT</div>
+
+  <h2>Mapeamento Proposto</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="c" style="width:40px">Linha</th>
+        <th style="width:170px">Campo</th>
+        <th>Descrição</th>
+        <th style="width:130px">Valor de Exemplo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="c">01</td><td>Tipo</td><td>Tipo do equipamento</td><td class="mono">RA</td></tr>
+      <tr><td class="c">02</td><td>Tensão Nominal</td><td>Tensão nominal de operação</td><td class="mono">15,5kV</td></tr>
+      <tr><td class="c">03</td><td>Corrente Nominal</td><td>Corrente nominal</td><td class="mono">630A</td></tr>
+      <tr><td class="c">04</td><td>Nº de Fases</td><td>Número de fases (3F = trifásico)</td><td class="mono">3F</td></tr>
+      <tr><td class="c">05</td><td>Tipo de Controle</td><td>Automático / Manual</td><td class="mono">AUT</td></tr>
+      <tr><td class="c">06</td><td>Cap. de Interrupção</td><td>Capacidade de interrupção</td><td class="mono">12,5kA</td></tr>
+      <tr><td class="c">07</td><td>NBI</td><td>Nível Básico de Isolamento</td><td class="mono">125kV</td></tr>
+      <tr><td class="c">08</td><td>TC Interno</td><td>Transformador de Corrente interno</td><td class="mono">600:1</td></tr>
+      <tr><td class="c">09</td><td>Sensor de Tensão</td><td>Relação do sensor de tensão</td><td class="mono">2223:1</td></tr>
+      <tr><td class="c">10</td><td>Seq. de Operação</td><td>Sequência de operação do religador</td><td class="mono">O-0,25s-CO-...</td></tr>
+      <tr><td class="c">11</td><td>Marca</td><td>Fabricante do equipamento</td><td class="mono">Arteche</td></tr>
+      <tr><td class="c">12</td><td>Modelo</td><td>Modelo do equipamento</td><td class="mono">smART RC PLUS</td></tr>
+      <tr><td class="c">13</td><td>Nº Série (Controle)</td><td>Número de série da caixa de controle</td><td class="mono">23021833051</td></tr>
+      <tr><td class="c">14</td><td>Nº Série (Tanque)</td><td>Número de série do tanque/mecanismo</td><td class="mono">23021833051</td></tr>
+      <tr><td class="c">15</td><td>Massa Interruptor</td><td>Peso do mecanismo interruptor</td><td class="mono">145kg</td></tr>
+      <tr><td class="c">16</td><td>Massa Cx. Controle</td><td>Peso da caixa de controle</td><td class="mono">47kg</td></tr>
+    </tbody>
+  </table>
+
+  <div class="questions">
+    <h3>Perguntas para confirmação</h3>
+    <ol>
+      <li><strong>A ordem dos campos está correta?</strong> Linha 1 = Tipo, Linha 2 = Tensão Nominal, e assim por diante?</li>
+      <li><strong>Todos os QR Codes seguem essa mesma ordem</strong>, independente do fabricante ou modelo?</li>
+      <li><strong>A linha 16 termina com "TEXT"</strong> (ex: "47kgTEXT"). O sufixo "TEXT" deve ser descartado pelo sistema?</li>
+      <li><strong>As linhas 13 e 14 são iguais nesta amostra.</strong> No equipamento real, os números de série do controle e do tanque são diferentes?</li>
+      <li><strong>Existem campos adicionais</strong> que podem aparecer em outros modelos de equipamento e que não estão nesta amostra?</li>
+      <li><strong>Pode haver menos de 16 linhas</strong> em algum caso, ou o formato é sempre fixo em 16?</li>
+    </ol>
+  </div>
+
+
+  <div class="footer">
+    <span>DIEN Soluções em Engenharia — Confidencial</span>
+    <span>DMS Inspection v0.26.2</span>
+  </div>
+
+</body>
+</html>

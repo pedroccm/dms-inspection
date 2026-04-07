@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { QRScanner } from "@/components/qr-scanner";
 import { createEquipment } from "../actions";
-import type { EquipmentQRData } from "@/lib/qr-parser";
+import { QR_FIELD_ORDER } from "@/lib/qr-parser";
 
 export function CreateEquipmentForm() {
-  const [qrData, setQrData] = useState<Partial<EquipmentQRData>>({});
+  const [qrFields, setQrFields] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const f of QR_FIELD_ORDER) {
+      initial[f.key] = "";
+    }
+    return initial;
+  });
   const [qrRaw, setQrRaw] = useState("");
   const [showTechnical, setShowTechnical] = useState(false);
 
@@ -21,13 +27,24 @@ export function CreateEquipmentForm() {
     null
   );
 
-  const handleQrScan = (data: Partial<EquipmentQRData>, raw: string) => {
-    setQrData(data);
+  const handleQrScan = (data: Record<string, string>, raw: string) => {
+    setQrFields((prev) => {
+      const next = { ...prev };
+      for (const field of QR_FIELD_ORDER) {
+        if (data[field.key]) {
+          next[field.key] = data[field.key];
+        }
+      }
+      return next;
+    });
     setQrRaw(raw);
-    // Expand technical section when QR data arrives
     if (Object.keys(data).length > 0) {
       setShowTechnical(true);
     }
+  };
+
+  const handleFieldChange = (key: string, value: string) => {
+    setQrFields((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -67,8 +84,8 @@ export function CreateEquipmentForm() {
         label="Número de Série do Mecanismo"
         name="mechanism_serial"
         required
-        defaultValue={qrData.mechanism_serial ?? ""}
-        key={`mechanism_serial-${qrData.mechanism_serial ?? ""}`}
+        defaultValue={qrFields.numero_serie_tanque}
+        key={`mechanism_serial-${qrFields.numero_serie_tanque}`}
         placeholder="Digite o número de série do mecanismo"
       />
 
@@ -76,8 +93,8 @@ export function CreateEquipmentForm() {
         label="Número de Série da Caixa de Controle"
         name="control_box_serial"
         required
-        defaultValue={qrData.control_box_serial ?? ""}
-        key={`control_box_serial-${qrData.control_box_serial ?? ""}`}
+        defaultValue={qrFields.numero_serie_controle}
+        key={`control_box_serial-${qrFields.numero_serie_controle}`}
         placeholder="Digite o número de série da caixa de controle"
       />
 
@@ -92,8 +109,8 @@ export function CreateEquipmentForm() {
         label="Fabricante do Religador"
         name="manufacturer"
         required
-        defaultValue={qrData.manufacturer ?? ""}
-        key={`manufacturer-${qrData.manufacturer ?? ""}`}
+        defaultValue={qrFields.marca}
+        key={`manufacturer-${qrFields.marca}`}
         placeholder="Digite o fabricante do religador"
       />
 
@@ -124,151 +141,25 @@ export function CreateEquipmentForm() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Modelo"
-                name="modelo"
-                defaultValue={qrData.modelo ?? ""}
-                key={`modelo-${qrData.modelo ?? ""}`}
-                placeholder="Ex.: smART RC PLUS"
-              />
-              <Input
-                label="Marca"
-                name="marca"
-                defaultValue={qrData.marca ?? ""}
-                key={`marca-${qrData.marca ?? ""}`}
-                placeholder="Ex.: Arteche"
-              />
-              <Input
-                label="Tipo"
-                name="tipo"
-                defaultValue={qrData.tipo ?? ""}
-                key={`tipo-${qrData.tipo ?? ""}`}
-                placeholder="Ex.: Religador Automatico"
-              />
-              <Input
-                label="Nº Série do Controle"
-                name="numero_serie_controle"
-                defaultValue={qrData.numero_serie_controle ?? ""}
-                key={`numero_serie_controle-${qrData.numero_serie_controle ?? ""}`}
-              />
-              <Input
-                label="Nº Série do Tanque"
-                name="numero_serie_tanque"
-                defaultValue={qrData.numero_serie_tanque ?? ""}
-                key={`numero_serie_tanque-${qrData.numero_serie_tanque ?? ""}`}
-              />
-              <Input
-                label="Tensão Nominal"
-                name="tensao_nominal"
-                defaultValue={qrData.tensao_nominal ?? ""}
-                key={`tensao_nominal-${qrData.tensao_nominal ?? ""}`}
-                placeholder="Ex.: 15,5 kV"
-              />
-              <Input
-                label="NBI"
-                name="nbi"
-                defaultValue={qrData.nbi ?? ""}
-                key={`nbi-${qrData.nbi ?? ""}`}
-                placeholder="Ex.: 125 kV"
-              />
-              <Input
-                label="Frequência Nominal"
-                name="frequencia_nominal"
-                defaultValue={qrData.frequencia_nominal ?? ""}
-                key={`frequencia_nominal-${qrData.frequencia_nominal ?? ""}`}
-                placeholder="Ex.: 60 Hz"
-              />
-              <Input
-                label="Corrente Nominal"
-                name="corrente_nominal"
-                defaultValue={qrData.corrente_nominal ?? ""}
-                key={`corrente_nominal-${qrData.corrente_nominal ?? ""}`}
-                placeholder="Ex.: 630 A"
-              />
-              <Input
-                label="Capacidade de Interrupção"
-                name="capacidade_interrupcao"
-                defaultValue={qrData.capacidade_interrupcao ?? ""}
-                key={`capacidade_interrupcao-${qrData.capacidade_interrupcao ?? ""}`}
-                placeholder="Ex.: 12,5 kA"
-              />
-              <Input
-                label="Nº de Fases"
-                name="numero_fases"
-                defaultValue={qrData.numero_fases ?? ""}
-                key={`numero_fases-${qrData.numero_fases ?? ""}`}
-                placeholder="Ex.: 3"
-              />
-              <Input
-                label="Tipo de Controle"
-                name="tipo_controle"
-                defaultValue={qrData.tipo_controle ?? ""}
-                key={`tipo_controle-${qrData.tipo_controle ?? ""}`}
-                placeholder="Ex.: Automatico"
-              />
-              <Input
-                label="Modelo Controle Eletrônico"
-                name="modelo_controle"
-                defaultValue={qrData.modelo_controle ?? ""}
-                key={`modelo_controle-${qrData.modelo_controle ?? ""}`}
-                placeholder="Ex.: adaTECH RC"
-              />
-              <Input
-                label="Sensor de Tensão"
-                name="sensor_tensao"
-                defaultValue={qrData.sensor_tensao ?? ""}
-                key={`sensor_tensao-${qrData.sensor_tensao ?? ""}`}
-                placeholder="Ex.: 2223:1"
-              />
-              <Input
-                label="TC Interno"
-                name="tc_interno"
-                defaultValue={qrData.tc_interno ?? ""}
-                key={`tc_interno-${qrData.tc_interno ?? ""}`}
-                placeholder="Ex.: 600:1"
-              />
-              <Input
-                label="Sequência de Operação"
-                name="sequencia_operacao"
-                defaultValue={qrData.sequencia_operacao ?? ""}
-                key={`sequencia_operacao-${qrData.sequencia_operacao ?? ""}`}
-                placeholder="Ex.: O-0,25s-CO-2s-CO-5s-CO"
-              />
-              <Input
-                label="Meio de Interrupção"
-                name="meio_interrupcao"
-                defaultValue={qrData.meio_interrupcao ?? ""}
-                key={`meio_interrupcao-${qrData.meio_interrupcao ?? ""}`}
-                placeholder="Ex.: Vacuo"
-              />
-              <Input
-                label="Massa do Interruptor"
-                name="massa_interruptor"
-                defaultValue={qrData.massa_interruptor ?? ""}
-                key={`massa_interruptor-${qrData.massa_interruptor ?? ""}`}
-                placeholder="Ex.: 145 kg"
-              />
-              <Input
-                label="Massa da Caixa de Controle"
-                name="massa_caixa_controle"
-                defaultValue={qrData.massa_caixa_controle ?? ""}
-                key={`massa_caixa_controle-${qrData.massa_caixa_controle ?? ""}`}
-                placeholder="Ex.: 47 kg"
-              />
-              <Input
-                label="Massa Total"
-                name="massa_total"
-                defaultValue={qrData.massa_total ?? ""}
-                key={`massa_total-${qrData.massa_total ?? ""}`}
-                placeholder="Ex.: 192 kg"
-              />
-              <Input
-                label="Norma Aplicável"
-                name="norma_aplicavel"
-                defaultValue={qrData.norma_aplicavel ?? ""}
-                key={`norma_aplicavel-${qrData.norma_aplicavel ?? ""}`}
-                placeholder="Ex.: ANSI/IEEE C37.60"
-              />
+              {QR_FIELD_ORDER.map((field) => (
+                <div key={field.key}>
+                  <label
+                    htmlFor={`eq-${field.key}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    {field.label}
+                  </label>
+                  <input
+                    id={`eq-${field.key}`}
+                    type="text"
+                    name={field.key}
+                    value={qrFields[field.key] ?? ""}
+                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
+                    placeholder={field.label}
+                  />
+                </div>
+              ))}
             </div>
 
             {/* Hidden field for raw QR code data */}

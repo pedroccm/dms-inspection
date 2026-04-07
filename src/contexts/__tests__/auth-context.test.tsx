@@ -12,6 +12,8 @@ vi.mock("next/navigation", () => ({
 
 // Mock supabase client
 const mockGetUser = vi.fn();
+const mockGetSession = vi.fn();
+const mockRefreshSession = vi.fn();
 const mockOnAuthStateChange = vi.fn();
 const mockSignOut = vi.fn();
 const mockSelect = vi.fn();
@@ -22,6 +24,8 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
       getUser: mockGetUser,
+      getSession: mockGetSession,
+      refreshSession: mockRefreshSession,
       onAuthStateChange: mockOnAuthStateChange,
       signOut: mockSignOut,
     },
@@ -51,6 +55,13 @@ describe("AuthContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    mockGetSession.mockResolvedValue({
+      data: { session: { user: { id: "user-1" } } },
+      error: null,
+    });
+    mockRefreshSession.mockResolvedValue({
+      data: { session: null },
+    });
     mockOnAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     });
@@ -160,6 +171,13 @@ describe("AuthContext", () => {
   });
 
   it("should handle no user (unauthenticated)", async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+    mockRefreshSession.mockResolvedValue({
+      data: { session: null },
+    });
     mockGetUser.mockResolvedValue({
       data: { user: null },
     });

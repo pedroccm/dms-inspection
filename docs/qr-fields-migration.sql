@@ -1,0 +1,17 @@
+-- QR Fields Migration
+-- The inspections.qr_data JSONB column already exists.
+-- No new columns are needed — all 16 QR fields are stored as JSON keys inside qr_data:
+--
+-- Expected keys in qr_data JSONB:
+--   tipo, tensao_nominal, corrente_nominal, numero_fases,
+--   tipo_controle, capacidade_interrupcao, nbi, tc_interno,
+--   sensor_tensao, sequencia_operacao, marca, modelo,
+--   numero_serie_controle, numero_serie_tanque,
+--   massa_interruptor, massa_caixa_controle
+--
+-- This file is for documentation purposes only. DO NOT execute.
+
+-- Verify the column exists (informational):
+-- SELECT column_name, data_type
+-- FROM information_schema.columns
+-- WHERE table_name = 'aime_int_inspections' AND column_name = 'qr_data';

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { parseEquipmentQR, type EquipmentQRData } from "@/lib/qr-parser";
+import { parseEquipmentQR } from "@/lib/qr-parser";
 
 interface BarcodeDetectorResult {
   rawValue: string;
@@ -24,7 +24,7 @@ declare global {
 }
 
 interface QRScannerProps {
-  onScan: (data: Partial<EquipmentQRData>, raw: string) => void;
+  onScan: (data: Record<string, string>, raw: string) => void;
 }
 
 export function QRScanner({ onScan }: QRScannerProps) {
