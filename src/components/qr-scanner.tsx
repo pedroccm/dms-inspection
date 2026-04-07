@@ -179,7 +179,25 @@ export function QRScanner({ onScan }: QRScannerProps) {
       {debugRaw && (
         <div className="mt-3 p-3 bg-gray-100 border border-gray-300 rounded-lg">
           <p className="text-xs font-semibold text-gray-500 mb-1">DEBUG — Dados brutos do QR Code:</p>
-          <pre className="text-xs text-gray-800 whitespace-pre-wrap break-all font-mono bg-white p-2 rounded border max-h-40 overflow-auto">{debugRaw}</pre>
+          <pre className="text-xs text-gray-800 whitespace-pre-wrap break-all font-mono bg-white p-2 rounded border max-h-48 overflow-auto">{debugRaw}</pre>
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(debugRaw);
+              }}
+              className="px-3 py-1.5 text-xs font-medium bg-[#1B2B5E] text-white rounded hover:bg-[#152349] transition-colors"
+            >
+              📋 Copiar
+            </button>
+            <button
+              type="button"
+              onClick={() => setDebugRaw(null)}
+              className="px-3 py-1.5 text-xs font-medium bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            >
+              ✕ Limpar
+            </button>
+          </div>
         </div>
       )}
 
