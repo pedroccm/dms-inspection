@@ -39,14 +39,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = supabaseRef.current;
 
   const fetchProfile = useCallback(
-    async (userId: string) => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    async (userId: string, retries = 3): Promise<Profile | null> => {
+      for (let attempt = 0; attempt < retries; attempt++) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      setProfile(data as Profile | null);
+        if (data) {
+          setProfile(data as Profile);
+          return data as Profile;
+        }
+
+        // If error (likely RLS/session not ready), wait and retry
+        if (error && attempt < retries - 1) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        }
+      }
+
+      setProfile(null);
+      return null;
     },
     [supabase]
   );
@@ -55,14 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const init = async () => {
+      // First ensure we have a valid session
+      const { data: { session } } = await supabase.auth.getSession();
       const {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
 
       if (!mounted) return;
-      setUser(currentUser);
-      if (currentUser) {
-        await fetchProfile(currentUser.id);
+      setUser(currentUser ?? session?.user ?? null);
+      const uid = currentUser?.id ?? session?.user?.id;
+      if (uid) {
+        await fetchProfile(uid);
       }
       setLoading(false);
     };
