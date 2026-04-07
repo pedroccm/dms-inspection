@@ -6,9 +6,9 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   const fetchProfile = useCallback(
     async (userId: string) => {
@@ -52,11 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    let mounted = true;
+
     const init = async () => {
       const {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
 
+      if (!mounted) return;
       setUser(currentUser);
       if (currentUser) {
         await fetchProfile(currentUser.id);
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
@@ -77,16 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
       }
-
-      if (event === "SIGNED_OUT") {
-        router.push("/login");
-      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile, router]);
+  }, [supabase, fetchProfile]);
 
   const signOut = useCallback(async () => {
     try {
@@ -96,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setProfile(null);
-    // Force full page reload to clear all state
     window.location.href = "/login";
   }, [supabase]);
 
