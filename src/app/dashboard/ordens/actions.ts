@@ -88,11 +88,9 @@ export async function createServiceOrder(formData: FormData) {
   // Create inspection fichas (one per equipment)
   const inspectionInserts = fichaNumbers.map((ficha) => ({
     service_order_id: data.id,
-    inspector_id: assignedTo,
     status: "disponivel" as const,
     numero_052r: ficha.numero_052r,
     numero_300: ficha.numero_300,
-    equipment_id: null,
   }));
 
   const { error: fichaError } = await supabase
