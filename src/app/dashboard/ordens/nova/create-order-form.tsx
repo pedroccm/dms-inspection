@@ -62,19 +62,26 @@ export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: Crea
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="w-full">
-          <Input
-            label="Quantidade de Equipamentos"
-            name="equipment_count"
-            type="number"
-            required
-            value={equipmentCount}
-            onChange={(e) => {
-              const val = parseInt(e.target.value, 10);
-              setEquipmentCount(isNaN(val) || val < 1 ? 1 : val > 50 ? 50 : val);
-            }}
-            min={1}
-            max={50}
-          />
+          <div className="w-full">
+            <label htmlFor="equipment_count" className="block text-sm font-medium text-gray-700 mb-1">
+              Quantidade de Equipamentos<span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <input
+              id="equipment_count"
+              name="equipment_count"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              required
+              value={equipmentCount}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                const val = parseInt(raw, 10);
+                setEquipmentCount(isNaN(val) || val < 1 ? (raw === "" ? 0 : 1) : val > 50 ? 50 : val);
+              }}
+              className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 transition-colors focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
+            />
+          </div>
         </div>
 
         <div className="w-full">
