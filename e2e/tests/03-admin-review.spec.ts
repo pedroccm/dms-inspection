@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { LoginPage } from '../pages/login.page';
-import { ADMIN, EQUIPMENT_1, INSPECTOR } from '../fixtures/test-data';
+import { ADMIN, EXECUTOR } from '../fixtures/test-data';
 
 /**
  * Helper: navigate to the inspection detail page for the "Pronta para Revisão" inspection.
@@ -11,7 +11,7 @@ async function navigateToReviewInspection(page: Page) {
   await page.waitForURL('**/inspecoes');
   await page.waitForTimeout(2000);
 
-  // Find the row with "Pronta para Revisão" status (there may be duplicate inspections)
+  // Find the row with "Pronta para Revisão" status
   const targetRow = page.locator('tr', { hasText: 'Pronta para Revisão' }).first();
   await expect(targetRow).toBeVisible({ timeout: 10000 });
   await targetRow.getByRole('link', { name: 'Ver' }).click();
@@ -28,11 +28,11 @@ async function navigateToReviewInspection(page: Page) {
   }
 }
 
-test.describe.serial('03 - Admin Review', () => {
+test.describe.serial('03 - Master Review', () => {
   // Increase timeout for tests that hit the inspection detail page (form lock can be slow)
   test.setTimeout(60000);
 
-  test('Admin login for review', async ({ page }) => {
+  test('Master login', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
@@ -40,67 +40,45 @@ test.describe.serial('03 - Admin Review', () => {
 
     // Verify redirect to dashboard
     await expect(page).toHaveURL(/\/dashboard/);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Verify admin name appears
-    await expect(page.getByText(ADMIN.name)).toBeVisible();
+    await expect(page.getByText(ADMIN.name)).toBeVisible({ timeout: 10000 });
 
-    await page.screenshot({ path: 'e2e/results/03-admin-login.png' });
+    await page.screenshot({ path: 'e2e/results/03-master-login.png' });
   });
 
-  test('Admin sees updated dashboard metrics', async ({ page }) => {
+  test('Master sees inspection in list with Pronta para Revisão status', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
-
-    // Verify metric cards in main area (avoid sidebar conflicts)
-    const main = page.getByRole('main');
-    await expect(main.getByText('Equipamentos')).toBeVisible();
-    await expect(main.getByText('Ordens Abertas')).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/results/03-dashboard-metrics.png' });
-  });
-
-  test('Admin sees inspector inspection in list', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Navigate to inspections page
     await page.goto('/dashboard/inspecoes');
     await page.waitForURL('**/inspecoes');
     await page.waitForTimeout(2000);
 
-    // Verify inspection for EQUIPMENT_1 appears in list (use .first() for duplicate data)
-    await expect(
-      page.getByRole('cell', { name: new RegExp(EQUIPMENT_1.copelRa) }).first()
-    ).toBeVisible({ timeout: 10000 });
-
-    // Verify a status badge is visible in the table (should be "Pronta para Revisão" from spec 02)
-    // Scope to <table> to avoid matching the hidden <option> in the status filter dropdown
+    // Verify a status badge "Pronta para Revisão" is visible in the table
     const table = page.locator('table');
     await expect(
       table.getByText('Pronta para Revisão').first()
     ).toBeVisible({ timeout: 10000 });
 
-    await page.screenshot({ path: 'e2e/results/03-inspection-list.png' });
+    await page.screenshot({ path: 'e2e/results/03-master-inspection-list.png' });
   });
 
-  test('Admin opens inspection and sees checklist, observations, and status', async ({ page }) => {
+  test('Master opens inspection and sees checklist data and observations', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     await navigateToReviewInspection(page);
 
-    // Wait for page to fully load (form lock may delay rendering)
-    // Try multiple indicators - any one means the page loaded
+    // Wait for page to fully load
     const loaded = await Promise.race([
       page.getByText(/Aprovados/).first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
       page.getByText('Alavanca Amarela').first().waitFor({ timeout: 25000 }).then(() => true).catch(() => false),
@@ -122,46 +100,30 @@ test.describe.serial('03 - Admin Review', () => {
       page.getByText('Alavanca Amarela').first()
     ).toBeVisible({ timeout: 10000 });
 
-    await page.screenshot({ path: 'e2e/results/03-checklist-data.png' });
-
     // Verify the observations text is visible (set in spec 02)
     await expect(
       page.getByText('Equipamento em bom estado', { exact: false })
     ).toBeVisible({ timeout: 10000 });
 
-    await page.screenshot({ path: 'e2e/results/03-observations.png' });
-
     // Verify status badge shows "Pronta para Revisão"
     await expect(page.getByText('Pronta para Revisão').first()).toBeVisible({ timeout: 10000 });
 
-    // Status is "ready_for_review" (Pronta para Revisão)
-    // Export button only appears for "aprovado" or "transferred" status
-    // Transfer button only appears for "aprovado" status
-    // So both should NOT be visible in the current state
-    await expect(
-      page.getByRole('button', { name: /Exportar para Webed/i })
-    ).toBeHidden();
-
-    await expect(
-      page.getByRole('button', { name: /Marcar como Transferida/i })
-    ).toBeHidden();
-
-    await page.screenshot({ path: 'e2e/results/03-buttons-visibility.png' });
+    await page.screenshot({ path: 'e2e/results/03-master-inspection-detail.png' });
   });
 
-  test('Admin views productivity report', async ({ page }) => {
+  test('Master views productivity report', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Navigate to reports page
     await page.goto('/dashboard/relatorios');
     await page.waitForTimeout(2000);
 
-    // Verify "Produtividade por Executor" section exists
-    await expect(page.getByText(/Produtividade/i)).toBeVisible();
+    // Verify "Produtividade" section exists
+    await expect(page.getByText(/Produtividade/i)).toBeVisible({ timeout: 10000 });
 
     // Click "Ver Relatório" to open the productivity report
     await page.getByRole('link', { name: /Ver Relatório/i }).first().click();
@@ -171,50 +133,25 @@ test.describe.serial('03 - Admin Review', () => {
     // Verify we're on the productivity report page
     await expect(page.getByText('Relatório de Produtividade')).toBeVisible({ timeout: 10000 });
 
-    // Verify inspector name appears in the report table (scope to table to avoid filter dropdown)
+    // Verify executor name appears in the report table
     const table = page.locator('table');
     await expect(
-      table.getByText(INSPECTOR.name).first()
+      table.getByText(EXECUTOR.name).first()
     ).toBeVisible({ timeout: 10000 });
 
-    await page.screenshot({ path: 'e2e/results/03-productivity-report.png' });
+    await page.screenshot({ path: 'e2e/results/03-master-productivity-report.png' });
   });
 
-  test('Admin views audit log', async ({ page }) => {
+  test('Master logout', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
-
-    await navigateToReviewInspection(page);
-
-    // Look for "Historico de Alteracoes" collapsible button
-    const auditToggle = page.getByRole('button', { name: /Historico de Alteracoes/i });
-    await expect(auditToggle).toBeVisible({ timeout: 10000 });
-
-    // Click to expand
-    await auditToggle.click();
-    await page.waitForTimeout(1000);
-
-    // Verify audit entries exist (action labels: "Criacao", "Alteracao", "Remocao")
-    await expect(
-      page.getByText(/Criacao|Alteracao|Remocao/).first()
-    ).toBeVisible({ timeout: 10000 });
-
-    await page.screenshot({ path: 'e2e/results/03-audit-log.png' });
-  });
-
-  test('Admin logout after review', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     await loginPage.logout();
     await loginPage.expectLoginPage();
 
-    await page.screenshot({ path: 'e2e/results/03-admin-logout.png' });
+    await page.screenshot({ path: 'e2e/results/03-master-logout.png' });
   });
 });

@@ -4,7 +4,7 @@ export const ADMIN = {
   name: 'Administrador DMS',
 };
 
-export const INSPECTOR = {
+export const EXECUTOR = {
   email: 'inspetor@dms.eng.br',
   password: 'Inspetor@2026',
   name: 'Inspetor Teste',
