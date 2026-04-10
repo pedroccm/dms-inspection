@@ -373,21 +373,15 @@ export function ChecklistForm({
       </div>
 
       {/* Checklist Items */}
-      {Object.keys(groupedItems).length === 0 ? (
+      {items.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500 mb-6">
           Nenhum item de checklist encontrado.
         </div>
       ) : (
         <div className="space-y-6 mb-6">
-          {Object.entries(groupedItems).map(([category, categoryItems]) => (
-            <div key={category} className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  {category}
-                </h2>
-              </div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               <ul className="divide-y divide-gray-100">
-                {categoryItems.map((item) => {
+                {items.map((item) => {
                   const itemState = saveStates[item.id];
                   const currentItem = items.find((i) => i.id === item.id) ?? item;
                   const reasonError = reasonErrors[item.id];
@@ -496,7 +490,6 @@ export function ChecklistForm({
                 })}
               </ul>
             </div>
-          ))}
         </div>
       )}
 
