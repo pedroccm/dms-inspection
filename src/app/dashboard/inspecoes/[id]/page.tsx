@@ -105,7 +105,7 @@ export default async function InspecaoDetailPage({
           )}
           <Badge variant={config.variant}>{config.label}</Badge>
           <Link
-            href="/dashboard/inspecoes"
+            href={inspection.service_order_id ? `/dashboard/ordens/${inspection.service_order_id}` : "/dashboard/ordens"}
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
           >
             Voltar
