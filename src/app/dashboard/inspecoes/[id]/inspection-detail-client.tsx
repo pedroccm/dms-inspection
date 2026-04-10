@@ -24,20 +24,8 @@ export function InspectionDetailClient({
   photos,
   isEditable,
 }: InspectionDetailClientProps) {
-  const { isLocked, lockedBy, lockedAt, loading } =
+  const { isLocked, lockedBy, lockedAt } =
     useFormLock(inspectionId);
-
-  // While checking lock status, show a subtle loading state
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-          <div className="h-3 bg-gray-100 rounded w-full" />
-        </div>
-      </div>
-    );
-  }
 
   // If locked by another user, override editable to false
   const effectiveEditable = isEditable && !isLocked;

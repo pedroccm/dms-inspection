@@ -95,12 +95,17 @@ export async function saveQrData(inspectionId: string, qrData: Record<string, st
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
+  // If status is draft, move to in_progress when QR data is saved
+  const updateData: Record<string, unknown> = {
+    qr_data: qrData,
+  };
+  if (inspection.status === "draft") {
+    updateData.status = "in_progress";
+  }
+
   const { error: updateError } = await supabase
     .from("inspections")
-    .update({
-      qr_data: qrData,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq("id", inspectionId);
 
   if (updateError) {

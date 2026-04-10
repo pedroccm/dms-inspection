@@ -169,30 +169,10 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
       ) : (
         <div className="flex items-center gap-3 mb-4">
           <Button onClick={startScanning}>
-            Escanear QR Code
+            📷 Escanear QR Code
           </Button>
-          <span className="text-sm text-gray-500">ou cole os dados abaixo</span>
         </div>
       )}
-
-      {/* QR Input (paste) */}
-      <div className="space-y-3 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Dados do QR Code (colar texto)
-          </label>
-          <textarea
-            value={qrInput}
-            onChange={(e) => setQrInput(e.target.value)}
-            placeholder="Cole aqui os dados brutos do QR Code (16 linhas posicionais)"
-            rows={3}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
-          />
-        </div>
-        <Button size="sm" onClick={handleProcessQr} disabled={!qrInput.trim()}>
-          Processar
-        </Button>
-      </div>
 
       {/* Editable Fields - 16 fields from QR_FIELD_ORDER */}
       <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
