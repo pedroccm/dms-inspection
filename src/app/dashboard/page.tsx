@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getProfile } from "@/lib/auth";
 import { getDashboardCounts } from "@/lib/queries";
 import { redirect } from "next/navigation";
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
   ];
 
   const inspectorStats = [
-    { label: "Minhas Ordens Ativas", value: counts.openOrders },
+    { label: "Minhas Ordens Ativas", value: counts.openOrders, href: "/dashboard/ordens" },
     { label: "Minhas Inspeções Pendentes", value: counts.pendingReviews },
     { label: "Inspeções Hoje", value: counts.inspectionsToday },
     { label: "Equipamentos", value: counts.equipmentCount },
@@ -50,22 +51,45 @@ export default async function DashboardPage() {
       </p>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-xl border border-gray-200 p-6"
-          >
-            <p className="text-sm text-gray-500">{stat.label}</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {stat.value}
-            </p>
-            {stat.value === 0 && (
-              <p className="mt-1 text-xs text-gray-400">
-                Nenhum dado encontrado
+        {stats.map((stat) => {
+          const content = (
+            <>
+              <p className="text-sm text-gray-500">{stat.label}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {stat.value}
               </p>
-            )}
-          </div>
-        ))}
+              {stat.value === 0 && (
+                <p className="mt-1 text-xs text-gray-400">
+                  Nenhum dado encontrado
+                </p>
+              )}
+              {"href" in stat && stat.href && (
+                <p className="mt-2 text-xs text-[#F5A623] font-medium">Ver todas →</p>
+              )}
+            </>
+          );
+
+          if ("href" in stat && stat.href) {
+            return (
+              <Link
+                key={stat.label}
+                href={stat.href}
+                className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#F5A623] hover:shadow-md transition-all cursor-pointer"
+              >
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={stat.label}
+              className="bg-white rounded-xl border border-gray-200 p-6"
+            >
+              {content}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

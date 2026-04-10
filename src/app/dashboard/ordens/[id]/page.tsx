@@ -3,12 +3,8 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getServiceOrderById, getInspectionsByServiceOrderId } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
-import { AdminOnly } from "@/components/admin-only";
-import { AddEquipmentSection } from "./add-equipment-section";
-import { RemoveEquipmentButton } from "./remove-equipment-button";
 import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
-import { ImportEquipment } from "./import-equipment";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -68,7 +64,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
     // Non-critical, show empty
   }
 
-  const equipmentList = order.service_order_equipment ?? [];
   const isCompleted = order.status === "completed" || order.status === "cancelled";
 
   return (
@@ -242,82 +237,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
         )}
       </div>
 
-      {/* Equipment list */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Equipamentos da Ordem
-          </h2>
-        </div>
-        {equipmentList.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-500">
-            Nenhum equipamento adicionado a esta ordem.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 bg-[#1B2B5E]">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Código Copel RA
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Fabricante
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Status Inspeção
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipmentList.map((soe) => (
-                  <tr
-                    key={soe.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {soe.equipment?.copel_ra_code ?? "—"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {soe.equipment?.manufacturer ?? "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="neutral">
-                        Não Iniciada
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <AdminOnly>
-                        <RemoveEquipmentButton
-                          orderId={order.id}
-                          equipmentId={soe.equipment_id}
-                        />
-                      </AdminOnly>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Add equipment section - admin only, only if order is not completed */}
-      {!isCompleted && (
-        <AdminOnly>
-          <AddEquipmentSection orderId={order.id} />
-        </AdminOnly>
-      )}
-
-      {/* Import equipment section - admin only, only if order is not completed */}
-      {!isCompleted && (
-        <AdminOnly>
-          <ImportEquipment orderId={order.id} />
-        </AdminOnly>
-      )}
     </div>
   );
 }
