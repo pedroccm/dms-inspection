@@ -8,11 +8,7 @@ import {
   MAX_PHOTOS,
   getPhotoLabel,
 } from "@/lib/types";
-import {
-  uploadInspectionPhoto,
-  deleteInspectionPhoto,
-  getPhotoUrl,
-} from "@/lib/storage";
+import { getPhotoUrl } from "@/lib/storage";
 import { PhotoViewer } from "@/components/photo-viewer";
 import type { PhotoViewerItem } from "@/components/photo-viewer";
 
@@ -189,49 +185,50 @@ export function PhotoSection({
         return;
       }
 
-      setSlotState(photoKey, { uploading: true, progress: 0, error: null });
+      setSlotState(photoKey, { uploading: true, progress: 10, error: null });
 
       try {
-        // If replacing, delete old photo first
+        // If replacing, delete old photo first via API
         const existing = photos[photoKey];
         if (existing) {
-          await deleteInspectionPhoto(existing.id, existing.storage_path);
+          await fetch("/api/photos/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photoId: existing.id, storagePath: existing.storage_path }),
+          });
         }
 
-        // Find custom label for dynamic slots
+        // Upload via API route (server-side, no RLS issues)
         const slot = slots.find((s) => s.key === photoKey);
         const customLabel = slot && !slot.required ? slot.label : null;
 
-        const photo = await uploadInspectionPhoto(
-          inspectionId,
-          photoKey,
-          file,
-          (percent) => setSlotState(photoKey, { progress: percent }),
-          customLabel
-        );
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("inspectionId", inspectionId);
+        formData.append("photoType", photoKey);
+        if (customLabel) formData.append("label", customLabel);
 
-        setPhotos((prev) => ({ ...prev, [photoKey]: photo }));
-        setSlotState(photoKey, {
-          uploading: false,
-          progress: 100,
-          error: null,
+        setSlotState(photoKey, { progress: 30 });
+
+        const res = await fetch("/api/photos/upload", {
+          method: "POST",
+          body: formData,
         });
 
-        // Load signed URL for new photo
-        try {
-          const url = await getPhotoUrl(photo.storage_path);
-          setSignedUrls((prev) => ({ ...prev, [photoKey]: url }));
-        } catch {
-          // Non-critical
+        const result = await res.json();
+
+        if (!res.ok || result.error) {
+          throw new Error(result.error ?? "Erro ao enviar foto.");
         }
+
+        setPhotos((prev) => ({ ...prev, [photoKey]: result.photo }));
+        if (result.signedUrl) {
+          setSignedUrls((prev) => ({ ...prev, [photoKey]: result.signedUrl }));
+        }
+        setSlotState(photoKey, { uploading: false, progress: 100, error: null });
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Erro ao enviar foto.";
-        setSlotState(photoKey, {
-          uploading: false,
-          progress: 0,
-          error: message,
-        });
+        const message = err instanceof Error ? err.message : "Erro ao enviar foto.";
+        setSlotState(photoKey, { uploading: false, progress: 0, error: message });
       }
     },
     [inspectionId, photos, slots, setSlotState]
@@ -245,7 +242,11 @@ export function PhotoSection({
       setSlotState(photoKey, { uploading: true, progress: 0, error: null });
 
       try {
-        await deleteInspectionPhoto(photo.id, photo.storage_path);
+        await fetch("/api/photos/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photoId: photo.id, storagePath: photo.storage_path }),
+        });
         setPhotos((prev) => {
           const next = { ...prev };
           delete next[photoKey];
@@ -283,7 +284,11 @@ export function PhotoSection({
       if (photo) {
         setSlotState(photoKey, { uploading: true, progress: 0, error: null });
         try {
-          await deleteInspectionPhoto(photo.id, photo.storage_path);
+          await fetch("/api/photos/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photoId: photo.id, storagePath: photo.storage_path }),
+        });
           setPhotos((prev) => {
             const next = { ...prev };
             delete next[photoKey];
