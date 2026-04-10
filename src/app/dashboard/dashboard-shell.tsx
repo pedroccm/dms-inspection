@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { ServerProfileProvider } from "@/contexts/server-profile-context";
+
+function ServerProfileProviderWrapper({ profile, children }: { profile: { full_name: string; role: string } | null; children: React.ReactNode }) {
+  return <ServerProfileProvider profile={profile}>{children}</ServerProfileProvider>;
+}
 
 const allNavItems = [
   { label: "Painel", href: "/dashboard", icon: "grid", adminOnly: false, executorOnly: false },
@@ -145,12 +150,11 @@ function Sidebar({
           )}
           <button
             type="button"
-            onClick={async () => {
-              try {
-                const { createClient } = await import("@/lib/supabase/client");
-                const supabase = createClient();
-                await supabase.auth.signOut();
-              } catch {}
+            onClick={() => {
+              // Fire and forget signout, redirect immediately
+              import("@/lib/supabase/client").then(({ createClient }) => {
+                createClient().auth.signOut().catch(() => {});
+              }).catch(() => {});
               window.location.href = "/login";
             }}
             className="w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/10 rounded-lg text-left min-h-[44px] transition-colors cursor-pointer"
@@ -221,8 +225,10 @@ export default function DashboardShell({
   initialProfile: { full_name: string; role: string } | null;
 }) {
   return (
-    <AuthProvider>
-      <DashboardContent initialProfile={initialProfile}>{children}</DashboardContent>
-    </AuthProvider>
+    <ServerProfileProviderWrapper profile={initialProfile}>
+      <AuthProvider>
+        <DashboardContent initialProfile={initialProfile}>{children}</DashboardContent>
+      </AuthProvider>
+    </ServerProfileProviderWrapper>
   );
 }

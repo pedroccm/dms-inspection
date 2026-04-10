@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/contexts/auth-context";
+import { useIsAdmin } from "@/contexts/server-profile-context";
 import type { ReactNode } from "react";
 
 interface AdminOnlyProps {
@@ -9,10 +9,7 @@ interface AdminOnlyProps {
 }
 
 export function AdminOnly({ children, fallback = null }: AdminOnlyProps) {
-  const { isAdmin, loading } = useAuth();
-
-  if (loading) return null;
+  const isAdmin = useIsAdmin();
   if (!isAdmin) return <>{fallback}</>;
-
   return <>{children}</>;
 }
