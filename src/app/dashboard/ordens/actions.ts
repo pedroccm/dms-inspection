@@ -189,3 +189,103 @@ export async function removeEquipmentFromOrder(orderId: string, equipmentId: str
   revalidatePath(`/dashboard/ordens/${orderId}`);
   return { success: true };
 }
+
+export async function deleteServiceOrder(orderId: string) {
+  await requireAdmin();
+
+  const supabase = await createClient();
+
+  // 1. Get all equipment for this order
+  const { data: equipment } = await supabase
+    .from("equipment")
+    .select("id")
+    .eq("service_order_id", orderId);
+
+  const equipmentIds = (equipment ?? []).map((e) => e.id);
+
+  if (equipmentIds.length > 0) {
+    // 2. Get all inspections for these equipment
+    const { data: inspections } = await supabase
+      .from("inspections")
+      .select("id")
+      .in("equipment_id", equipmentIds);
+
+    const inspectionIds = (inspections ?? []).map((i) => i.id);
+
+    if (inspectionIds.length > 0) {
+      // 3. Delete checklist items
+      await supabase
+        .from("checklist_items")
+        .delete()
+        .in("inspection_id", inspectionIds);
+
+      // 4. Delete photos (from DB — storage cleanup is separate)
+      const { data: photos } = await supabase
+        .from("photos")
+        .select("storage_path")
+        .in("inspection_id", inspectionIds);
+
+      await supabase
+        .from("photos")
+        .delete()
+        .in("inspection_id", inspectionIds);
+
+      // 5. Delete photo files from storage
+      if (photos && photos.length > 0) {
+        const paths = photos.map((p) => p.storage_path);
+        await supabase.storage.from("inspection-photos").remove(paths);
+      }
+
+      // 6. Delete form locks
+      await supabase
+        .from("form_locks")
+        .delete()
+        .in("inspection_id", inspectionIds);
+
+      // 7. Delete inspections
+      await supabase
+        .from("inspections")
+        .delete()
+        .in("id", inspectionIds);
+    }
+
+    // 8. Delete service_order_equipment junction
+    await supabase
+      .from("service_order_equipment")
+      .delete()
+      .eq("service_order_id", orderId);
+
+    // 9. Delete equipment
+    await supabase
+      .from("equipment")
+      .delete()
+      .in("id", equipmentIds);
+  }
+
+  // 10. Delete inspections directly linked to order (without equipment)
+  const { data: directInspections } = await supabase
+    .from("inspections")
+    .select("id")
+    .eq("service_order_id", orderId);
+
+  if (directInspections && directInspections.length > 0) {
+    const ids = directInspections.map((i) => i.id);
+    await supabase.from("checklist_items").delete().in("inspection_id", ids);
+    await supabase.from("photos").delete().in("inspection_id", ids);
+    await supabase.from("form_locks").delete().in("inspection_id", ids);
+    await supabase.from("inspections").delete().in("id", ids);
+  }
+
+  // 11. Delete the service order itself
+  const { error } = await supabase
+    .from("service_orders")
+    .delete()
+    .eq("id", orderId);
+
+  if (error) {
+    return { error: `Erro ao excluir ordem: ${error.message}` };
+  }
+
+  revalidatePath("/dashboard/ordens");
+  redirect("/dashboard/ordens");
+}
