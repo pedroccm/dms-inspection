@@ -20,20 +20,6 @@ const allNavItems = [
     executorOnly: false,
   },
   {
-    label: "Equipamentos",
-    href: "/dashboard/equipamentos",
-    icon: "cpu",
-    adminOnly: true,
-    executorOnly: false,
-  },
-  {
-    label: "Inspeções",
-    href: "/dashboard/inspecoes",
-    icon: "search",
-    adminOnly: true,
-    executorOnly: false,
-  },
-  {
     label: "Relatórios",
     href: "/dashboard/relatorios",
     icon: "file-text",
