@@ -87,7 +87,7 @@ export async function createServiceOrder(formData: FormData) {
 
   // Create equipment records (one per ficha number pair)
   const equipmentInserts = fichaNumbers.map((ficha, index) => ({
-    copel_ra_code: `PENDENTE-${index + 1}`,
+    copel_ra_code: `PENDENTE-${crypto.randomUUID().slice(0, 8)}`,
     numero_052r: ficha.numero_052r,
     numero_300: ficha.numero_300,
     service_order_id: data.id,
