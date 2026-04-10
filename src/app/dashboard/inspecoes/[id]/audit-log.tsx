@@ -25,9 +25,9 @@ const actionColors: Record<string, string> = {
 };
 
 const actionLabels: Record<string, string> = {
-  insert: "Criacao",
-  update: "Alteracao",
-  delete: "Remocao",
+  insert: "Criação",
+  update: "Alteração",
+  delete: "Remoção",
 };
 
 export function AuditLog({ entries }: AuditLogProps) {
@@ -40,7 +40,7 @@ export function AuditLog({ entries }: AuditLogProps) {
         className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors min-h-[44px]"
       >
         <h3 className="text-lg font-semibold text-gray-900">
-          Historico de Alteracoes
+          Histórico de Alterações
         </h3>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +58,7 @@ export function AuditLog({ entries }: AuditLogProps) {
         <div className="px-6 pb-6 border-t border-gray-100">
           {entries.length === 0 ? (
             <p className="text-sm text-gray-500 py-4">
-              Nenhuma alteracao registrada.
+              Nenhuma alteração registrada.
             </p>
           ) : (
             <div className="mt-4 space-y-3">
