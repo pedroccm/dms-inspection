@@ -6,42 +6,48 @@ import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 const allNavItems = [
-  { label: "Painel", href: "/dashboard", icon: "grid", adminOnly: false },
+  { label: "Painel", href: "/dashboard", icon: "grid", adminOnly: false, executorOnly: false },
   {
     label: "Ordens de Serviço",
     href: "/dashboard/ordens",
     icon: "clipboard",
     adminOnly: false,
+    executorOnly: false,
   },
   {
     label: "Equipamentos",
     href: "/dashboard/equipamentos",
     icon: "cpu",
     adminOnly: false,
+    executorOnly: true,
   },
   {
     label: "Inspeções",
     href: "/dashboard/inspecoes",
     icon: "search",
     adminOnly: false,
+    executorOnly: true,
   },
   {
     label: "Relatórios",
     href: "/dashboard/relatorios",
     icon: "file-text",
-    adminOnly: false,
+    adminOnly: true,
+    executorOnly: false,
   },
   {
     label: "Usuários",
     href: "/dashboard/usuarios",
     icon: "users",
     adminOnly: true,
+    executorOnly: false,
   },
   {
     label: "Configurações",
     href: "/dashboard/configuracoes",
     icon: "settings",
     adminOnly: true,
+    executorOnly: false,
   },
 ];
 
@@ -61,7 +67,11 @@ function Sidebar({
   const profile = authProfile ?? initialProfile;
   const isAdmin = authIsAdmin || initialProfile?.role === "admin";
 
-  const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
+  const navItems = allNavItems.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.executorOnly && isAdmin) return false;
+    return true;
+  });
 
   return (
     <>
