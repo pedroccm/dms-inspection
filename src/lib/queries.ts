@@ -87,7 +87,7 @@ export async function getServiceOrders(filters?: ServiceOrderFilters) {
 
   let query = supabase
     .from("service_orders")
-    .select("*, assignee:profiles!assigned_to(full_name)")
+    .select("*, assignee:profiles!assigned_to(full_name), inspection_location:inspection_locations!location_id(name)")
     .order("created_at", { ascending: false });
 
   if (filters?.status) {

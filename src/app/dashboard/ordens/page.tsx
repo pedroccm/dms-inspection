@@ -99,13 +99,14 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                     className="border-b border-gray-100 hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {order.title}
+                      {order.order_number ?? order.title}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {order.client_name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell">
-                      {order.location ?? "—"}
+                      {(order as unknown as { inspection_location?: { name: string } }).inspection_location?.name
+                        ?? order.location ?? "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
                       {order.assignee?.full_name ?? "—"}
@@ -119,10 +120,9 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                       {order.start_date
                         ? new Date(order.start_date).toLocaleDateString("pt-BR")
                         : "—"}
-                      {" — "}
                       {order.end_date
-                        ? new Date(order.end_date).toLocaleDateString("pt-BR")
-                        : "—"}
+                        ? ` — ${new Date(order.end_date).toLocaleDateString("pt-BR")}`
+                        : ""}
                     </td>
                     <td className="px-6 py-4">
                       <Link

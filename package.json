@@ -1,6 +1,6 @@
 {
   "name": "dms-inspection",
-  "version": "0.28.4",
+  "version": "0.28.5",
   "private": true,
   "description": "Field inspection system for DMS Manutenção - Recloser inspection for Copel",
   "scripts": {
