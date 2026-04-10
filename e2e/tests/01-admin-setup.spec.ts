@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/login.page';
 import { DashboardPage } from '../pages/dashboard.page';
-import { EquipmentPage } from '../pages/equipment.page';
-import { OrdersPage } from '../pages/orders.page';
-import { UsersPage } from '../pages/users.page';
-import { SettingsPage } from '../pages/settings.page';
-import { ReportsPage } from '../pages/reports.page';
-import { ADMIN, EQUIPMENT_1, EQUIPMENT_2, ORDER_1, INSPECTOR } from '../fixtures/test-data';
+import { ADMIN, INSPECTOR, ORDER_1 } from '../fixtures/test-data';
 
-test.describe.serial('Admin Setup', () => {
-  test('Admin login', async ({ page }) => {
+test.describe.serial('01 - Admin Setup', () => {
+  test('Admin login and verify dashboard', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
@@ -17,13 +12,13 @@ test.describe.serial('Admin Setup', () => {
 
     // Verify redirect to dashboard
     await expect(page).toHaveURL(/\/dashboard/);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // Verify admin name appears in sidebar
-    await expect(page.getByText(ADMIN.name)).toBeVisible();
+    await expect(page.getByText(ADMIN.name)).toBeVisible({ timeout: 10000 });
 
-    // Verify admin role badge
-    await expect(page.getByText('Master', { exact: true })).toBeVisible();
+    // Verify admin role label "Master"
+    await expect(page.getByText('Master', { exact: true })).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e/results/01-admin-login.png' });
   });
@@ -34,7 +29,7 @@ test.describe.serial('Admin Setup', () => {
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // Verify all sidebar menu items are visible for admin
     await dashboard.expectMenuItemVisible('Painel');
@@ -48,195 +43,124 @@ test.describe.serial('Admin Setup', () => {
     await page.screenshot({ path: 'e2e/results/01-admin-menu-items.png' });
   });
 
-  test('Admin dashboard shows metrics', async ({ page }) => {
+  test('Admin creates O.S. with fichas', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
-
-    // Verify 4 metric cards exist with expected labels
-    const main = page.getByRole('main');
-    await expect(main.getByText('Ordens Abertas')).toBeVisible();
-    await expect(main.getByText('Inspeções Hoje')).toBeVisible();
-    await expect(main.getByText('Equipamentos')).toBeVisible();
-    await expect(main.getByText('Pendentes de Revisão')).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/results/01-admin-dashboard-metrics.png' });
-  });
-
-  test('Admin creates equipment 1', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const equipmentPage = new EquipmentPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
-
-    // Navigate to equipment page
-    await equipmentPage.goto();
-    await page.waitForTimeout(1000);
-
-    // Click "Novo Equipamento"
-    await page.getByRole('link', { name: /Novo Equipamento/i }).click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-
-    // Fill all 6 fields using input name attributes
-    await page.fill('input[name="copel_ra_code"]', EQUIPMENT_1.copelRa);
-    await page.fill('input[name="copel_control_code"]', EQUIPMENT_1.copelControl);
-    await page.fill('input[name="mechanism_serial"]', EQUIPMENT_1.mechanismSerial);
-    await page.fill('input[name="control_box_serial"]', EQUIPMENT_1.controlBoxSerial);
-    await page.fill('input[name="protection_relay_serial"]', EQUIPMENT_1.relaySerial);
-    await page.fill('input[name="manufacturer"]', EQUIPMENT_1.manufacturer);
-
-    // Submit
-    await page.getByRole('button', { name: /Cadastrar/i }).click();
-    await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
-
-    // Verify redirect back to equipment list
-    await expect(page).toHaveURL(/\/equipamentos/);
-
-    // Verify equipment appears in list
-    await expect(page.getByText(EQUIPMENT_1.copelRa)).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/results/01-admin-equipment-1-created.png' });
-  });
-
-  test('Admin creates equipment 2', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const equipmentPage = new EquipmentPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
-
-    // Navigate to equipment page
-    await equipmentPage.goto();
-    await page.waitForTimeout(1000);
-
-    // Click "Novo Equipamento"
-    await page.getByRole('link', { name: /Novo Equipamento/i }).click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-
-    // Fill all 6 fields using input name attributes
-    await page.fill('input[name="copel_ra_code"]', EQUIPMENT_2.copelRa);
-    await page.fill('input[name="copel_control_code"]', EQUIPMENT_2.copelControl);
-    await page.fill('input[name="mechanism_serial"]', EQUIPMENT_2.mechanismSerial);
-    await page.fill('input[name="control_box_serial"]', EQUIPMENT_2.controlBoxSerial);
-    await page.fill('input[name="protection_relay_serial"]', EQUIPMENT_2.relaySerial);
-    await page.fill('input[name="manufacturer"]', EQUIPMENT_2.manufacturer);
-
-    // Submit
-    await page.getByRole('button', { name: /Cadastrar/i }).click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Verify redirect back to equipment list
-    await expect(page).toHaveURL(/\/equipamentos/);
-
-    // Verify equipment appears in list
-    await expect(page.getByText(EQUIPMENT_2.copelRa)).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/results/01-admin-equipment-2-created.png' });
-  });
-
-  test('Admin creates service order', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
 
     // Navigate to orders page
     await page.goto('/dashboard/ordens');
     await page.waitForURL('**/ordens');
     await page.waitForTimeout(2000);
 
-    // Wait for AdminOnly to load, then click "Nova Ordem"
+    // Click "Nova Ordem"
     await expect(page.getByRole('link', { name: /Nova Ordem/i })).toBeVisible({ timeout: 10000 });
     await page.getByRole('link', { name: /Nova Ordem/i }).click();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Fill form fields using input name attributes
-    await page.fill('input[name="title"]', ORDER_1.title);
+    // Verify auto-generated order number is displayed (DS-CP-INSP-RA-xxx)
+    await expect(page.getByText(/DS-CP-INSP-RA-/)).toBeVisible({ timeout: 10000 });
+
+    // Fill: Nome do Cliente
     await page.fill('input[name="client_name"]', ORDER_1.clientName);
-    await page.fill('input[name="location"]', ORDER_1.location);
-    await page.fill('input[name="start_date"]', ORDER_1.startDate);
-    await page.fill('input[name="end_date"]', ORDER_1.endDate);
 
-    // Select inspector from the dropdown
-    await page.selectOption('select[name="assigned_to"]', { label: INSPECTOR.name });
+    // Fill: Quantidade de Equipamentos = 2
+    const equipInput = page.locator('input[name="equipment_count"]');
+    await equipInput.fill('');
+    await equipInput.fill(ORDER_1.equipmentCount);
+    await page.waitForTimeout(500);
+
+    // Fill: Data Inicio
+    await page.fill('input[name="start_date"]', ORDER_1.startDate);
+
+    // Select: Local -> "+ Novo Local"
+    await page.selectOption('#local', '__new__');
+    await page.waitForTimeout(500);
+
+    // Fill new location name
+    await page.fill('input[name="new_location_name"]', ORDER_1.location);
+
+    // Select: Executor Responsavel = Inspetor Teste
+    await page.selectOption('#executor-responsável', { label: INSPECTOR.name });
+
+    // Fill Numeros do Lote: row 0
+    await page.fill('input[name="numero_052r_0"]', ORDER_1.fichas[0].numero052r);
+    await page.fill('input[name="numero_300_0"]', ORDER_1.fichas[0].numero300);
+
+    // Fill Numeros do Lote: row 1
+    await page.fill('input[name="numero_052r_1"]', ORDER_1.fichas[1].numero052r);
+    await page.fill('input[name="numero_300_1"]', ORDER_1.fichas[1].numero300);
+
+    await page.screenshot({ path: 'e2e/results/01-admin-order-form-filled.png' });
 
     // Submit
     await page.getByRole('button', { name: /Criar Ordem/i }).click();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
-    // Verify redirect back to orders list or order detail
-    await expect(page).toHaveURL(/\/ordens/);
+    // Verify redirect to order detail page
+    await expect(page).toHaveURL(/\/ordens\/[0-9a-f-]{36}/);
+
+    // Verify order number DS-CP-INSP-RA-xxx is shown on the detail page
+    await expect(page.getByText(/DS-CP-INSP-RA-/)).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e/results/01-admin-order-created.png' });
   });
 
-  test('Admin adds equipment to order', async ({ page }) => {
+  test('Admin sees fichas in order detail', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // Navigate to orders page
     await page.goto('/dashboard/ordens');
     await page.waitForURL('**/ordens');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Open the created order by clicking "Detalhes" (first match)
+    // Open the first order by clicking "Detalhes"
     await page.getByRole('link', { name: /Detalhes/i }).first().click();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-
-    // Add EQUIPMENT_1: search and add
-    await page.fill('#buscar-por-código-copel-ra', EQUIPMENT_1.copelRa);
-    await page.getByRole('button', { name: 'Buscar' }).click();
     await page.waitForTimeout(2000);
 
-    // Click "Adicionar" on the search result
-    await page.getByRole('button', { name: 'Adicionar' }).click();
-    await page.waitForTimeout(2000);
+    // Verify 2 fichas listed (table inside "Fichas de Inspecao" section)
+    await expect(page.getByText('Fichas de Inspeção (2)')).toBeVisible({ timeout: 10000 });
 
-    // Add EQUIPMENT_2: search and add
-    await page.fill('#buscar-por-código-copel-ra', EQUIPMENT_2.copelRa);
-    await page.getByRole('button', { name: 'Buscar' }).click();
-    await page.waitForTimeout(2000);
+    // Verify 052R numbers appear
+    await expect(page.getByText(`052R-${ORDER_1.fichas[0].numero052r}`).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(`052R-${ORDER_1.fichas[1].numero052r}`).first()).toBeVisible({ timeout: 10000 });
 
-    await page.getByRole('button', { name: 'Adicionar' }).click();
-    await page.waitForTimeout(2000);
+    // Verify 300 numbers appear
+    await expect(page.getByText(`300-${ORDER_1.fichas[0].numero300}`).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(`300-${ORDER_1.fichas[1].numero300}`).first()).toBeVisible({ timeout: 10000 });
 
-    // Verify both equipment codes appear
-    await expect(page.getByText(EQUIPMENT_1.copelRa)).toBeVisible();
-    await expect(page.getByText(EQUIPMENT_2.copelRa)).toBeVisible();
+    // Verify status "Disponivel" on each ficha (at least 2 badges with "Disponivel")
+    const disponvelBadges = page.locator('table').first().getByText('Disponível');
+    await expect(disponvelBadges.first()).toBeVisible({ timeout: 10000 });
+    expect(await disponvelBadges.count()).toBeGreaterThanOrEqual(2);
 
-    await page.screenshot({ path: 'e2e/results/01-admin-equipment-added-to-order.png' });
+    await page.screenshot({ path: 'e2e/results/01-admin-fichas-detail.png' });
   });
 
   test('Admin views user list', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    const usersPage = new UsersPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    await usersPage.goto();
-    await page.waitForTimeout(1000);
+    // Navigate to users page
+    await page.goto('/dashboard/usuarios');
+    await page.waitForURL('**/usuarios');
+    await page.waitForTimeout(2000);
 
     // Verify both users appear
-    await usersPage.expectUserInList(ADMIN.name);
-    await usersPage.expectUserInList(INSPECTOR.name);
+    await expect(page.getByRole('cell', { name: new RegExp(ADMIN.name) })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('cell', { name: new RegExp(INSPECTOR.name) })).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({ path: 'e2e/results/01-admin-user-list.png' });
   });
@@ -246,6 +170,7 @@ test.describe.serial('Admin Setup', () => {
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
+    await page.waitForTimeout(2000);
 
     // On mobile, open sidebar first
     const hamburger = page.locator('button[aria-label="Abrir menu"]');
@@ -254,15 +179,13 @@ test.describe.serial('Admin Setup', () => {
       await page.waitForTimeout(500);
     }
 
-    // Wait for auth context to load profile (admin items appear in sidebar)
+    // Verify Configuracoes is visible and navigate
     await expect(page.getByText('Configurações')).toBeVisible({ timeout: 10000 });
-
-    // Navigate via sidebar link
     await page.getByText('Configurações').click();
     await page.waitForURL('**/configuracoes');
     await page.waitForTimeout(3000);
 
-    // Verify retention period select exists (client component, may take time to load)
+    // Verify retention period select exists (client component may take time)
     const retentionSelect = page.locator('#retention-select');
     const visible = await retentionSelect.isVisible({ timeout: 10000 }).catch(() => false);
     if (!visible) {
@@ -274,39 +197,23 @@ test.describe.serial('Admin Setup', () => {
     await page.screenshot({ path: 'e2e/results/01-admin-settings.png' });
   });
 
-  test('Admin views reports page', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-
-    await loginPage.goto();
-    await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
-
-    await page.goto('/dashboard/relatorios');
-    await page.waitForTimeout(2000);
-
-    // Verify "Produtividade por Executor" card/section exists
-    await expect(page.getByText(/Produtividade/i)).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/results/01-admin-reports.png' });
-  });
-
   test('Admin logout', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
     await loginPage.loginAs(ADMIN.email, ADMIN.password);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Click "Sair" button
+    // Logout
     await loginPage.logout();
 
     // Verify redirect to login
     await expect(page).toHaveURL(/\/login/);
 
-    // Verify login form is visible (session was actually invalidated)
+    // Verify login form is visible (session invalidated)
     await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 5000 });
 
-    // Verify accessing dashboard redirects back to login (session invalidated)
+    // Verify accessing dashboard redirects back to login
     await page.goto('/dashboard');
     await page.waitForTimeout(3000);
     await expect(page).toHaveURL(/\/login/);

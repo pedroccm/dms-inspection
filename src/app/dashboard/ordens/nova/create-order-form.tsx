@@ -6,16 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createServiceOrder } from "../actions";
-import type { InspectionLocation, Team } from "@/lib/types";
+import type { InspectionLocation } from "@/lib/types";
 
 interface CreateOrderFormProps {
   inspectors: { id: string; full_name: string }[];
   locations: InspectionLocation[];
-  teams: Team[];
   nextOrderNumber: string;
 }
 
-export function CreateOrderForm({ inspectors, locations, teams, nextOrderNumber }: CreateOrderFormProps) {
+export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: CreateOrderFormProps) {
   const [state, formAction, pending] = useActionState(
     async (_prevState: { error: string } | null, formData: FormData) => {
       const result = await createServiceOrder(formData);
@@ -35,11 +34,6 @@ export function CreateOrderForm({ inspectors, locations, teams, nextOrderNumber 
   const locationOptions = [
     ...locations.map((l) => ({ value: l.id, label: l.name })),
     { value: "__new__", label: "+ Novo Local" },
-  ];
-
-  const teamOptions = [
-    { value: "", label: "Nenhuma equipe" },
-    ...teams.map((t) => ({ value: t.id, label: t.name })),
   ];
 
   return (
@@ -136,22 +130,13 @@ export function CreateOrderForm({ inspectors, locations, teams, nextOrderNumber 
         />
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <Select
-          label="Executor Responsável"
-          name="assigned_to"
-          required
-          placeholder="Selecione o executor"
-          options={inspectorOptions}
-        />
-
-        <Select
-          label="Equipe"
-          name="assigned_team_id"
-          placeholder="Selecione a equipe (opcional)"
-          options={teamOptions}
-        />
-      </div>
+      <Select
+        label="Executor Responsável"
+        name="assigned_to"
+        required
+        placeholder="Selecione o executor"
+        options={inspectorOptions}
+      />
 
       {/* Batch Numbers Section */}
       {equipmentCount > 0 && (
