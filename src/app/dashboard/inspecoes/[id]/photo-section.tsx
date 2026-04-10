@@ -167,16 +167,17 @@ export function PhotoSection({
 
   const handleFileSelect = useCallback(
     async (photoKey: string, file: File) => {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        setSlotState(photoKey, { error: "Selecione um arquivo de imagem." });
+      // Validate file type (allow empty type for camera captures on Android)
+      const isImage = file.type.startsWith("image/") || file.type === "" || file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i);
+      if (!isImage) {
+        setSlotState(photoKey, { uploading: false, progress: 0, error: `Tipo não suportado: ${file.type || "desconhecido"}` });
         return;
       }
 
       // Validate file size (max 10 MB)
       if (file.size > 10 * 1024 * 1024) {
         setSlotState(photoKey, {
-          error: "Imagem deve ter no maximo 10 MB.",
+          uploading: false, progress: 0, error: `Imagem muito grande: ${(file.size / 1024 / 1024).toFixed(1)}MB (máx 10MB)`,
         });
         return;
       }
