@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getEquipmentById } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
+import { StartInspectionButton } from "./start-inspection-button";
 import type { Equipment, InspectionStatus } from "@/lib/types";
 
 interface EquipamentoDetailPageProps {
@@ -74,12 +75,10 @@ export default async function EquipamentoDetailPage({
         </div>
         <div className="flex items-center gap-3">
           {!hasCompletedInspection && !hasActiveInspection && (
-            <Link
-              href={`/dashboard/inspecoes/nova?equipment_id=${equipment.id}`}
-              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors min-h-[44px]"
-            >
-              Iniciar Inspeção
-            </Link>
+            <StartInspectionButton
+              equipmentId={equipment.id}
+              serviceOrderId={equipment.service_order_id ?? null}
+            />
           )}
           <Link
             href={backHref}
@@ -118,14 +117,12 @@ export default async function EquipamentoDetailPage({
             Nenhuma inspeção iniciada para este equipamento.
           </p>
           <p className="text-sm text-yellow-700 mb-4">
-            Escaneie o QR Code do equipamento para preencher os dados técnicos e iniciar a inspeção.
+            Clique abaixo para iniciar. Você poderá escanear o QR Code e preencher o checklist.
           </p>
-          <Link
-            href={`/dashboard/inspecoes/nova?equipment_id=${equipment.id}`}
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors min-h-[44px]"
-          >
-            Iniciar Inspeção
-          </Link>
+          <StartInspectionButton
+            equipmentId={equipment.id}
+            serviceOrderId={equipment.service_order_id ?? null}
+          />
         </div>
       )}
 
