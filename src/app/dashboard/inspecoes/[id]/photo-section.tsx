@@ -22,6 +22,7 @@ interface PhotoSectionProps {
   inspectionId: string;
   existingPhotos: Photo[];
   isEditable: boolean;
+  serverPhotoUrls?: Record<string, string>;
 }
 
 interface PhotoSlot {
@@ -82,6 +83,7 @@ export function PhotoSection({
   inspectionId,
   existingPhotos,
   isEditable,
+  serverPhotoUrls,
 }: PhotoSectionProps) {
   const [slots, setSlots] = useState<PhotoSlot[]>(() =>
     buildInitialSlots(existingPhotos)
@@ -96,7 +98,7 @@ export function PhotoSection({
   });
 
   const [slotStates, setSlotStates] = useState<Record<string, SlotState>>({});
-  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>(serverPhotoUrls ?? {});
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -139,17 +141,22 @@ export function PhotoSection({
   useEffect(() => {
     async function loadUrls() {
       const entries = Object.entries(photos);
-      const urls: Record<string, string> = {};
+      const newUrls: Record<string, string> = {};
       for (const [type, photo] of entries) {
+        // Skip if already have a URL from server or previous load
+        if (signedUrls[type]) continue;
         try {
-          urls[type] = await getPhotoUrl(photo.storage_path);
+          newUrls[type] = await getPhotoUrl(photo.storage_path);
         } catch {
           // Skip failed URLs
         }
       }
-      setSignedUrls(urls);
+      if (Object.keys(newUrls).length > 0) {
+        setSignedUrls((prev) => ({ ...prev, ...newUrls }));
+      }
     }
     loadUrls();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photos]);
 
   const setSlotState = useCallback(

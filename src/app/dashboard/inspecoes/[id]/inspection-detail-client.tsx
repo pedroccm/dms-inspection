@@ -12,6 +12,7 @@ interface InspectionDetailClientProps {
   checklistItems: ChecklistItem[];
   photos: Photo[];
   isEditable: boolean;
+  serverPhotoUrls?: Record<string, string>;
 }
 
 export function InspectionDetailClient({
@@ -21,6 +22,7 @@ export function InspectionDetailClient({
   checklistItems,
   photos,
   isEditable,
+  serverPhotoUrls,
 }: InspectionDetailClientProps) {
   return (
     <>
@@ -41,6 +43,7 @@ export function InspectionDetailClient({
         inspectionId={inspectionId}
         existingPhotos={photos}
         isEditable={isEditable}
+        serverPhotoUrls={serverPhotoUrls}
       />
     </>
   );

@@ -67,6 +67,21 @@ export default async function InspecaoDetailPage({
   const checklistItems = inspection.checklist_items ?? [];
   const photos = inspection.photos ?? [];
   const isDisponivel = inspection.status === "disponivel";
+
+  // Generate signed URLs server-side (reliable, no RLS issues)
+  const { createClient: createServerClient } = await import("@/lib/supabase/server");
+  const supabase = await createServerClient();
+  const photoUrls: Record<string, string> = {};
+  for (const photo of photos) {
+    try {
+      const { data } = await supabase.storage
+        .from("inspection-photos")
+        .createSignedUrl(photo.storage_path, 3600); // 1 hour
+      if (data?.signedUrl) {
+        photoUrls[photo.photo_type] = data.signedUrl;
+      }
+    } catch {}
+  }
   const isEditable =
     inspection.status !== "disponivel" &&
     inspection.status !== "aprovado" &&
@@ -213,6 +228,7 @@ export default async function InspecaoDetailPage({
           checklistItems={checklistItems}
           photos={photos}
           isEditable={isEditable}
+          serverPhotoUrls={photoUrls}
         />
       )}
 
