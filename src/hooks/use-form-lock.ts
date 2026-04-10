@@ -25,7 +25,7 @@ export function useFormLock(inspectionId: string): UseFormLockReturn {
     lockedBy: null,
     lockedAt: null,
     isOwner: false,
-    loading: true,
+    loading: false,
   });
 
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
