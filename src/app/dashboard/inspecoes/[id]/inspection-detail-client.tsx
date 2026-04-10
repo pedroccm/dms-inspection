@@ -1,7 +1,5 @@
 "use client";
 
-import { useFormLock } from "@/hooks/use-form-lock";
-import { FormLockBanner } from "@/components/form-lock-banner";
 import { ChecklistSummary } from "./checklist-summary";
 import { ChecklistForm } from "./checklist-form";
 import { PhotoSection } from "./photo-section";
@@ -24,38 +22,25 @@ export function InspectionDetailClient({
   photos,
   isEditable,
 }: InspectionDetailClientProps) {
-  const { isLocked, lockedBy, lockedAt } =
-    useFormLock(inspectionId);
-
-  // If locked by another user, override editable to false
-  const effectiveEditable = isEditable && !isLocked;
-
   return (
     <>
-      {/* Lock banner */}
-      {isLocked && lockedBy && (
-        <FormLockBanner lockedBy={lockedBy} lockedAt={lockedAt} />
-      )}
-
-      {/* Checklist Summary (US-304) */}
+      {/* Checklist Summary */}
       <ChecklistSummary items={checklistItems} />
 
-      {/* Interactive Checklist Form (US-302 + US-303 + US-306) */}
+      {/* Interactive Checklist Form */}
       <ChecklistForm
         checklistItems={checklistItems}
         inspectionId={inspectionId}
-        inspectionStatus={
-          effectiveEditable ? inspectionStatus : "aprovado"
-        }
+        inspectionStatus={isEditable ? inspectionStatus : "aprovado"}
         inspectionNotes={inspectionNotes}
         photoCount={photos.length}
       />
 
-      {/* Photo Capture Section (US-401 + US-402) */}
+      {/* Photo Capture Section */}
       <PhotoSection
         inspectionId={inspectionId}
         existingPhotos={photos}
-        isEditable={effectiveEditable}
+        isEditable={isEditable}
       />
     </>
   );
