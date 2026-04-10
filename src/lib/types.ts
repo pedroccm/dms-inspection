@@ -163,6 +163,9 @@ export interface ServiceOrderEquipment {
   equipment?: Equipment;
 }
 
+// Equipment status derived from inspection state
+export type EquipmentStatus = "pendente" | "em_inspecao" | "concluido";
+
 export interface Equipment {
   id: string;
   copel_ra_code: string;
@@ -174,6 +177,11 @@ export interface Equipment {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // Ficha identification (052R/300) — now lives on equipment, not inspection
+  numero_052r?: string | null;
+  numero_300?: string | null;
+  // Direct link to the service order that created this equipment
+  service_order_id?: string | null;
   // Expanded technical data (from QR Code)
   modelo?: string;
   numero_serie_controle?: string;

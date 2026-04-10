@@ -85,20 +85,38 @@ export async function createServiceOrder(formData: FormData) {
     return { error: `Erro ao criar ordem de serviço: ${error.message}` };
   }
 
-  // Create inspection fichas (one per equipment)
-  const inspectionInserts = fichaNumbers.map((ficha) => ({
-    service_order_id: data.id,
-    status: "disponivel" as const,
+  // Create equipment records (one per ficha number pair)
+  const equipmentInserts = fichaNumbers.map((ficha, index) => ({
+    copel_ra_code: `PENDENTE-${index + 1}`,
     numero_052r: ficha.numero_052r,
     numero_300: ficha.numero_300,
+    service_order_id: data.id,
+    created_by: user.id,
   }));
 
-  const { error: fichaError } = await supabase
-    .from("inspections")
-    .insert(inspectionInserts);
+  const { data: equipmentRows, error: equipError } = await supabase
+    .from("equipment")
+    .insert(equipmentInserts)
+    .select("id");
 
-  if (fichaError) {
-    return { error: `Ordem criada, mas erro ao criar fichas: ${fichaError.message}` };
+  if (equipError) {
+    return { error: `Ordem criada, mas erro ao criar equipamentos: ${equipError.message}` };
+  }
+
+  // Link equipment to the service order via junction table
+  if (equipmentRows && equipmentRows.length > 0) {
+    const junctionInserts = equipmentRows.map((eq) => ({
+      service_order_id: data.id,
+      equipment_id: eq.id,
+    }));
+
+    const { error: junctionError } = await supabase
+      .from("service_order_equipment")
+      .insert(junctionInserts);
+
+    if (junctionError) {
+      return { error: `Equipamentos criados, mas erro ao vincular à ordem: ${junctionError.message}` };
+    }
   }
 
   revalidatePath("/dashboard/ordens");

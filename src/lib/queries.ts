@@ -131,6 +131,23 @@ export async function getInspectionsByServiceOrderId(serviceOrderId: string) {
   return (data ?? []) as (Inspection & { claimed_user?: { full_name: string } | null })[];
 }
 
+export async function getEquipmentByServiceOrderId(serviceOrderId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("*, inspections(id, status, inspector_id, inspector:profiles!inspector_id(full_name))")
+    .eq("service_order_id", serviceOrderId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as (Equipment & {
+    inspections?: (Pick<Inspection, "id" | "status" | "inspector_id"> & {
+      inspector?: { full_name: string } | null;
+    })[];
+  })[];
+}
+
 export async function getInspectors() {
   const supabase = await createClient();
 

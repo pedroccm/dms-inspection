@@ -2,11 +2,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getEquipmentById } from "@/lib/queries";
-import type { Equipment } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import type { Equipment, InspectionStatus } from "@/lib/types";
 
 interface EquipamentoDetailPageProps {
   params: Promise<{ id: string }>;
 }
+
+const INSPECTION_STATUS_CONFIG: Record<
+  InspectionStatus,
+  { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
+> = {
+  disponivel: { label: "Disponível", variant: "info" },
+  draft: { label: "Rascunho", variant: "neutral" },
+  in_progress: { label: "Em Andamento", variant: "warning" },
+  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
+  aprovado: { label: "Aprovado", variant: "success" },
+  relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
+  equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
+  transferred: { label: "Transferida", variant: "neutral" },
+};
 
 export default async function EquipamentoDetailPage({
   params,
@@ -27,28 +42,92 @@ export default async function EquipamentoDetailPage({
   }
 
   const inspections = equipment.inspections ?? [];
+  const hasActiveInspection = inspections.some(
+    (i) =>
+      i.status !== "aprovado" &&
+      i.status !== "transferred" &&
+      i.status !== "equipamento_reprovado"
+  );
+  const hasCompletedInspection = inspections.some(
+    (i) => i.status === "aprovado" || i.status === "transferred"
+  );
+
+  // Build back link: if equipment belongs to a service order, go back to order detail
+  const backHref = equipment.service_order_id
+    ? `/dashboard/ordens/${equipment.service_order_id}`
+    : "/dashboard/equipamentos";
+  const backLabel = equipment.service_order_id ? "Voltar para Ordem" : "Voltar";
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-bold text-[#1B2B5E]">
-          Equipamento: {equipment.copel_ra_code}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-[#1B2B5E]">
+            Equipamento: {equipment.copel_ra_code}
+          </h1>
+          {(equipment.numero_052r || equipment.numero_300) && (
+            <p className="text-sm text-gray-500 mt-1">
+              {equipment.numero_052r && <span className="mr-3">052R: {equipment.numero_052r}</span>}
+              {equipment.numero_300 && <span>300: {equipment.numero_300}</span>}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
+          {!hasCompletedInspection && !hasActiveInspection && (
+            <Link
+              href={`/dashboard/inspecoes/nova?equipment_id=${equipment.id}`}
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors min-h-[44px]"
+            >
+              Iniciar Inspeção
+            </Link>
+          )}
+          <Link
+            href={backHref}
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
+          >
+            {backLabel}
+          </Link>
+        </div>
+      </div>
+
+      {/* 052R / 300 identification numbers */}
+      {(equipment.numero_052r || equipment.numero_300) && (
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Números de Identificação</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {equipment.numero_052r && (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-sm font-medium text-blue-700">052R:</span>
+                <span className="text-lg font-bold text-blue-900">{equipment.numero_052r}</span>
+              </div>
+            )}
+            {equipment.numero_300 && (
+              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <span className="text-sm font-medium text-green-700">300:</span>
+                <span className="text-lg font-bold text-green-900">{equipment.numero_300}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* No inspection yet — prompt to start one */}
+      {inspections.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8 text-center">
+          <p className="text-yellow-800 font-medium mb-2">
+            Nenhuma inspeção iniciada para este equipamento.
+          </p>
+          <p className="text-sm text-yellow-700 mb-4">
+            Escaneie o QR Code do equipamento para preencher os dados técnicos e iniciar a inspeção.
+          </p>
           <Link
             href={`/dashboard/inspecoes/nova?equipment_id=${equipment.id}`}
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors min-h-[44px]"
           >
-            Nova Inspeção
-          </Link>
-          <Link
-            href="/dashboard/equipamentos"
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
-          >
-            Voltar
+            Iniciar Inspeção
           </Link>
         </div>
-      </div>
+      )}
 
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
@@ -60,7 +139,7 @@ export default async function EquipamentoDetailPage({
               Código Copel do RA (Mecanismo)
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.copel_ra_code}
+              {equipment.copel_ra_code || "—"}
             </dd>
           </div>
           <div>
@@ -68,7 +147,7 @@ export default async function EquipamentoDetailPage({
               Código Copel do Controle
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.copel_control_code}
+              {equipment.copel_control_code || "—"}
             </dd>
           </div>
           <div>
@@ -76,7 +155,7 @@ export default async function EquipamentoDetailPage({
               Número de Série do Mecanismo
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.mechanism_serial}
+              {equipment.mechanism_serial || "—"}
             </dd>
           </div>
           <div>
@@ -84,7 +163,7 @@ export default async function EquipamentoDetailPage({
               Número de Série da Caixa de Controle
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.control_box_serial}
+              {equipment.control_box_serial || "—"}
             </dd>
           </div>
           <div>
@@ -92,7 +171,7 @@ export default async function EquipamentoDetailPage({
               Número de Série do Relé de Proteção
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.protection_relay_serial}
+              {equipment.protection_relay_serial || "—"}
             </dd>
           </div>
           <div>
@@ -100,7 +179,7 @@ export default async function EquipamentoDetailPage({
               Fabricante do Religador
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {equipment.manufacturer}
+              {equipment.manufacturer || "—"}
             </dd>
           </div>
           <div>
@@ -146,32 +225,37 @@ export default async function EquipamentoDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {inspections.map((inspection) => (
-                  <tr
-                    key={inspection.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(inspection.created_at).toLocaleDateString(
-                        "pt-BR"
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {inspection.inspector?.full_name ?? "—"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                      {inspection.status}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/dashboard/inspecoes/${inspection.id}`}
-                        className="text-sm font-medium text-[#F5A623] hover:text-[#E8941E]"
-                      >
-                        Ver
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {inspections.map((inspection) => {
+                  const config = INSPECTION_STATUS_CONFIG[inspection.status] ?? INSPECTION_STATUS_CONFIG.draft;
+                  return (
+                    <tr
+                      key={inspection.id}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {new Date(inspection.created_at).toLocaleDateString(
+                          "pt-BR"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {inspection.inspector?.full_name ?? "—"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={config.variant}>
+                          {config.label}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Link
+                          href={`/dashboard/inspecoes/${inspection.id}`}
+                          className="text-sm font-medium text-[#F5A623] hover:text-[#E8941E]"
+                        >
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

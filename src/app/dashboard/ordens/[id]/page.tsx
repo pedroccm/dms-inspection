@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { getServiceOrderById, getInspectionsByServiceOrderId } from "@/lib/queries";
+import { getServiceOrderById, getEquipmentByServiceOrderId } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
 import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
@@ -21,19 +21,26 @@ const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success"
   cancelled: "neutral",
 };
 
-const INSPECTION_STATUS_CONFIG: Record<
-  InspectionStatus,
-  { label: string; variant: "neutral" | "info" | "warning" | "success" | "danger" }
-> = {
-  disponivel: { label: "Disponível", variant: "info" },
-  draft: { label: "Rascunho", variant: "neutral" },
-  in_progress: { label: "Em Andamento", variant: "warning" },
-  ready_for_review: { label: "Pronta para Revisão", variant: "warning" },
-  aprovado: { label: "Aprovado", variant: "success" },
-  relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
-  equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
-  transferred: { label: "Transferida", variant: "neutral" },
-};
+/** Derive equipment status from its inspections */
+function getEquipmentStatus(inspections?: { id: string; status: InspectionStatus }[]): {
+  label: string;
+  variant: "neutral" | "info" | "warning" | "success";
+} {
+  if (!inspections || inspections.length === 0) {
+    return { label: "Pendente", variant: "neutral" };
+  }
+
+  // If any inspection is approved or transferred, equipment is done
+  const hasApproved = inspections.some(
+    (i) => i.status === "aprovado" || i.status === "transferred"
+  );
+  if (hasApproved) {
+    return { label: "Concluído", variant: "success" };
+  }
+
+  // If any inspection exists and is in progress/draft/review, it's being inspected
+  return { label: "Em Inspeção", variant: "warning" };
+}
 
 
 interface OrdemDetailPageProps {
@@ -56,15 +63,18 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
     notFound();
   }
 
-  // Fetch inspection fichas for this order
-  let fichas: Awaited<ReturnType<typeof getInspectionsByServiceOrderId>> = [];
+  // Fetch equipment for this order (with inspection status)
+  let equipmentList: Awaited<ReturnType<typeof getEquipmentByServiceOrderId>> = [];
   try {
-    fichas = await getInspectionsByServiceOrderId(id);
+    equipmentList = await getEquipmentByServiceOrderId(id);
   } catch {
     // Non-critical, show empty
   }
 
-  const isCompleted = order.status === "completed" || order.status === "cancelled";
+  const completedCount = equipmentList.filter((eq) => {
+    const status = getEquipmentStatus(eq.inspections);
+    return status.label === "Concluído";
+  }).length;
 
   return (
     <div>
@@ -108,7 +118,9 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           <div>
             <dt className="text-sm font-medium text-gray-500">Qtd. Equipamentos</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {order.equipment_count ?? "—"}
+              {equipmentList.length > 0
+                ? `${completedCount}/${equipmentList.length} concluídos`
+                : (order.equipment_count ?? "—")}
             </dd>
           </div>
           <div>
@@ -158,16 +170,16 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
         </dl>
       </div>
 
-      {/* Inspection Fichas */}
+      {/* Equipment List */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Fichas de Inspeção ({fichas.length})
+            Equipamentos ({equipmentList.length})
           </h2>
         </div>
-        {fichas.length === 0 ? (
+        {equipmentList.length === 0 ? (
           <div className="px-6 py-8 text-center text-gray-500">
-            Nenhuma ficha de inspeção criada para esta ordem.
+            Nenhum equipamento cadastrado para esta ordem.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -187,7 +199,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                     Status
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                    Reivindicado por
+                    Executor
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Ações
@@ -195,37 +207,47 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                 </tr>
               </thead>
               <tbody>
-                {fichas.map((ficha, idx) => {
-                  const config = INSPECTION_STATUS_CONFIG[ficha.status] ?? INSPECTION_STATUS_CONFIG.draft;
-                  const claimedUser = (ficha as unknown as Record<string, unknown>).claimed_user as { full_name: string } | null;
+                {equipmentList.map((eq, idx) => {
+                  const statusInfo = getEquipmentStatus(eq.inspections);
+                  const latestInspection = eq.inspections?.[eq.inspections.length - 1];
+                  const inspectorName = latestInspection?.inspector?.full_name ?? null;
+
+                  // Determine the action link:
+                  // - If there's an inspection, go to it
+                  // - If not, go to the equipment detail (where they can start inspection)
+                  const actionHref = latestInspection
+                    ? `/dashboard/inspecoes/${latestInspection.id}`
+                    : `/dashboard/equipamentos/${eq.id}`;
+                  const actionLabel = latestInspection ? "Ver Inspeção" : "Iniciar";
+
                   return (
                     <tr
-                      key={ficha.id}
+                      key={eq.id}
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {idx + 1}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {ficha.numero_052r ?? "—"}
+                        {eq.numero_052r ?? "—"}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {ficha.numero_300 ?? "—"}
+                        {eq.numero_300 ?? "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={config.variant}>
-                          {config.label}
+                        <Badge variant={statusInfo.variant}>
+                          {statusInfo.label}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
-                        {claimedUser?.full_name ?? "—"}
+                        {inspectorName ?? "—"}
                       </td>
                       <td className="px-6 py-4">
                         <Link
-                          href={`/dashboard/inspecoes/${ficha.id}`}
+                          href={actionHref}
                           className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
                         >
-                          Ver
+                          {actionLabel}
                         </Link>
                       </td>
                     </tr>

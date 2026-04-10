@@ -113,26 +113,31 @@ export default async function InspecaoDetailPage({
         </div>
       </div>
 
-      {/* 052R and 300 Numbers */}
-      {(inspection.numero_052r || inspection.numero_300) && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Números de Identificação</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {inspection.numero_052r && (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <span className="text-sm font-medium text-blue-700">052R:</span>
-                <span className="text-lg font-bold text-blue-900">{inspection.numero_052r}</span>
-              </div>
-            )}
-            {inspection.numero_300 && (
-              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <span className="text-sm font-medium text-green-700">300:</span>
-                <span className="text-lg font-bold text-green-900">{inspection.numero_300}</span>
-              </div>
-            )}
+      {/* 052R and 300 Numbers — sourced from equipment or inspection (backwards compat) */}
+      {(() => {
+        const n052r = inspection.equipment?.numero_052r ?? inspection.numero_052r;
+        const n300 = inspection.equipment?.numero_300 ?? inspection.numero_300;
+        if (!n052r && !n300) return null;
+        return (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Números de Identificação</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {n052r && (
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-sm font-medium text-blue-700">052R:</span>
+                  <span className="text-lg font-bold text-blue-900">{n052r}</span>
+                </div>
+              )}
+              {n300 && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <span className="text-sm font-medium text-green-700">300:</span>
+                  <span className="text-lg font-bold text-green-900">{n300}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* QR Data Display */}
       {inspection.qr_data && Object.keys(inspection.qr_data).length > 0 && (
