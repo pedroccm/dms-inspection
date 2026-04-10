@@ -31,15 +31,15 @@ function getEquipmentStatus(inspections?: { id: string; status: InspectionStatus
     return { label: "Pendente", variant: "neutral" };
   }
 
-  // If any inspection is approved or transferred, equipment is done
-  const hasApproved = inspections.some(
-    (i) => i.status === "aprovado" || i.status === "transferred"
+  // If any inspection is approved, transferred, or ready for review, equipment is done
+  const isDone = inspections.some(
+    (i) => i.status === "aprovado" || i.status === "transferred" || i.status === "ready_for_review"
   );
-  if (hasApproved) {
+  if (isDone) {
     return { label: "Concluído", variant: "success" };
   }
 
-  // If any inspection exists and is in progress/draft/review, it's being inspected
+  // If any inspection exists and is in progress/draft, it's being inspected
   return { label: "Em Inspeção", variant: "warning" };
 }
 

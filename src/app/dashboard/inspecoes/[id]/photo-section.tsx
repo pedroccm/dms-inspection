@@ -19,6 +19,7 @@ interface PhotoSectionProps {
   existingPhotos: Photo[];
   isEditable: boolean;
   serverPhotoUrls?: Record<string, string>;
+  onPhotoCountChange?: (count: number) => void;
 }
 
 interface PhotoSlot {
@@ -80,6 +81,7 @@ export function PhotoSection({
   existingPhotos,
   isEditable,
   serverPhotoUrls,
+  onPhotoCountChange,
 }: PhotoSectionProps) {
   const [slots, setSlots] = useState<PhotoSlot[]>(() =>
     buildInitialSlots(existingPhotos)
@@ -99,6 +101,11 @@ export function PhotoSection({
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const capturedCount = Object.keys(photos).length;
+
+  // Notify parent when photo count changes
+  useEffect(() => {
+    onPhotoCountChange?.(capturedCount);
+  }, [capturedCount, onPhotoCountChange]);
 
   // Gallery state (US-403)
   const [gallery, setGallery] = useState<GalleryState>({

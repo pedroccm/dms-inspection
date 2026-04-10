@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ChecklistSummary } from "./checklist-summary";
 import { ChecklistForm } from "./checklist-form";
 import { PhotoSection } from "./photo-section";
@@ -24,6 +25,8 @@ export function InspectionDetailClient({
   isEditable,
   serverPhotoUrls,
 }: InspectionDetailClientProps) {
+  const [photoCount, setPhotoCount] = useState(photos.length);
+
   return (
     <>
       {/* Checklist Summary */}
@@ -35,7 +38,7 @@ export function InspectionDetailClient({
         inspectionId={inspectionId}
         inspectionStatus={isEditable ? inspectionStatus : "aprovado"}
         inspectionNotes={inspectionNotes}
-        photoCount={photos.length}
+        photoCount={photoCount}
       />
 
       {/* Photo Capture Section */}
@@ -44,6 +47,7 @@ export function InspectionDetailClient({
         existingPhotos={photos}
         isEditable={isEditable}
         serverPhotoUrls={serverPhotoUrls}
+        onPhotoCountChange={setPhotoCount}
       />
     </>
   );
