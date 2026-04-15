@@ -6,15 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createServiceOrder } from "../actions";
-import type { InspectionLocation } from "@/lib/types";
+import type { InspectionLocation, Client } from "@/lib/types";
 
 interface CreateOrderFormProps {
   inspectors: { id: string; full_name: string }[];
   locations: InspectionLocation[];
+  clients: Client[];
   nextOrderNumber: string;
 }
 
-export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: CreateOrderFormProps) {
+export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumber }: CreateOrderFormProps) {
   const [state, formAction, pending] = useActionState(
     async (_prevState: { error: string } | null, formData: FormData) => {
       const result = await createServiceOrder(formData);
@@ -25,6 +26,7 @@ export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: Crea
 
   const [equipmentCount, setEquipmentCount] = useState(1);
   const [locationId, setLocationId] = useState("");
+  const [clientName, setClientName] = useState("");
 
   const inspectorOptions = inspectors.map((i) => ({
     value: i.id,
@@ -34,6 +36,11 @@ export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: Crea
   const locationOptions = [
     ...locations.map((l) => ({ value: l.id, label: l.name })),
     { value: "__new__", label: "+ Novo Local" },
+  ];
+
+  const clientOptions = [
+    ...clients.map((c) => ({ value: c.name, label: c.name })),
+    { value: "__new__", label: "+ Novo Cliente" },
   ];
 
   return (
@@ -53,12 +60,24 @@ export function CreateOrderForm({ inspectors, locations, nextOrderNumber }: Crea
         </p>
       </div>
 
-      <Input
-        label="Nome do Cliente"
+      <Select
+        label="Cliente"
         name="client_name"
         required
-        placeholder="Digite o nome do cliente"
+        placeholder="Selecione o cliente"
+        options={clientOptions}
+        value={clientName}
+        onChange={(e) => setClientName(e.target.value)}
       />
+
+      {clientName === "__new__" && (
+        <Input
+          label="Nome do Novo Cliente"
+          name="new_client_name"
+          required
+          placeholder="Digite o nome do novo cliente"
+        />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="w-full">

@@ -9,7 +9,8 @@ import { getNextOrderNumber } from "@/lib/queries";
 export async function createServiceOrder(formData: FormData) {
   const user = await requireAdmin();
 
-  const clientName = (formData.get("client_name") as string)?.trim();
+  const clientNameRaw = (formData.get("client_name") as string)?.trim();
+  const newClientName = (formData.get("new_client_name") as string)?.trim() || null;
   const startDate = (formData.get("start_date") as string)?.trim() || null;
   const assignedTo = (formData.get("assigned_to") as string)?.trim();
   const equipmentCountStr = (formData.get("equipment_count") as string)?.trim();
@@ -19,6 +20,19 @@ export async function createServiceOrder(formData: FormData) {
   const assignedTeamId = (formData.get("assigned_team_id") as string)?.trim() || null;
 
   const equipmentCount = parseInt(equipmentCountStr || "0", 10);
+
+  // Resolve client name: inline new client or selected existing
+  let clientName = clientNameRaw;
+  if (clientNameRaw === "__new__") {
+    if (!newClientName) {
+      return { error: "Informe o nome do novo cliente." };
+    }
+    clientName = newClientName;
+
+    // Persist new client to clients table
+    const supabaseForClient = await createClient();
+    await supabaseForClient.from("clients").insert({ name: newClientName });
+  }
 
   if (!clientName || !assignedTo) {
     return { error: "Nome do cliente e executor são obrigatórios." };

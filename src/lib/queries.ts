@@ -287,6 +287,20 @@ export async function getDashboardCounts() {
   };
 }
 
+// ─── Clients ──────────────────────────────────────────────
+
+export async function getClients() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("clients")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as import("@/lib/types").Client[];
+}
+
 // ─── Inspection Locations ──────────────────────────────────
 
 export async function getInspectionLocations() {

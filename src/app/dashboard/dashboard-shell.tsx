@@ -20,6 +20,13 @@ const allNavItems = [
     executorOnly: false,
   },
   {
+    label: "Clientes",
+    href: "/dashboard/clientes",
+    icon: "building",
+    adminOnly: true,
+    executorOnly: false,
+  },
+  {
     label: "Relatórios",
     href: "/dashboard/relatorios",
     icon: "file-text",

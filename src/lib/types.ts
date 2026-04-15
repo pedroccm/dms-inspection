@@ -103,6 +103,14 @@ export function getPhotoLabel(photoType: string, customLabel?: string | null): s
   return photoType;
 }
 
+// ─── Clients ────────────────────────────────────────────────────
+
+export interface Client {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 // ─── Inspection Locations ────────────────────────────────────────
 
 export interface InspectionLocation {

@@ -1,13 +1,14 @@
 import { requireAdmin } from "@/lib/auth";
-import { getInspectors, getInspectionLocations, getNextOrderNumber } from "@/lib/queries";
+import { getInspectors, getInspectionLocations, getClients, getNextOrderNumber } from "@/lib/queries";
 import { CreateOrderForm } from "./create-order-form";
 
 export default async function NovaOrdemPage() {
   await requireAdmin();
 
-  const [inspectors, locations, nextOrderNumber] = await Promise.all([
+  const [inspectors, locations, clients, nextOrderNumber] = await Promise.all([
     getInspectors(),
     getInspectionLocations(),
+    getClients(),
     getNextOrderNumber(),
   ]);
 
@@ -19,6 +20,7 @@ export default async function NovaOrdemPage() {
       <CreateOrderForm
         inspectors={inspectors}
         locations={locations}
+        clients={clients}
         nextOrderNumber={nextOrderNumber}
       />
     </div>
