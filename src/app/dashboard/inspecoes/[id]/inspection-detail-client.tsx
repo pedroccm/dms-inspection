@@ -14,6 +14,7 @@ interface InspectionDetailClientProps {
   photos: Photo[];
   isEditable: boolean;
   serverPhotoUrls?: Record<string, string>;
+  serviceOrderId?: string | null;
 }
 
 export function InspectionDetailClient({
@@ -24,6 +25,7 @@ export function InspectionDetailClient({
   photos,
   isEditable,
   serverPhotoUrls,
+  serviceOrderId,
 }: InspectionDetailClientProps) {
   const [photoCount, setPhotoCount] = useState(photos.length);
 
@@ -39,6 +41,7 @@ export function InspectionDetailClient({
         inspectionStatus={isEditable ? inspectionStatus : "aprovado"}
         inspectionNotes={inspectionNotes}
         photoCount={photoCount}
+        serviceOrderId={serviceOrderId}
       />
 
       {/* Photo Capture Section */}

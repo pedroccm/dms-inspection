@@ -229,6 +229,7 @@ export default async function InspecaoDetailPage({
           photos={photos}
           isEditable={isEditable}
           serverPhotoUrls={photoUrls}
+          serviceOrderId={inspection.service_order_id}
         />
       )}
 

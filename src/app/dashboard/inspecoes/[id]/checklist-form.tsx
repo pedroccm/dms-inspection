@@ -17,6 +17,7 @@ interface ChecklistFormProps {
   inspectionStatus: InspectionStatus;
   inspectionNotes: string | null;
   photoCount?: number;
+  serviceOrderId?: string | null;
 }
 
 interface ItemSaveState {
@@ -99,6 +100,7 @@ export function ChecklistForm({
   inspectionStatus,
   inspectionNotes,
   photoCount = 0,
+  serviceOrderId,
 }: ChecklistFormProps) {
   const router = useRouter();
   const editable = isEditable(inspectionStatus);
@@ -129,6 +131,10 @@ export function ChecklistForm({
   // Track current inspection status locally for draft → in_progress transition
   const [currentStatus, setCurrentStatus] = useState<InspectionStatus>(inspectionStatus);
   const statusTransitioned = useRef(false);
+
+  // Save draft state
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
 
   // Complete evaluation state
   const [completing, setCompleting] = useState(false);
@@ -350,6 +356,21 @@ export function ChecklistForm({
     setShowConfirmModal(true);
   }, []);
 
+  const handleSaveDraft = useCallback(async () => {
+    setSavingDraft(true);
+    setDraftSaved(false);
+
+    // Force-save current observations
+    const result = await updateInspectionObservations(inspectionId, observations);
+
+    setSavingDraft(false);
+
+    if (result.success) {
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
+    }
+  }, [inspectionId, observations]);
+
   // ─── Render ────────────────────────────────────────────
 
   return (
@@ -521,18 +542,30 @@ export function ChecklistForm({
         )}
       </div>
 
-      {/* Complete Evaluation Button */}
+      {/* Action Buttons */}
       {editable && (
         <div className="flex flex-col items-center gap-3">
-          <Button
-            onClick={handleCompleteClick}
-            loading={completing}
-            disabled={!allEvaluated || completing}
-            size="lg"
-            fullWidth
-          >
-            Concluir Avaliação
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              onClick={handleSaveDraft}
+              loading={savingDraft}
+              disabled={savingDraft}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            >
+              {draftSaved ? "Rascunho Salvo ✓" : savingDraft ? "Salvando..." : "Salvar Rascunho"}
+            </Button>
+            <Button
+              onClick={handleCompleteClick}
+              loading={completing}
+              disabled={!allEvaluated || completing}
+              size="lg"
+              fullWidth
+            >
+              Concluir Avaliação
+            </Button>
+          </div>
           {!allEvaluated && (
             <p className="text-sm text-gray-500">
               Avalie todos os {totalCount - evaluatedCount} itens pendentes para concluir.
