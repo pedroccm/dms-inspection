@@ -137,6 +137,49 @@ export async function createServiceOrder(formData: FormData) {
   redirect(`/dashboard/ordens/${data.id}`);
 }
 
+export async function updateEquipmentNumbers(
+  orderId: string,
+  equipmentId: string,
+  formData: FormData
+) {
+  await requireAdmin();
+
+  const n052r = (formData.get("numero_052r") as string)?.trim();
+  const n300 = (formData.get("numero_300") as string)?.trim();
+
+  if (!n052r || !n300) {
+    return { error: "Ambos os números são obrigatórios." };
+  }
+
+  const supabase = await createClient();
+
+  // Verify order is still open/in_progress
+  const { data: order } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (!order || (order.status !== "open" && order.status !== "in_progress")) {
+    return { error: "Só é possível editar equipamentos de ordens abertas ou em andamento." };
+  }
+
+  const { error } = await supabase
+    .from("equipment")
+    .update({
+      numero_052r: `052R-${n052r}`,
+      numero_300: `300-${n300}`,
+    })
+    .eq("id", equipmentId);
+
+  if (error) {
+    return { error: `Erro ao atualizar: ${error.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  return { success: true };
+}
+
 export async function addEquipmentToOrder(orderId: string, equipmentId: string) {
   await requireAdmin();
 

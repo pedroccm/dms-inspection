@@ -7,6 +7,7 @@ import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
 import { DeleteOrderButton } from "./delete-order-button";
 import { AdminOnly } from "@/components/admin-only";
+import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -248,12 +249,21 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                         {inspectorName ?? "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <Link
-                          href={actionHref}
-                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
-                        >
-                          {actionLabel}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={actionHref}
+                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
+                          >
+                            {actionLabel}
+                          </Link>
+                          <EditEquipmentNumbers
+                            equipmentId={eq.id}
+                            orderId={order.id}
+                            currentNumero052r={eq.numero_052r ?? null}
+                            currentNumero300={eq.numero_300 ?? null}
+                            orderStatus={order.status}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
