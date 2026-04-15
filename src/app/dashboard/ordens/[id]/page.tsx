@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
 import { DeleteOrderButton } from "./delete-order-button";
+import { AdminOnly } from "@/components/admin-only";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -91,7 +92,9 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
         <div className="flex items-center gap-3">
           <PdfOrderButton orderId={order.id} />
           <ExportOrderButton orderId={order.id} />
-          <DeleteOrderButton orderId={order.id} />
+          <AdminOnly>
+            <DeleteOrderButton orderId={order.id} />
+          </AdminOnly>
           <Link
             href="/dashboard/ordens"
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
