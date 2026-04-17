@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { deleteServiceOrder } from "../actions";
 
-export function DeleteOrderButton({ orderId }: { orderId: string }) {
+export function DeleteOrderButton({
+  orderId,
+  menuItem = false,
+}: {
+  orderId: string;
+  menuItem?: boolean;
+}) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -18,6 +24,19 @@ export function DeleteOrderButton({ orderId }: { orderId: string }) {
       alert(result.error);
       setLoading(false);
     }
+  }
+
+  if (menuItem) {
+    return (
+      <button
+        type="button"
+        onClick={handleDelete}
+        disabled={loading}
+        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+      >
+        {loading ? "Excluindo..." : "Excluir Ordem"}
+      </button>
+    );
   }
 
   return (

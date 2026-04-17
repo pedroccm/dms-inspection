@@ -27,9 +27,23 @@ export function IncludeEquipmentButton({ orderId }: IncludeEquipmentButtonProps)
 
   if (!open) {
     return (
-      <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 px-4 h-11 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
         Incluir Equipamento
-      </Button>
+      </button>
     );
   }
 

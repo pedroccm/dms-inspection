@@ -25,6 +25,7 @@ interface EditOrderButtonProps {
   contracts: Contract[];
   locations: InspectionLocation[];
   inspectors: { id: string; full_name: string }[];
+  menuItem?: boolean;
 }
 
 export function EditOrderButton({
@@ -35,6 +36,7 @@ export function EditOrderButton({
   contracts,
   locations,
   inspectors,
+  menuItem = false,
 }: EditOrderButtonProps) {
   const isAdmin = useIsAdmin();
   const [open, setOpen] = useState(false);
@@ -71,6 +73,17 @@ export function EditOrderButton({
   }));
 
   if (!open) {
+    if (menuItem) {
+      return (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Editar
+        </button>
+      );
+    }
     return (
       <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(true)}>
         Editar

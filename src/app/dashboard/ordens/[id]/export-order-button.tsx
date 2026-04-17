@@ -44,9 +44,25 @@ function ExportOrderButtonInner({ orderId }: ExportOrderButtonProps) {
     <button
       onClick={handleExport}
       disabled={loading}
-      className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label="Exportar Ordem Completa"
+      title="Exportar Ordem Completa"
+      className="inline-flex items-center justify-center gap-2 px-4 h-11 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {loading ? "Exportando..." : "Exportar Ordem Completa"}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+        />
+      </svg>
+      <span className="hidden sm:inline">{loading ? "Exportando..." : "Exportar"}</span>
     </button>
   );
 }

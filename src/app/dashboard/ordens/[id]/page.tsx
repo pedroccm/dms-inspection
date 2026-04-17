@@ -17,6 +17,7 @@ import { AdminOnly } from "@/components/admin-only";
 import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
+import { OrderActionsMenu } from "./order-actions-menu";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
@@ -99,45 +100,60 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1B2B5E]">
-            {order.order_number ?? order.title}
-          </h1>
-          {order.order_number && order.title !== order.order_number && (
-            <p className="text-sm text-gray-500 mt-1">{order.title}</p>
-          )}
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href="/dashboard/ordens"
+            aria-label="Voltar"
+            title="Voltar"
+            className="inline-flex items-center justify-center w-11 h-11 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors shrink-0"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-[#1B2B5E] truncate">
+              {order.order_number ?? order.title}
+            </h1>
+            {order.order_number && order.title !== order.order_number && (
+              <p className="text-sm text-gray-500 mt-0.5 truncate">{order.title}</p>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <PdfOrderButton orderId={order.id} />
           <ExportOrderButton orderId={order.id} />
           <AdminOnly>
-            <EditOrderButton
-              orderId={order.id}
-              orderStatus={order.status}
-              current={{
-                order_number: order.order_number,
-                client_name: order.client_name,
-                contract_name: order.contract_name ?? null,
-                location_id: order.location_id,
-                assigned_to: order.assigned_to,
-                start_date: order.start_date,
-                client_request_date: order.client_request_date,
-              }}
-              clients={clients}
-              contracts={contracts}
-              locations={locations}
-              inspectors={inspectors.map((i) => ({ id: i.id, full_name: i.full_name }))}
-            />
-            <IncludeEquipmentButton orderId={order.id} />
-            <DeleteOrderButton orderId={order.id} />
+            <OrderActionsMenu>
+              <EditOrderButton
+                orderId={order.id}
+                orderStatus={order.status}
+                current={{
+                  order_number: order.order_number,
+                  client_name: order.client_name,
+                  contract_name: order.contract_name ?? null,
+                  location_id: order.location_id,
+                  assigned_to: order.assigned_to,
+                  start_date: order.start_date,
+                  client_request_date: order.client_request_date,
+                }}
+                clients={clients}
+                contracts={contracts}
+                locations={locations}
+                inspectors={inspectors.map((i) => ({ id: i.id, full_name: i.full_name }))}
+                menuItem
+              />
+              <DeleteOrderButton orderId={order.id} menuItem />
+            </OrderActionsMenu>
           </AdminOnly>
-          <Link
-            href="/dashboard/ordens"
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors min-h-[44px]"
-          >
-            Voltar
-          </Link>
         </div>
       </div>
 
@@ -218,10 +234,13 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
 
       {/* Equipment List */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-gray-900">
             Equipamentos ({equipmentList.length})
           </h2>
+          <AdminOnly>
+            <IncludeEquipmentButton orderId={order.id} />
+          </AdminOnly>
         </div>
         {equipmentList.length === 0 ? (
           <div className="px-6 py-8 text-center text-gray-500">
