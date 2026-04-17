@@ -60,22 +60,19 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Título
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Cliente
+                  O.S.
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
-                  Local
+                  Local da Inspeção
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  Executor
+                  Inspetor
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden lg:table-cell">
-                  Período
+                  Início
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Ações
@@ -86,7 +83,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
               {orders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     Nenhuma ordem de serviço encontrada.
@@ -100,9 +97,6 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                   >
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {order.order_number ?? order.title}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {order.client_name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell">
                       {(order as unknown as { inspection_location?: { name: string } }).inspection_location?.name
@@ -120,9 +114,6 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                       {order.start_date
                         ? new Date(order.start_date).toLocaleDateString("pt-BR")
                         : "—"}
-                      {order.end_date
-                        ? ` — ${new Date(order.end_date).toLocaleDateString("pt-BR")}`
-                        : ""}
                     </td>
                     <td className="px-6 py-4">
                       <Link

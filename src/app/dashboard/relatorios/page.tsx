@@ -3,9 +3,9 @@ import { requireAdmin } from "@/lib/auth";
 
 const reports = [
   {
-    title: "Produtividade por Executor",
+    title: "Produtividade por Inspetor",
     description:
-      "Visualize o desempenho de cada executor: total de inspeções, itens aprovados, reprovados e taxa de aprovação.",
+      "Visualize o desempenho de cada inspetor: total de inspeções, itens aprovados, reprovados e taxa de aprovação.",
     href: "/dashboard/relatorios/produtividade",
     available: true,
   },

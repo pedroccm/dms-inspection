@@ -111,6 +111,14 @@ export interface Client {
   created_at: string;
 }
 
+// ─── Contracts ───────────────────────────────────────────────────
+
+export interface Contract {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 // ─── Inspection Locations ────────────────────────────────────────
 
 export interface InspectionLocation {
@@ -142,6 +150,7 @@ export interface ServiceOrder {
   id: string;
   title: string;
   client_name: string;
+  contract_name: string | null;
   location: string | null;
   status: ServiceOrderStatus;
   assigned_to: string;

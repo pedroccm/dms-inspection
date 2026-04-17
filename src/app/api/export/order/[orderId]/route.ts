@@ -78,7 +78,7 @@ export async function GET(
 
   // Header
   lines.push(
-    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Executor,Data"
+    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
   );
 
   for (const inspection of inspections) {

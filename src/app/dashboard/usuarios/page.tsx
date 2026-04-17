@@ -84,7 +84,7 @@ export default async function UsuariosPage() {
                       {emailMap.get(user.id) ?? "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {user.role === "admin" ? "Master" : "Executor"}
+                      {user.role === "admin" ? "Master" : "Inspetor"}
                     </td>
                     <td className="px-6 py-4">
                       {user.active ? (

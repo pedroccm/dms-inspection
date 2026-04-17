@@ -64,10 +64,20 @@ describe("CreateOrderForm", () => {
     { id: "t1", name: "Equipe A", created_at: "2024-01-01" },
   ];
 
+  const clients = [
+    { id: "c1", name: "Cliente A", created_at: "2024-01-01" },
+  ];
+
+  const contracts = [
+    { id: "co1", name: "Contrato A", created_at: "2024-01-01" },
+  ];
+
   const defaultProps = {
     inspectors,
     locations,
     teams,
+    clients,
+    contracts,
     nextOrderNumber: "DS-CP-INSP-RA-001",
   };
 
@@ -75,18 +85,18 @@ describe("CreateOrderForm", () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
     render(<CreateOrderForm {...defaultProps} />);
 
-    expect(screen.getByText(/DS-CP-INSP-RA-001/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Nome do Cliente/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/O\.S\./)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Cliente/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Quantidade de Equipamentos/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Data Início/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Executor Responsável/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Inspetor Responsável/)).toBeInTheDocument();
   });
 
-  it("client name is required", async () => {
+  it("client is required", async () => {
     const { CreateOrderForm } = await import("../nova/create-order-form");
     render(<CreateOrderForm {...defaultProps} />);
 
-    expect(screen.getByLabelText(/Nome do Cliente/)).toBeRequired();
+    expect(screen.getByLabelText(/^Cliente/)).toBeRequired();
   });
 
   it("renders Criar Ordem and Cancelar buttons", async () => {

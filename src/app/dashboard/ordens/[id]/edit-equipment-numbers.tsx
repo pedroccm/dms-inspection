@@ -9,7 +9,6 @@ interface EditEquipmentNumbersProps {
   orderId: string;
   currentNumero052r: string | null;
   currentNumero300: string | null;
-  orderStatus: string;
 }
 
 export function EditEquipmentNumbers({
@@ -17,11 +16,9 @@ export function EditEquipmentNumbers({
   orderId,
   currentNumero052r,
   currentNumero300,
-  orderStatus,
 }: EditEquipmentNumbersProps) {
   const isAdmin = useIsAdmin();
   const [editing, setEditing] = useState(false);
-  const canEdit = isAdmin && (orderStatus === "open" || orderStatus === "in_progress");
 
   const [state, formAction, pending] = useActionState(
     async (_prevState: { error?: string; success?: boolean } | null, formData: FormData) => {
@@ -32,7 +29,7 @@ export function EditEquipmentNumbers({
     null
   );
 
-  if (!canEdit) return null;
+  if (!isAdmin) return null;
 
   if (!editing) {
     return (
@@ -58,6 +55,7 @@ export function EditEquipmentNumbers({
           name="numero_052r"
           defaultValue={currentNumero052r?.replace("052R-", "") ?? ""}
           required
+          placeholder="Mecanismo"
           className="block w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] focus:outline-none"
         />
       </div>
@@ -68,6 +66,7 @@ export function EditEquipmentNumbers({
           name="numero_300"
           defaultValue={currentNumero300?.replace("300-", "") ?? ""}
           required
+          placeholder="Controle"
           className="block w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] focus:outline-none"
         />
       </div>

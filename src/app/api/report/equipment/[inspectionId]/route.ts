@@ -199,7 +199,7 @@ export async function GET(
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(`Executor: ${inspectorName}`, 14, currentY + 18);
+  doc.text(`Inspetor: ${inspectorName}`, 14, currentY + 18);
   doc.text(`Data: ${dateStr}`, 14, currentY + 24);
   doc.text(
     `Status: ${INSPECTION_STATUS_LABELS[inspection.status] ?? inspection.status}`,

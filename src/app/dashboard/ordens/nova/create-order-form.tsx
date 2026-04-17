@@ -6,16 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createServiceOrder } from "../actions";
-import type { InspectionLocation, Client } from "@/lib/types";
+import type { InspectionLocation, Client, Contract } from "@/lib/types";
 
 interface CreateOrderFormProps {
   inspectors: { id: string; full_name: string }[];
   locations: InspectionLocation[];
   clients: Client[];
+  contracts: Contract[];
   nextOrderNumber: string;
 }
 
-export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumber }: CreateOrderFormProps) {
+export function CreateOrderForm({
+  inspectors,
+  locations,
+  clients,
+  contracts,
+  nextOrderNumber,
+}: CreateOrderFormProps) {
   const [state, formAction, pending] = useActionState(
     async (_prevState: { error: string } | null, formData: FormData) => {
       const result = await createServiceOrder(formData);
@@ -27,6 +34,7 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
   const [equipmentCount, setEquipmentCount] = useState(1);
   const [locationId, setLocationId] = useState("");
   const [clientName, setClientName] = useState("");
+  const [contractName, setContractName] = useState("");
 
   const inspectorOptions = inspectors.map((i) => ({
     value: i.id,
@@ -43,6 +51,11 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
     { value: "__new__", label: "+ Novo Cliente" },
   ];
 
+  const contractOptions = [
+    ...contracts.map((c) => ({ value: c.name, label: c.name })),
+    { value: "__new__", label: "+ Novo Contrato" },
+  ];
+
   return (
     <form action={formAction} className="bg-white rounded-lg shadow p-6 space-y-6">
       {state?.error && (
@@ -51,14 +64,14 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
         </div>
       )}
 
-      {/* Auto-generated order number display */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-700">
-          <span className="font-medium">Número da O.S.:</span>{" "}
-          <span className="font-bold text-lg">{nextOrderNumber}</span>
-          <span className="text-xs ml-2">(gerado automaticamente)</span>
-        </p>
-      </div>
+      {/* Editable order number (defaults to auto-generated suggestion) */}
+      <Input
+        label="O.S."
+        name="order_number"
+        required
+        defaultValue={nextOrderNumber}
+        placeholder="Número da Ordem de Serviço"
+      />
 
       <Select
         label="Cliente"
@@ -76,6 +89,24 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
           name="new_client_name"
           required
           placeholder="Digite o nome do novo cliente"
+        />
+      )}
+
+      <Select
+        label="Contrato"
+        name="contract_name"
+        placeholder="Selecione o contrato"
+        options={contractOptions}
+        value={contractName}
+        onChange={(e) => setContractName(e.target.value)}
+      />
+
+      {contractName === "__new__" && (
+        <Input
+          label="Nome do Novo Contrato"
+          name="new_contract_name"
+          required
+          placeholder="Digite o nome do novo contrato"
         />
       )}
 
@@ -137,9 +168,9 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
 
         <div className="w-full">
           <Select
-            label="Local"
+            label="Local da Inspeção"
             name="location_id"
-            placeholder="Selecione o local"
+            placeholder="Selecione o local da inspeção"
             options={locationOptions}
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
@@ -157,10 +188,10 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
       )}
 
       <Select
-        label="Executor Responsável"
+        label="Inspetor Responsável"
         name="assigned_to"
         required
-        placeholder="Selecione o executor"
+        placeholder="Selecione o inspetor"
         options={inspectorOptions}
       />
 
@@ -174,8 +205,8 @@ export function CreateOrderForm({ inspectors, locations, clients, nextOrderNumbe
             {/* Header */}
             <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-center">
               <div className="w-8 text-center text-xs font-medium text-gray-500">#</div>
-              <div className="text-xs font-medium text-gray-500">Número 052R</div>
-              <div className="text-xs font-medium text-gray-500">Número 300</div>
+              <div className="text-xs font-medium text-gray-500">Mecanismo</div>
+              <div className="text-xs font-medium text-gray-500">Controle</div>
             </div>
             {/* Rows */}
             {Array.from({ length: equipmentCount }, (_, i) => (

@@ -27,6 +27,13 @@ const allNavItems = [
     executorOnly: false,
   },
   {
+    label: "Contratos",
+    href: "/dashboard/contratos",
+    icon: "file-contract",
+    adminOnly: true,
+    executorOnly: false,
+  },
+  {
     label: "Relatórios",
     href: "/dashboard/relatorios",
     icon: "file-text",
@@ -138,7 +145,7 @@ function Sidebar({
               <p className="text-sm font-medium text-white truncate">
                 {profile.full_name}
               </p>
-              <p className="text-xs text-white/50">{profile.role === "admin" ? "Master" : "Executor"}</p>
+              <p className="text-xs text-white/50">{profile.role === "admin" ? "Master" : "Inspetor"}</p>
             </div>
           )}
           <button

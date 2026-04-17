@@ -91,7 +91,7 @@ export function CreateUserForm() {
             Selecione uma função
           </option>
           <option value="admin">Master</option>
-          <option value="inspector">Executor</option>
+          <option value="inspector">Inspetor</option>
         </select>
       </div>
 

@@ -93,8 +93,9 @@ export async function GET(
   const orderData = [
     ["Titulo", order.title ?? "—"],
     ["Cliente", order.client_name ?? "—"],
-    ["Localizacao", order.location ?? "—"],
-    ["Executor Responsavel", assigneeName],
+    ["Contrato", order.contract_name ?? "—"],
+    ["Local da Inspecao", order.location ?? "—"],
+    ["Inspetor Responsavel", assigneeName],
     ["Data Inicio", formatDate(order.start_date)],
     ["Data Fim", formatDate(order.end_date)],
   ];

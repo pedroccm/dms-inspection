@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { getServiceOrderById, getEquipmentByServiceOrderId } from "@/lib/queries";
+import {
+  getServiceOrderById,
+  getEquipmentByServiceOrderId,
+  getClients,
+  getContracts,
+  getInspectionLocations,
+  getInspectors,
+} from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
 import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
 import { DeleteOrderButton } from "./delete-order-button";
 import { AdminOnly } from "@/components/admin-only";
 import { EditEquipmentNumbers } from "./edit-equipment-numbers";
+import { IncludeEquipmentButton } from "./include-equipment-button";
+import { EditOrderButton } from "./edit-order-button";
+import { RemoveEquipmentButton } from "./remove-equipment-button";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
@@ -74,6 +84,14 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
     // Non-critical, show empty
   }
 
+  // Preload lookup lists for the Edit modal (master-only, but server-side is fine)
+  const [clients, contracts, locations, inspectors] = await Promise.all([
+    getClients(),
+    getContracts(),
+    getInspectionLocations(),
+    getInspectors(),
+  ]);
+
   const completedCount = equipmentList.filter((eq) => {
     const status = getEquipmentStatus(eq.inspections);
     return status.label === "Concluído";
@@ -90,10 +108,28 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             <p className="text-sm text-gray-500 mt-1">{order.title}</p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <PdfOrderButton orderId={order.id} />
           <ExportOrderButton orderId={order.id} />
           <AdminOnly>
+            <EditOrderButton
+              orderId={order.id}
+              orderStatus={order.status}
+              current={{
+                order_number: order.order_number,
+                client_name: order.client_name,
+                contract_name: order.contract_name ?? null,
+                location_id: order.location_id,
+                assigned_to: order.assigned_to,
+                start_date: order.start_date,
+                client_request_date: order.client_request_date,
+              }}
+              clients={clients}
+              contracts={contracts}
+              locations={locations}
+              inspectors={inspectors.map((i) => ({ id: i.id, full_name: i.full_name }))}
+            />
+            <IncludeEquipmentButton orderId={order.id} />
             <DeleteOrderButton orderId={order.id} />
           </AdminOnly>
           <Link
@@ -112,7 +148,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
         </h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
           <div>
-            <dt className="text-sm font-medium text-gray-500">Número da O.S.</dt>
+            <dt className="text-sm font-medium text-gray-500">O.S.</dt>
             <dd className="mt-1 text-sm font-semibold text-[#1B2B5E]">
               {order.order_number ?? "—"}
             </dd>
@@ -120,6 +156,10 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           <div>
             <dt className="text-sm font-medium text-gray-500">Cliente</dt>
             <dd className="mt-1 text-sm text-gray-900">{order.client_name}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Contrato</dt>
+            <dd className="mt-1 text-sm text-gray-900">{order.contract_name ?? "—"}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Qtd. Equipamentos</dt>
@@ -130,14 +170,14 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Local</dt>
+            <dt className="text-sm font-medium text-gray-500">Local da Inspeção</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.inspection_location?.name ?? order.location ?? "—"}
             </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">
-              Executor Responsável
+              Inspetor Responsável
             </dt>
             <dd className="mt-1 text-sm text-gray-900">
               {order.assignee?.full_name ?? "—"}
@@ -196,16 +236,16 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                     #
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Número 052R
+                    Mecanismo
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Número 300
+                    Controle
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                    Executor
+                    Inspetor
                   </th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Ações
@@ -249,7 +289,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                         {inspectorName ?? "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Link
                             href={actionHref}
                             className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
@@ -261,8 +301,13 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                             orderId={order.id}
                             currentNumero052r={eq.numero_052r ?? null}
                             currentNumero300={eq.numero_300 ?? null}
-                            orderStatus={order.status}
                           />
+                          <AdminOnly>
+                            <RemoveEquipmentButton
+                              orderId={order.id}
+                              equipmentId={eq.id}
+                            />
+                          </AdminOnly>
                         </div>
                       </td>
                     </tr>

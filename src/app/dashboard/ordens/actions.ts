@@ -9,8 +9,11 @@ import { getNextOrderNumber } from "@/lib/queries";
 export async function createServiceOrder(formData: FormData) {
   const user = await requireAdmin();
 
+  const orderNumberRaw = (formData.get("order_number") as string)?.trim();
   const clientNameRaw = (formData.get("client_name") as string)?.trim();
   const newClientName = (formData.get("new_client_name") as string)?.trim() || null;
+  const contractNameRaw = (formData.get("contract_name") as string)?.trim() || "";
+  const newContractName = (formData.get("new_contract_name") as string)?.trim() || null;
   const startDate = (formData.get("start_date") as string)?.trim() || null;
   const assignedTo = (formData.get("assigned_to") as string)?.trim();
   const equipmentCountStr = (formData.get("equipment_count") as string)?.trim();
@@ -34,8 +37,20 @@ export async function createServiceOrder(formData: FormData) {
     await supabaseForClient.from("clients").insert({ name: newClientName });
   }
 
+  // Resolve contract name (optional)
+  let contractName: string | null = contractNameRaw || null;
+  if (contractNameRaw === "__new__") {
+    if (!newContractName) {
+      return { error: "Informe o nome do novo contrato." };
+    }
+    contractName = newContractName;
+
+    const supabaseForContract = await createClient();
+    await supabaseForContract.from("contracts").insert({ name: newContractName });
+  }
+
   if (!clientName || !assignedTo) {
-    return { error: "Nome do cliente e executor são obrigatórios." };
+    return { error: "Nome do cliente e inspetor são obrigatórios." };
   }
 
   if (!equipmentCount || equipmentCount < 1) {
@@ -48,7 +63,7 @@ export async function createServiceOrder(formData: FormData) {
     const n052r = (formData.get(`numero_052r_${i}`) as string)?.trim() || "";
     const n300 = (formData.get(`numero_300_${i}`) as string)?.trim() || "";
     if (!n052r || !n300) {
-      return { error: `Preencha os números 052R e 300 para o equipamento ${i + 1}.` };
+      return { error: `Preencha os números de Mecanismo e Controle para o equipamento ${i + 1}.` };
     }
     fichaNumbers.push({ numero_052r: `052R-${n052r}`, numero_300: `300-${n300}` });
   }
@@ -72,8 +87,8 @@ export async function createServiceOrder(formData: FormData) {
     return { error: "Informe o nome do novo local." };
   }
 
-  // Auto-generate order number
-  const orderNumber = await getNextOrderNumber();
+  // Order number: use user-provided value, or auto-generate if empty
+  const orderNumber = orderNumberRaw || (await getNextOrderNumber());
 
   const { data, error } = await supabase
     .from("service_orders")
@@ -81,6 +96,7 @@ export async function createServiceOrder(formData: FormData) {
       title: orderNumber,
       order_number: orderNumber,
       client_name: clientName,
+      contract_name: contractName,
       location: null,
       location_id: finalLocationId || null,
       start_date: startDate,
@@ -100,7 +116,7 @@ export async function createServiceOrder(formData: FormData) {
   }
 
   // Create equipment records (one per ficha number pair)
-  const equipmentInserts = fichaNumbers.map((ficha, index) => ({
+  const equipmentInserts = fichaNumbers.map((ficha) => ({
     copel_ra_code: `PENDENTE-${crypto.randomUUID().slice(0, 8)}`,
     numero_052r: ficha.numero_052r,
     numero_300: ficha.numero_300,
@@ -153,16 +169,7 @@ export async function updateEquipmentNumbers(
 
   const supabase = await createClient();
 
-  // Verify order is still open/in_progress
-  const { data: order } = await supabase
-    .from("service_orders")
-    .select("status")
-    .eq("id", orderId)
-    .single();
-
-  if (!order || (order.status !== "open" && order.status !== "in_progress")) {
-    return { error: "Só é possível editar equipamentos de ordens abertas ou em andamento." };
-  }
+  // Master can edit regardless of status
 
   const { error } = await supabase
     .from("equipment")
@@ -228,6 +235,49 @@ export async function addEquipmentToOrder(orderId: string, equipmentId: string) 
   return { success: true };
 }
 
+export async function addNewEquipmentToOrder(orderId: string, formData: FormData) {
+  const user = await requireAdmin();
+
+  const n052r = (formData.get("numero_052r") as string)?.trim();
+  const n300 = (formData.get("numero_300") as string)?.trim();
+
+  if (!n052r || !n300) {
+    return { error: "Informe os números de Mecanismo e Controle." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: created, error: createError } = await supabase
+    .from("equipment")
+    .insert({
+      copel_ra_code: `PENDENTE-${crypto.randomUUID().slice(0, 8)}`,
+      numero_052r: `052R-${n052r}`,
+      numero_300: `300-${n300}`,
+      service_order_id: orderId,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+
+  if (createError || !created) {
+    return { error: `Erro ao criar equipamento: ${createError?.message ?? "Erro desconhecido"}` };
+  }
+
+  const { error: linkError } = await supabase
+    .from("service_order_equipment")
+    .insert({
+      service_order_id: orderId,
+      equipment_id: created.id,
+    });
+
+  if (linkError) {
+    return { error: `Equipamento criado, mas erro ao vincular: ${linkError.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  return { success: true };
+}
+
 export async function removeEquipmentFromOrder(orderId: string, equipmentId: string) {
   await requireAdmin();
 
@@ -244,6 +294,52 @@ export async function removeEquipmentFromOrder(orderId: string, equipmentId: str
   }
 
   revalidatePath(`/dashboard/ordens/${orderId}`);
+  return { success: true };
+}
+
+export async function updateServiceOrder(orderId: string, formData: FormData) {
+  await requireAdmin();
+
+  const orderNumber = (formData.get("order_number") as string)?.trim();
+  const clientName = (formData.get("client_name") as string)?.trim();
+  const contractName = (formData.get("contract_name") as string)?.trim() || null;
+  const locationId = (formData.get("location_id") as string)?.trim() || null;
+  const assignedTo = (formData.get("assigned_to") as string)?.trim();
+  const startDate = (formData.get("start_date") as string)?.trim() || null;
+  const clientRequestDate = (formData.get("client_request_date") as string)?.trim() || null;
+
+  if (!orderNumber) {
+    return { error: "O número da O.S. é obrigatório." };
+  }
+  if (!clientName) {
+    return { error: "O cliente é obrigatório." };
+  }
+  if (!assignedTo) {
+    return { error: "O inspetor responsável é obrigatório." };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("service_orders")
+    .update({
+      title: orderNumber,
+      order_number: orderNumber,
+      client_name: clientName,
+      contract_name: contractName,
+      location_id: locationId,
+      assigned_to: assignedTo,
+      start_date: startDate,
+      client_request_date: clientRequestDate,
+    })
+    .eq("id", orderId);
+
+  if (error) {
+    return { error: `Erro ao atualizar ordem: ${error.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
   return { success: true };
 }
 

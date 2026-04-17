@@ -75,7 +75,7 @@ export function EditUserForm({ profile, email }: EditUserFormProps) {
           className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F5A623] focus:border-[#F5A623] outline-none bg-white"
         >
           <option value="admin">Master</option>
-          <option value="inspector">Executor</option>
+          <option value="inspector">Inspetor</option>
         </select>
       </div>
 

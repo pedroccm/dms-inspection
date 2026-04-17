@@ -301,6 +301,20 @@ export async function getClients() {
   return (data ?? []) as import("@/lib/types").Client[];
 }
 
+// ─── Contracts ────────────────────────────────────────────
+
+export async function getContracts() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("contracts")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as import("@/lib/types").Contract[];
+}
+
 // ─── Inspection Locations ──────────────────────────────────
 
 export async function getInspectionLocations() {

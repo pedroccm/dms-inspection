@@ -73,7 +73,7 @@ export default async function ProdutividadePage({
             <thead>
               <tr className="border-b border-gray-200 bg-[#1B2B5E]">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Nome do Executor
+                  Nome do Inspetor
                 </th>
                 <th className="text-right px-6 py-4 text-sm font-semibold text-white">
                   Total de Inspeções
