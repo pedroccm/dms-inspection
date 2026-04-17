@@ -17,7 +17,6 @@ import { AdminOnly } from "@/components/admin-only";
 import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
-import { OrderActionsMenu } from "./order-actions-menu";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
@@ -128,11 +127,9 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <PdfOrderButton orderId={order.id} />
-          <ExportOrderButton orderId={order.id} />
+        <div className="flex items-center gap-3 shrink-0">
           <AdminOnly>
-            <OrderActionsMenu>
+            <div className="flex items-center gap-2">
               <EditOrderButton
                 orderId={order.id}
                 orderStatus={order.status}
@@ -149,11 +146,15 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                 contracts={contracts}
                 locations={locations}
                 inspectors={inspectors.map((i) => ({ id: i.id, full_name: i.full_name }))}
-                menuItem
               />
-              <DeleteOrderButton orderId={order.id} menuItem />
-            </OrderActionsMenu>
+              <DeleteOrderButton orderId={order.id} />
+            </div>
+            <div className="h-8 w-px bg-gray-300" aria-hidden="true" />
           </AdminOnly>
+          <div className="flex items-center gap-2">
+            <PdfOrderButton orderId={order.id} />
+            <ExportOrderButton orderId={order.id} />
+          </div>
         </div>
       </div>
 

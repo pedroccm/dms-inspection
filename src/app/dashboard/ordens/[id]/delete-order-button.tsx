@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { deleteServiceOrder } from "../actions";
 
 export function DeleteOrderButton({
@@ -40,8 +39,13 @@ export function DeleteOrderButton({
   }
 
   return (
-    <Button variant="danger" onClick={handleDelete} loading={loading} size="sm">
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={loading}
+      className="inline-flex items-center justify-center px-4 h-11 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+    >
       {loading ? "Excluindo..." : "Excluir Ordem"}
-    </Button>
+    </button>
   );
 }

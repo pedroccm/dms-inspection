@@ -85,9 +85,13 @@ export function EditOrderButton({
       );
     }
     return (
-      <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center justify-center px-4 h-11 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+      >
         Editar
-      </Button>
+      </button>
     );
   }
 
