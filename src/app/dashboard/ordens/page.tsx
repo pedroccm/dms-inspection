@@ -66,7 +66,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                   Local da Inspeção
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  Inspetor
+                  Executor
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                   Status
@@ -118,9 +118,24 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
                     <td className="px-6 py-4">
                       <Link
                         href={`/dashboard/ordens/${order.id}`}
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
+                        aria-label="Ver detalhes"
+                        title="Ver detalhes"
+                        className="inline-flex items-center justify-center w-11 h-11 text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors"
                       >
-                        Detalhes
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+                          />
+                        </svg>
                       </Link>
                     </td>
                   </tr>
