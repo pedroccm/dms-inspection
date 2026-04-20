@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { useRouter } from "next/navigation";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { SaveIndicator } from "@/components/save-indicator";
+import { ExtraPhotoButton } from "./extra-photo-button";
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -528,13 +529,16 @@ export function ChecklistForm({
           )}
         </div>
         {editable ? (
-          <textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            placeholder="Adicione observações sobre a inspeção..."
-            rows={4}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
-          />
+          <>
+            <textarea
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Adicione observações sobre a inspeção..."
+              rows={4}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
+            />
+            <ExtraPhotoButton inspectionId={inspectionId} />
+          </>
         ) : (
           <div className="rounded-lg border border-gray-300 p-4 min-h-[100px] text-sm text-gray-700 bg-gray-50">
             {inspectionNotes || "Nenhuma observação registrada."}

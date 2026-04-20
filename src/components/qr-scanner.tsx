@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { parseEquipmentQR } from "@/lib/qr-parser";
 
+// Both QR Code and Data Matrix formats are supported.
+// Data Matrix is common on industrial/electrical equipment labels (relays etc.).
+const SUPPORTED_FORMATS = ["qr_code", "data_matrix"];
+
 interface BarcodeDetectorResult {
   rawValue: string;
   format: string;
@@ -36,11 +40,19 @@ export function QRScanner({ onScan }: QRScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationRef = useRef<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const zxingControlsRef = useRef<any>(null);
 
   const stopCamera = useCallback(() => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = 0;
+    }
+    if (zxingControlsRef.current) {
+      try {
+        zxingControlsRef.current.stop();
+      } catch {}
+      zxingControlsRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -87,33 +99,30 @@ export function QRScanner({ onScan }: QRScannerProps) {
     [handleDetection]
   );
 
-  const scanWithJsQR = useCallback(
-    (jsQR: (data: Uint8ClampedArray, w: number, h: number) => { data: string } | null) => {
-      const scan = () => {
-        if (!videoRef.current || !canvasRef.current || !streamRef.current) return;
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-          animationRef.current = requestAnimationFrame(scan);
-          return;
+  /**
+   * Fallback using @zxing/browser — handles QR Code + Data Matrix + many more,
+   * in case the browser does not have a native BarcodeDetector (e.g. iOS Safari).
+   */
+  const scanWithZXing = useCallback(async () => {
+    if (!videoRef.current) return;
+    try {
+      const { BrowserMultiFormatReader } = await import("@zxing/browser");
+      const reader = new BrowserMultiFormatReader();
+      const controls = await reader.decodeFromVideoElement(
+        videoRef.current,
+        (result) => {
+          if (result) {
+            handleDetection(result.getText());
+          }
         }
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-        if (code) {
-          handleDetection(code.data);
-          return;
-        }
-        animationRef.current = requestAnimationFrame(scan);
-      };
-      animationRef.current = requestAnimationFrame(scan);
-    },
-    [handleDetection]
-  );
+      );
+      zxingControlsRef.current = controls;
+    } catch {
+      setError(
+        "Scanner não suportado neste navegador. Tente Chrome no Android ou digite os dados manualmente."
+      );
+    }
+  }, [handleDetection]);
 
   const startScanning = useCallback(async () => {
     setError(null);
@@ -136,20 +145,16 @@ export function QRScanner({ onScan }: QRScannerProps) {
       }
 
       if (window.BarcodeDetector) {
-        const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+        const detector = new window.BarcodeDetector({ formats: SUPPORTED_FORMATS });
         scanWithNativeDetector(detector);
       } else {
-        try {
-          const jsQR = (await import("jsqr")).default;
-          scanWithJsQR(jsQR);
-        } catch {
-          setError("Scanner QR não suportado neste navegador. Use Chrome no Android.");
-        }
+        // Fallback for browsers without BarcodeDetector (iOS Safari mostly)
+        await scanWithZXing();
       }
     } catch {
       setError("Não foi possível acessar a câmera. Verifique as permissões.");
     }
-  }, [scanWithNativeDetector, scanWithJsQR]);
+  }, [scanWithNativeDetector, scanWithZXing]);
 
   // Lock body scroll when fullscreen is open
   useEffect(() => {
@@ -172,7 +177,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
         </svg>
-        Escanear QR Code
+        Escanear código
       </button>
 
 
@@ -181,7 +186,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
         <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
           {/* Header */}
           <div className="flex-none flex items-center justify-between px-4 py-3 bg-black/80 z-10">
-            <p className="text-white text-sm font-medium">Escanear QR Code</p>
+            <p className="text-white text-sm font-medium">Escanear QR Code ou Data Matrix</p>
             <button
               type="button"
               onClick={handleClose}
@@ -226,7 +231,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
             {/* Bottom instruction */}
             <div className="absolute bottom-6 left-0 right-0 text-center z-10">
               <p className="inline-block text-white text-sm font-medium bg-black/60 px-4 py-2 rounded-full">
-                Aponte para o QR Code do equipamento
+                Aponte para o QR Code ou Data Matrix
               </p>
             </div>
 
