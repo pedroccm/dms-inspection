@@ -6,11 +6,9 @@ import type { ServiceOrderStatus } from "@/lib/types";
 const statusOptions: { value: string; label: string }[] = [
   { value: "", label: "Todos os status" },
   { value: "open", label: "Aberta" },
-  { value: "in_progress", label: "Em Andamento" },
-  { value: "aprovada", label: "Aprovada" },
+  { value: "finalizada", label: "Finalizada" },
   { value: "medida", label: "Medida" },
   { value: "faturada", label: "Faturada" },
-  { value: "completed", label: "Concluída" },
   { value: "cancelled", label: "Cancelada" },
 ];
 

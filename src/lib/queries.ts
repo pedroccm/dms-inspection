@@ -91,7 +91,12 @@ export async function getServiceOrders(filters?: ServiceOrderFilters) {
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
-    query = query.eq("status", filters.status);
+    // "Aberta" is a UI alias covering open/in_progress/aprovada
+    if (filters.status === "open") {
+      query = query.in("status", ["open", "in_progress", "aprovada"]);
+    } else {
+      query = query.eq("status", filters.status);
+    }
   }
   if (filters?.assigned_to) {
     query = query.eq("assigned_to", filters.assigned_to);

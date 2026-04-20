@@ -151,6 +151,7 @@ export type ServiceOrderStatus =
   | "open"
   | "in_progress"
   | "aprovada"
+  | "finalizada"
   | "medida"
   | "faturada"
   | "completed"
@@ -175,6 +176,7 @@ export interface ServiceOrder {
   equipment_count: number;
   assigned_team_id: string | null;
   approved_at?: string | null;
+  finalized_at?: string | null;
   measured_at?: string | null;
   billed_at?: string | null;
   billed_by?: string | null;

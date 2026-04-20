@@ -16,7 +16,7 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   aprovado: "Aprovado",
   relatorio_reprovado: "Rel. Reprovado",
   equipamento_reprovado: "Eq. Reprovado",
-  transferred: "Transferida",
+  transferred: "Cadastrada",
 };
 
 // --- Tests ---
@@ -110,7 +110,7 @@ describe("PDF Report", () => {
       expect(INSPECTION_STATUS_LABELS["equipamento_reprovado"]).toBe(
         "Eq. Reprovado"
       );
-      expect(INSPECTION_STATUS_LABELS["transferred"]).toBe("Transferida");
+      expect(INSPECTION_STATUS_LABELS["transferred"]).toBe("Cadastrada");
     });
   });
 

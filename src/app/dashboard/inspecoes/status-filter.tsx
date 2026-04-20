@@ -12,7 +12,7 @@ const statusOptions: { value: string; label: string }[] = [
   { value: "aprovado", label: "Aprovado" },
   { value: "relatorio_reprovado", label: "Relatório Reprovado" },
   { value: "equipamento_reprovado", label: "Equipamento Reprovado" },
-  { value: "transferred", label: "Transferida" },
+  { value: "transferred", label: "Cadastrada" },
 ];
 
 interface InspectionStatusFilterProps {

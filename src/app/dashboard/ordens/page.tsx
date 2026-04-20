@@ -8,8 +8,9 @@ import type { ServiceOrderStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
-  in_progress: "Em Andamento",
-  aprovada: "Aprovada",
+  in_progress: "Aberta",
+  aprovada: "Aberta",
+  finalizada: "Finalizada",
   medida: "Medida",
   faturada: "Faturada",
   completed: "Concluída",
@@ -18,8 +19,9 @@ const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
 
 const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success" | "neutral"> = {
   open: "info",
-  in_progress: "warning",
-  aprovada: "success",
+  in_progress: "info",
+  aprovada: "info",
+  finalizada: "success",
   medida: "success",
   faturada: "success",
   completed: "success",

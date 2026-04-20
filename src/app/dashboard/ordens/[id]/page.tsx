@@ -19,14 +19,15 @@ import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
 import { RegisteredToggle } from "./registered-toggle";
-import { BilledButton } from "./billed-button";
+import { OrderStatusActions } from "./order-status-actions";
 import { getProfile } from "@/lib/auth";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
-  in_progress: "Em Andamento",
-  aprovada: "Aprovada",
+  in_progress: "Aberta",
+  aprovada: "Aberta",
+  finalizada: "Finalizada",
   medida: "Medida",
   faturada: "Faturada",
   completed: "Concluída",
@@ -35,32 +36,51 @@ const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
 
 const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success" | "neutral"> = {
   open: "info",
-  in_progress: "warning",
-  aprovada: "success",
+  in_progress: "info",
+  aprovada: "info",
+  finalizada: "success",
   medida: "success",
   faturada: "success",
   completed: "success",
   cancelled: "neutral",
 };
 
-/** Derive equipment status from its inspections */
-function getEquipmentStatus(inspections?: { id: string; status: InspectionStatus }[]): {
+/**
+ * Derive equipment status from its latest inspection + registered flag.
+ * Stages (from the DMS process):
+ *   Pendente → Em Inspeção → Concluído (submitted) → Relatório Aprovado → Cadastrada
+ */
+function getEquipmentStatus(
+  inspections: { id: string; status: InspectionStatus }[] | undefined,
+  registered: boolean | undefined
+): {
   label: string;
   variant: "neutral" | "info" | "warning" | "success";
 } {
+  // If equipment is marked as registered in the client system, it's Cadastrada.
+  if (registered) {
+    return { label: "Cadastrada", variant: "success" };
+  }
+
   if (!inspections || inspections.length === 0) {
     return { label: "Pendente", variant: "neutral" };
   }
 
-  // If any inspection is approved, transferred, or ready for review, equipment is done
-  const isDone = inspections.some(
-    (i) => i.status === "aprovado" || i.status === "transferred" || i.status === "ready_for_review"
-  );
-  if (isDone) {
-    return { label: "Concluído", variant: "success" };
-  }
+  const latest = inspections[inspections.length - 1];
 
-  // If any inspection exists and is in progress/draft, it's being inspected
+  if (latest.status === "transferred") {
+    return { label: "Cadastrada", variant: "success" };
+  }
+  if (latest.status === "aprovado") {
+    return { label: "Relatório Aprovado", variant: "success" };
+  }
+  if (latest.status === "ready_for_review") {
+    return { label: "Concluído", variant: "info" };
+  }
+  if (latest.status === "disponivel") {
+    return { label: "Pendente", variant: "neutral" };
+  }
+  // draft, in_progress, relatorio_reprovado, equipamento_reprovado
   return { label: "Em Inspeção", variant: "warning" };
 }
 
@@ -104,8 +124,8 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
   ]);
 
   const completedCount = equipmentList.filter((eq) => {
-    const status = getEquipmentStatus(eq.inspections);
-    return status.label === "Concluído";
+    const status = getEquipmentStatus(eq.inspections, eq.registered);
+    return status.label === "Concluído" || status.label === "Relatório Aprovado" || status.label === "Cadastrada";
   }).length;
 
   return (
@@ -223,8 +243,8 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
               <Badge variant={STATUS_VARIANTS[order.status]}>
                 {STATUS_LABELS[order.status]}
               </Badge>
-              {isAdmin && (order.status === "medida" || order.status === "faturada" || order.status === "aprovada") && (
-                <BilledButton orderId={order.id} status={order.status} />
+              {isAdmin && (
+                <OrderStatusActions orderId={order.id} status={order.status} />
               )}
             </dd>
           </div>
@@ -293,7 +313,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
               </thead>
               <tbody>
                 {equipmentList.map((eq, idx) => {
-                  const statusInfo = getEquipmentStatus(eq.inspections);
+                  const statusInfo = getEquipmentStatus(eq.inspections, eq.registered);
                   const latestInspection = eq.inspections?.[eq.inspections.length - 1];
                   const inspectorName = latestInspection?.inspector?.full_name ?? null;
                   const inspectionApproved = latestInspection?.status === "aprovado";

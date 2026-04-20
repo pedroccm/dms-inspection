@@ -99,7 +99,7 @@ describe("InspectionStatusFilter", () => {
     expect(screen.getByText("Aprovado")).toBeInTheDocument();
     expect(screen.getByText("Relatório Reprovado")).toBeInTheDocument();
     expect(screen.getByText("Equipamento Reprovado")).toBeInTheDocument();
-    expect(screen.getByText("Transferida")).toBeInTheDocument();
+    expect(screen.getByText("Cadastrada")).toBeInTheDocument();
   });
 });
 
@@ -179,7 +179,7 @@ describe("Status badge rendering", () => {
     aprovado: { label: "Aprovado", variant: "success" },
     relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
     equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
-    transferred: { label: "Transferida", variant: "neutral" },
+    transferred: { label: "Cadastrada", variant: "success" },
   } as const;
 
   it("maps all statuses to correct labels", () => {
@@ -189,7 +189,7 @@ describe("Status badge rendering", () => {
     expect(statusConfig.aprovado.label).toBe("Aprovado");
     expect(statusConfig.relatorio_reprovado.label).toBe("Relatório Reprovado");
     expect(statusConfig.equipamento_reprovado.label).toBe("Equipamento Reprovado");
-    expect(statusConfig.transferred.label).toBe("Transferida");
+    expect(statusConfig.transferred.label).toBe("Cadastrada");
   });
 
   it("maps all statuses to correct badge variants", () => {
@@ -199,6 +199,6 @@ describe("Status badge rendering", () => {
     expect(statusConfig.aprovado.variant).toBe("success");
     expect(statusConfig.relatorio_reprovado.variant).toBe("danger");
     expect(statusConfig.equipamento_reprovado.variant).toBe("danger");
-    expect(statusConfig.transferred.variant).toBe("neutral");
+    expect(statusConfig.transferred.variant).toBe("success");
   });
 });

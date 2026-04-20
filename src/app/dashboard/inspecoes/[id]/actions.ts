@@ -217,7 +217,7 @@ export async function markAsTransferred(inspectionId: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("id, role")
     .eq("id", user.id)
     .single();
 
@@ -249,6 +249,34 @@ export async function markAsTransferred(inspectionId: string) {
 
   if (updateError) {
     return { success: false, error: updateError.message };
+  }
+
+  // Also mark the equipment as Cadastrado (registered), so the OS panel checkbox
+  // and this button stay in sync. Trigger OS status sync afterwards.
+  const { data: fullInsp } = await supabase
+    .from("inspections")
+    .select("equipment_id, service_order_id")
+    .eq("id", inspectionId)
+    .single();
+
+  if (fullInsp?.equipment_id) {
+    await supabase
+      .from("equipment")
+      .update({
+        registered: true,
+        registered_at: new Date().toISOString(),
+        registered_by: profile.id,
+      })
+      .eq("id", fullInsp.equipment_id);
+  }
+
+  if (fullInsp?.service_order_id) {
+    try {
+      const { syncOrderStatus } = await import("@/app/dashboard/ordens/actions");
+      await syncOrderStatus(fullInsp.service_order_id);
+    } catch {
+      // non-critical
+    }
   }
 
   return { success: true };

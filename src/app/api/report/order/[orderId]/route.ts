@@ -11,13 +11,14 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   aprovado: "Aprovado",
   relatorio_reprovado: "Rel. Reprovado",
   equipamento_reprovado: "Eq. Reprovado",
-  transferred: "Transferida",
+  transferred: "Cadastrada",
 };
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
   open: "Aberta",
-  in_progress: "Em Andamento",
-  aprovada: "Aprovada",
+  in_progress: "Aberta",
+  aprovada: "Aberta",
+  finalizada: "Finalizada",
   medida: "Medida",
   faturada: "Faturada",
   completed: "Concluída",

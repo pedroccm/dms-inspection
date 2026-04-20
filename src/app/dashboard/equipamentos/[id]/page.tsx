@@ -21,7 +21,7 @@ const INSPECTION_STATUS_CONFIG: Record<
   aprovado: { label: "Aprovado", variant: "success" },
   relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
   equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
-  transferred: { label: "Transferida", variant: "neutral" },
+  transferred: { label: "Cadastrada", variant: "success" },
 };
 
 export default async function EquipamentoDetailPage({

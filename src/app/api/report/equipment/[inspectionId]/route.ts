@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
+import { createClient } from "@/lib/supabase/server";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { RELAY_FIELD_ORDER } from "@/lib/relay-qr-parser";
+import { QR_FIELD_ORDER } from "@/lib/qr-parser";
+import { getPhotoLabel } from "@/lib/types";
 
 const STATUS_LABELS: Record<string, string> = {
   approved: "Aprovado",
@@ -19,7 +22,7 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   aprovado: "Aprovado",
   relatorio_reprovado: "Relatório Reprovado",
   equipamento_reprovado: "Equipamento Reprovado",
-  transferred: "Transferida",
+  transferred: "Cadastrada",
 };
 
 function formatDate(dateStr: string | null): string {
@@ -197,10 +200,35 @@ export async function GET(
     },
   });
 
-  // Observations
+  // QR code data (from first QR scan) — optional
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentY = (doc as any).lastAutoTable?.finalY ?? 180;
 
+  const qrData = (inspection as { qr_data?: Record<string, string> | null }).qr_data ?? null;
+  const qrRows = qrData
+    ? QR_FIELD_ORDER.map((field) => [field.label, qrData[field.key] ?? ""]).filter(
+        ([, v]) => v
+      )
+    : [];
+  if (qrRows.length > 0) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Dados do QR Code (Equipamento)", 14, currentY + 10);
+
+    autoTable(doc, {
+      startY: currentY + 14,
+      head: [["Campo", "Valor"]],
+      body: qrRows,
+      theme: "grid",
+      headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentY = (doc as any).lastAutoTable?.finalY ?? currentY + 14;
+  }
+
+  // Observations
   if (inspection.observations) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
@@ -214,6 +242,62 @@ export async function GET(
     );
     doc.text(splitText, 14, currentY + 18);
     currentY = currentY + 18 + splitText.length * 5;
+  }
+
+  // Photos — embed each photo on its own portion of a page
+  const photos = inspection.photos ?? [];
+  if (photos.length > 0) {
+    const supabase = await createClient();
+    doc.addPage();
+    let photoY = 20;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Fotos da Inspeção", pageWidth / 2, photoY, { align: "center" });
+    photoY += 10;
+
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const imgWidth = pageWidth - 28;
+    const imgHeight = 100;
+
+    for (const photo of photos) {
+      // New page if it won't fit
+      if (photoY + imgHeight + 12 > pageHeight - 14) {
+        doc.addPage();
+        photoY = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      const label = getPhotoLabel(photo.photo_type, photo.label);
+      doc.text(label, 14, photoY);
+      photoY += 4;
+
+      try {
+        const { data: blob } = await supabase.storage
+          .from("inspection-photos")
+          .download(photo.storage_path);
+
+        if (blob) {
+          const arrayBuffer = await blob.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString("base64");
+          const contentType = blob.type || "image/jpeg";
+          const format = contentType.includes("png") ? "PNG" : "JPEG";
+          const dataUrl = `data:${contentType};base64,${base64}`;
+          doc.addImage(dataUrl, format, 14, photoY, imgWidth, imgHeight, undefined, "FAST");
+        } else {
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "italic");
+          doc.text("(não foi possível carregar a imagem)", 14, photoY + 10);
+        }
+      } catch {
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("(erro ao carregar imagem)", 14, photoY + 10);
+      }
+
+      photoY += imgHeight + 8;
+    }
+    currentY = photoY;
   }
 
   // Footer

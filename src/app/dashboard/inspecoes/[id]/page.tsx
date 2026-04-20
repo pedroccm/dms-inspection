@@ -5,7 +5,6 @@ import { getInspectionById } from "@/lib/queries";
 import { getInspectionAuditLogs } from "@/lib/audit";
 import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
-import { ExportButton } from "./export-button";
 import { PdfButton } from "./pdf-button";
 import { TransferButton } from "./transfer-button";
 import { ApprovalPanel } from "./approval-panel";
@@ -27,7 +26,7 @@ const statusConfig: Record<
   aprovado: { label: "Aprovado", variant: "success" },
   relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
   equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
-  transferred: { label: "Transferida", variant: "neutral" },
+  transferred: { label: "Cadastrada", variant: "success" },
 };
 
 interface InspecaoDetailPageProps {
@@ -111,10 +110,7 @@ export default async function InspecaoDetailPage({
         <div className="flex items-center gap-3">
           {(inspection.status === "aprovado" ||
             inspection.status === "transferred") && (
-            <>
-              <PdfButton inspectionId={inspection.id} />
-              <ExportButton inspectionId={inspection.id} />
-            </>
+            <PdfButton inspectionId={inspection.id} />
           )}
           {inspection.status === "aprovado" && (
             <TransferButton inspectionId={inspection.id} />

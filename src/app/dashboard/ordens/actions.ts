@@ -362,17 +362,94 @@ export async function toggleEquipmentRegistered(
     .single();
 
   if (order) {
-    if (next && total > 0 && registeredCount === total && order.status === "aprovada") {
+    // All equipment registered → OS finalizada (auto). Manual steps Medida / Faturada come next.
+    if (
+      next &&
+      total > 0 &&
+      registeredCount === total &&
+      (order.status === "aprovada" ||
+        order.status === "open" ||
+        order.status === "in_progress")
+    ) {
       await supabase
         .from("service_orders")
-        .update({ status: "medida", measured_at: new Date().toISOString() })
+        .update({ status: "finalizada", finalized_at: new Date().toISOString() })
         .eq("id", orderId);
-    } else if (!next && order.status === "medida") {
+    } else if (!next && order.status === "finalizada") {
+      // Unchecking a registered flag moves OS back to aprovada.
       await supabase
         .from("service_orders")
-        .update({ status: "aprovada", measured_at: null })
+        .update({ status: "aprovada", finalized_at: null })
         .eq("id", orderId);
     }
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
+  return { success: true };
+}
+
+/**
+ * Master control: mark an OS as Medida. Only allowed from "finalizada".
+ */
+export async function markOrderAsMeasured(orderId: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: order, error } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (error || !order) {
+    return { error: "Ordem não encontrada." };
+  }
+  if (order.status !== "finalizada") {
+    return { error: "Só é possível medir uma ordem Finalizada." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("service_orders")
+    .update({ status: "medida", measured_at: new Date().toISOString() })
+    .eq("id", orderId);
+
+  if (updateError) {
+    return { error: `Erro ao atualizar status: ${updateError.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
+  return { success: true };
+}
+
+/**
+ * Master control: revert Medida → Finalizada.
+ */
+export async function unmarkOrderAsMeasured(orderId: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: order, error } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (error || !order) {
+    return { error: "Ordem não encontrada." };
+  }
+  if (order.status !== "medida") {
+    return { error: "Esta ordem não está medida." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("service_orders")
+    .update({ status: "finalizada", measured_at: null })
+    .eq("id", orderId);
+
+  if (updateError) {
+    return { error: `Erro ao atualizar status: ${updateError.message}` };
   }
 
   revalidatePath(`/dashboard/ordens/${orderId}`);
@@ -397,7 +474,7 @@ export async function markOrderAsBilled(orderId: string) {
     return { error: "Ordem não encontrada." };
   }
   if (order.status !== "medida") {
-    return { error: "Só é possível faturar uma ordem com status Medida." };
+    return { error: "Só é possível faturar uma ordem Medida." };
   }
 
   const { error: updateError } = await supabase
@@ -471,7 +548,13 @@ export async function syncOrderStatus(orderId: string) {
     .single();
 
   if (!order) return { success: false };
-  if (order.status === "completed" || order.status === "cancelled" || order.status === "faturada") {
+  // Do not touch terminal / manual states.
+  if (
+    order.status === "completed" ||
+    order.status === "cancelled" ||
+    order.status === "faturada" ||
+    order.status === "medida"
+  ) {
     return { success: true };
   }
 
@@ -486,12 +569,16 @@ export async function syncOrderStatus(orderId: string) {
   const total = allEquip?.length ?? 0;
   const registeredCount = (allEquip ?? []).filter((e) => e.registered).length;
 
-  if (total > 0 && registeredCount === total && order.status !== "medida") {
+  if (total > 0 && registeredCount === total && order.status !== "finalizada") {
     await supabase
       .from("service_orders")
-      .update({ status: "medida", measured_at: new Date().toISOString(), approved_at: new Date().toISOString() })
+      .update({
+        status: "finalizada",
+        approved_at: new Date().toISOString(),
+        finalized_at: new Date().toISOString(),
+      })
       .eq("id", orderId);
-  } else if (order.status !== "aprovada" && order.status !== "medida") {
+  } else if (order.status !== "aprovada" && order.status !== "finalizada") {
     await supabase
       .from("service_orders")
       .update({ status: "aprovada", approved_at: new Date().toISOString() })
@@ -508,14 +595,46 @@ export async function removeEquipmentFromOrder(orderId: string, equipmentId: str
 
   const supabase = await createClient();
 
-  const { error } = await supabase
+  // Block removal if the equipment has any inspections — data integrity.
+  const { data: inspections } = await supabase
+    .from("inspections")
+    .select("id")
+    .eq("equipment_id", equipmentId)
+    .limit(1);
+
+  if (inspections && inspections.length > 0) {
+    return {
+      error:
+        "Não é possível remover equipamento que já tem inspeção. Exclua a inspeção antes.",
+    };
+  }
+
+  // Delete junction entries for this order
+  const { error: junctionError } = await supabase
     .from("service_order_equipment")
     .delete()
     .eq("service_order_id", orderId)
     .eq("equipment_id", equipmentId);
 
-  if (error) {
-    return { error: `Erro ao remover equipamento: ${error.message}` };
+  if (junctionError) {
+    return { error: `Erro ao remover vínculo: ${junctionError.message}` };
+  }
+
+  // Delete the equipment row if it belonged to this order
+  const { data: eq } = await supabase
+    .from("equipment")
+    .select("id, service_order_id")
+    .eq("id", equipmentId)
+    .single();
+
+  if (eq?.service_order_id === orderId) {
+    const { error: delError } = await supabase
+      .from("equipment")
+      .delete()
+      .eq("id", equipmentId);
+    if (delError) {
+      return { error: `Erro ao excluir equipamento: ${delError.message}` };
+    }
   }
 
   revalidatePath(`/dashboard/ordens/${orderId}`);

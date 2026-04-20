@@ -92,9 +92,9 @@ function SettingsContent() {
           Política de Retenção de Dados
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Inspeções com status &quot;Transferida&quot; serão elegíveis para
+          Inspeções com status &quot;Cadastrada&quot; serão elegíveis para
           limpeza automática após o período configurado. Apenas inspeções
-          transferidas são afetadas.
+          cadastradas são afetadas.
         </p>
 
         <div className="flex items-end gap-4">

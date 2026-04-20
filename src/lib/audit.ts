@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
   aprovado: "Aprovado",
   relatorio_reprovado: "Relatório Reprovado",
   equipamento_reprovado: "Equipamento Reprovado",
-  transferred: "Transferida",
+  transferred: "Cadastrada",
 };
 
 const CHECKLIST_STATUS_LABELS: Record<string, string> = {

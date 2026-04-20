@@ -16,7 +16,7 @@ const statusConfig: Record<
   aprovado: { label: "Aprovado", variant: "success" },
   relatorio_reprovado: { label: "Relatório Reprovado", variant: "danger" },
   equipamento_reprovado: { label: "Equipamento Reprovado", variant: "danger" },
-  transferred: { label: "Transferida", variant: "neutral" },
+  transferred: { label: "Cadastrada", variant: "success" },
 };
 
 interface InspecoesPageProps {
