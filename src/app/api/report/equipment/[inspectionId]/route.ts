@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { RELAY_FIELD_ORDER } from "@/lib/relay-qr-parser";
 
 const STATUS_LABELS: Record<string, string> = {
   approved: "Aprovado",
@@ -85,10 +86,13 @@ export async function GET(
   const equipmentData = [
     ["Codigo Copel RA", equipment?.copel_ra_code ?? "—"],
     ["Codigo Copel Controle", equipment?.copel_control_code ?? "—"],
+    ["Mecanismo (052R)", equipment?.numero_052r ?? "—"],
+    ["Controle (300)", equipment?.numero_300 ?? "—"],
     ["N. Serie Mecanismo", equipment?.mechanism_serial ?? "—"],
     ["N. Serie Caixa Controle", equipment?.control_box_serial ?? "—"],
     ["N. Serie Rele Protecao", equipment?.protection_relay_serial ?? "—"],
     ["Fabricante", equipment?.manufacturer ?? "—"],
+    ["Cadastrado", equipment?.registered ? "Sim" : "Nao"],
   ];
 
   autoTable(doc, {
@@ -132,6 +136,33 @@ export async function GET(
       startY: lastY + 14,
       head: [["Campo", "Valor"]],
       body: availableTechnical.map(([k, v]) => [k, v ?? ""]),
+      theme: "grid",
+      headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
+    });
+  }
+
+  // Relay data (from relay QR code) - only if present
+  const relayData = (inspection as { relay_data?: Record<string, string> | null }).relay_data ?? null;
+  const relayRows = relayData
+    ? RELAY_FIELD_ORDER.map((field) => [field.label, relayData[field.key] ?? ""]).filter(
+        ([, v]) => v
+      )
+    : [];
+
+  if (relayRows.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastRelayY = (doc as any).lastAutoTable?.finalY ?? 120;
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Dados do Rele de Protecao", 14, lastRelayY + 10);
+
+    autoTable(doc, {
+      startY: lastRelayY + 14,
+      head: [["Campo", "Valor"]],
+      body: relayRows,
       theme: "grid",
       headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
       bodyStyles: { fontSize: 9 },

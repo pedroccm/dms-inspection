@@ -214,23 +214,21 @@ export function CreateOrderForm({
                 <div className="w-8 text-center text-sm font-medium text-gray-400">
                   {i + 1}
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-gray-500 shrink-0">052R-</span>
+                <div>
                   <input
                     type="text"
                     name={`numero_052r_${i}`}
                     required
-                    placeholder="xxxxx"
+                    placeholder="052R-XXXXX"
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 transition-colors focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
                   />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-gray-500 shrink-0">300-</span>
+                <div>
                   <input
                     type="text"
                     name={`numero_300_${i}`}
                     required
-                    placeholder="xxxxx"
+                    placeholder="300-XXXXX"
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 transition-colors focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
                   />
                 </div>

@@ -48,25 +48,23 @@ export function EditEquipmentNumbers({
       {state?.error && (
         <p className="text-xs text-red-600">{state.error}</p>
       )}
-      <div className="flex items-center gap-1">
-        <span className="text-xs font-medium text-gray-500 shrink-0">052R-</span>
+      <div>
         <input
           type="text"
           name="numero_052r"
-          defaultValue={currentNumero052r?.replace("052R-", "") ?? ""}
+          defaultValue={currentNumero052r ?? ""}
           required
-          placeholder="Mecanismo"
+          placeholder="052R-XXXXX"
           className="block w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] focus:outline-none"
         />
       </div>
-      <div className="flex items-center gap-1">
-        <span className="text-xs font-medium text-gray-500 shrink-0">300-</span>
+      <div>
         <input
           type="text"
           name="numero_300"
-          defaultValue={currentNumero300?.replace("300-", "") ?? ""}
+          defaultValue={currentNumero300 ?? ""}
           required
-          placeholder="Controle"
+          placeholder="300-XXXXX"
           className="block w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623] focus:outline-none"
         />
       </div>

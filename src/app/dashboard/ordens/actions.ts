@@ -65,7 +65,7 @@ export async function createServiceOrder(formData: FormData) {
     if (!n052r || !n300) {
       return { error: `Preencha os números de Mecanismo e Controle para o equipamento ${i + 1}.` };
     }
-    fichaNumbers.push({ numero_052r: `052R-${n052r}`, numero_300: `300-${n300}` });
+    fichaNumbers.push({ numero_052r: n052r, numero_300: n300 });
   }
 
   const supabase = await createClient();
@@ -174,8 +174,8 @@ export async function updateEquipmentNumbers(
   const { error } = await supabase
     .from("equipment")
     .update({
-      numero_052r: `052R-${n052r}`,
-      numero_300: `300-${n300}`,
+      numero_052r: n052r,
+      numero_300: n300,
     })
     .eq("id", equipmentId);
 
@@ -251,8 +251,8 @@ export async function addNewEquipmentToOrder(orderId: string, formData: FormData
     .from("equipment")
     .insert({
       copel_ra_code: `PENDENTE-${crypto.randomUUID().slice(0, 8)}`,
-      numero_052r: `052R-${n052r}`,
-      numero_300: `300-${n300}`,
+      numero_052r: n052r,
+      numero_300: n300,
       service_order_id: orderId,
       created_by: user.id,
     })
@@ -275,6 +275,231 @@ export async function addNewEquipmentToOrder(orderId: string, formData: FormData
   }
 
   revalidatePath(`/dashboard/ordens/${orderId}`);
+  return { success: true };
+}
+
+/**
+ * Check whether all inspections of a given order are approved.
+ * Returns true only if the order has at least one inspection and all are in "aprovado".
+ */
+async function allInspectionsApproved(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orderId: string
+): Promise<boolean> {
+  const { data: equipment } = await supabase
+    .from("equipment")
+    .select("id, inspections(status)")
+    .eq("service_order_id", orderId);
+
+  if (!equipment || equipment.length === 0) return false;
+
+  for (const eq of equipment as { id: string; inspections?: { status: string }[] }[]) {
+    const inspections = eq.inspections ?? [];
+    if (inspections.length === 0) return false;
+    const latest = inspections[inspections.length - 1];
+    if (latest.status !== "aprovado") return false;
+  }
+  return true;
+}
+
+/**
+ * Master control: toggle the "Cadastrado" flag on an equipment.
+ * Can only be set when the equipment's latest inspection is approved.
+ * Auto-transitions the parent OS to "medida" when all equipment become registered,
+ * and rolls back from "medida" to "aprovada" when a registered flag is cleared.
+ */
+export async function toggleEquipmentRegistered(
+  orderId: string,
+  equipmentId: string,
+  next: boolean
+) {
+  const user = await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: equipment, error: eqError } = await supabase
+    .from("equipment")
+    .select("id, registered, inspections(status)")
+    .eq("id", equipmentId)
+    .single();
+
+  if (eqError || !equipment) {
+    return { error: "Equipamento não encontrado." };
+  }
+
+  const inspections =
+    (equipment as { inspections?: { status: string }[] }).inspections ?? [];
+  const latest = inspections[inspections.length - 1];
+  if (next && (!latest || latest.status !== "aprovado")) {
+    return { error: "Só é possível marcar como Cadastrado após a inspeção ser aprovada." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("equipment")
+    .update({
+      registered: next,
+      registered_at: next ? new Date().toISOString() : null,
+      registered_by: next ? user.id : null,
+    })
+    .eq("id", equipmentId);
+
+  if (updateError) {
+    return { error: `Erro ao atualizar equipamento: ${updateError.message}` };
+  }
+
+  // Auto-transition the OS status based on aggregate equipment state
+  const { data: allEquip } = await supabase
+    .from("equipment")
+    .select("id, registered")
+    .eq("service_order_id", orderId);
+
+  const total = allEquip?.length ?? 0;
+  const registeredCount = (allEquip ?? []).filter((e) => e.registered).length;
+
+  const { data: order } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (order) {
+    if (next && total > 0 && registeredCount === total && order.status === "aprovada") {
+      await supabase
+        .from("service_orders")
+        .update({ status: "medida", measured_at: new Date().toISOString() })
+        .eq("id", orderId);
+    } else if (!next && order.status === "medida") {
+      await supabase
+        .from("service_orders")
+        .update({ status: "aprovada", measured_at: null })
+        .eq("id", orderId);
+    }
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
+  return { success: true };
+}
+
+/**
+ * Master control: mark an OS as Faturada. Only allowed from "medida".
+ */
+export async function markOrderAsBilled(orderId: string) {
+  const user = await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: order, error } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (error || !order) {
+    return { error: "Ordem não encontrada." };
+  }
+  if (order.status !== "medida") {
+    return { error: "Só é possível faturar uma ordem com status Medida." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("service_orders")
+    .update({
+      status: "faturada",
+      billed_at: new Date().toISOString(),
+      billed_by: user.id,
+    })
+    .eq("id", orderId);
+
+  if (updateError) {
+    return { error: `Erro ao atualizar status: ${updateError.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
+  return { success: true };
+}
+
+/**
+ * Master control: revert a Faturada OS back to Medida (undo button).
+ */
+export async function unmarkOrderAsBilled(orderId: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: order, error } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (error || !order) {
+    return { error: "Ordem não encontrada." };
+  }
+  if (order.status !== "faturada") {
+    return { error: "Esta ordem não está faturada." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("service_orders")
+    .update({
+      status: "medida",
+      billed_at: null,
+      billed_by: null,
+    })
+    .eq("id", orderId);
+
+  if (updateError) {
+    return { error: `Erro ao atualizar status: ${updateError.message}` };
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
+  return { success: true };
+}
+
+/**
+ * Re-evaluate and set the OS status based on current inspections + registered flags.
+ * Safe to call anytime — only promotes forward (open/in_progress → aprovada,
+ * aprovada → medida). Does not touch completed / cancelled / faturada.
+ */
+export async function syncOrderStatus(orderId: string) {
+  const supabase = await createClient();
+
+  const { data: order } = await supabase
+    .from("service_orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) return { success: false };
+  if (order.status === "completed" || order.status === "cancelled" || order.status === "faturada") {
+    return { success: true };
+  }
+
+  const approved = await allInspectionsApproved(supabase, orderId);
+  if (!approved) return { success: true };
+
+  const { data: allEquip } = await supabase
+    .from("equipment")
+    .select("id, registered")
+    .eq("service_order_id", orderId);
+
+  const total = allEquip?.length ?? 0;
+  const registeredCount = (allEquip ?? []).filter((e) => e.registered).length;
+
+  if (total > 0 && registeredCount === total && order.status !== "medida") {
+    await supabase
+      .from("service_orders")
+      .update({ status: "medida", measured_at: new Date().toISOString(), approved_at: new Date().toISOString() })
+      .eq("id", orderId);
+  } else if (order.status !== "aprovada" && order.status !== "medida") {
+    await supabase
+      .from("service_orders")
+      .update({ status: "aprovada", approved_at: new Date().toISOString() })
+      .eq("id", orderId);
+  }
+
+  revalidatePath(`/dashboard/ordens/${orderId}`);
+  revalidatePath("/dashboard/ordens");
   return { success: true };
 }
 

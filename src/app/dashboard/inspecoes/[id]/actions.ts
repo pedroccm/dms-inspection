@@ -289,7 +289,7 @@ export async function approveInspection(inspectionId: string) {
 
   const { data: inspection, error: inspError } = await supabase
     .from("inspections")
-    .select("id, status")
+    .select("id, status, service_order_id")
     .eq("id", inspectionId)
     .single();
 
@@ -315,6 +315,16 @@ export async function approveInspection(inspectionId: string) {
 
   if (updateError) {
     return { success: false, error: updateError.message };
+  }
+
+  // Auto-promote the parent OS to "aprovada" when all its inspections are approved.
+  if (inspection.service_order_id) {
+    try {
+      const { syncOrderStatus } = await import("@/app/dashboard/ordens/actions");
+      await syncOrderStatus(inspection.service_order_id);
+    } catch {
+      // Non-critical — the master can still tick equipment manually
+    }
   }
 
   return { success: true };
@@ -346,49 +356,6 @@ export async function rejectReport(inspectionId: string, reason: string) {
       status: "relatorio_reprovado",
       rejection_reason: reason.trim(),
       rejection_type: "relatorio",
-      reviewed_by: profile.id,
-      reviewed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", inspectionId);
-
-  if (updateError) {
-    return { success: false, error: updateError.message };
-  }
-
-  return { success: true };
-}
-
-export async function rejectEquipment(inspectionId: string, reason: string) {
-  const { error: authError, supabase, profile } = await requireAdminUser();
-  if (authError || !supabase || !profile) {
-    return { success: false, error: authError ?? "Erro de autenticação." };
-  }
-
-  if (!reason || reason.trim().length < 10) {
-    return { success: false, error: "O motivo da reprovação do equipamento deve ter pelo menos 10 caracteres." };
-  }
-
-  const { data: inspection, error: inspError } = await supabase
-    .from("inspections")
-    .select("id, status")
-    .eq("id", inspectionId)
-    .single();
-
-  if (inspError || !inspection) {
-    return { success: false, error: "Inspeção não encontrada." };
-  }
-
-  if (inspection.status !== "ready_for_review") {
-    return { success: false, error: "Apenas inspeções prontas para revisão podem ser reprovadas." };
-  }
-
-  const { error: updateError } = await supabase
-    .from("inspections")
-    .update({
-      status: "equipamento_reprovado",
-      rejection_reason: reason.trim(),
-      rejection_type: "equipamento",
       reviewed_by: profile.id,
       reviewed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

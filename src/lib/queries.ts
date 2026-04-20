@@ -142,6 +142,7 @@ export async function getEquipmentByServiceOrderId(serviceOrderId: string) {
 
   if (error) throw error;
   return (data ?? []) as (Equipment & {
+    registered?: boolean;
     inspections?: (Pick<Inspection, "id" | "status" | "inspector_id"> & {
       inspector?: { full_name: string } | null;
     })[];

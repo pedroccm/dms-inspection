@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { AdminOnly } from "@/components/admin-only";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { approveInspection, rejectReport, rejectEquipment } from "./actions";
+import { approveInspection, rejectReport } from "./actions";
 
 interface ApprovalPanelProps {
   inspectionId: string;
 }
 
-type ApprovalAction = "aprovar" | "reprovar_relatorio" | "reprovar_equipamento" | null;
+type ApprovalAction = "aprovar" | "reprovar_relatorio" | null;
 
 function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
   const router = useRouter();
@@ -36,11 +36,7 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
   }
 
   function handleConfirmRejection() {
-    if (currentAction === "reprovar_equipamento" && reason.trim().length < 10) {
-      setReasonError("O motivo deve ter pelo menos 10 caracteres.");
-      return;
-    }
-    if ((currentAction === "reprovar_relatorio" || currentAction === "reprovar_equipamento") && !reason.trim()) {
+    if (currentAction === "reprovar_relatorio" && !reason.trim()) {
       setReasonError("Informe o motivo da reprovacao.");
       return;
     }
@@ -59,8 +55,6 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
         result = await approveInspection(inspectionId);
       } else if (currentAction === "reprovar_relatorio") {
         result = await rejectReport(inspectionId, reason);
-      } else if (currentAction === "reprovar_equipamento") {
-        result = await rejectEquipment(inspectionId, reason);
       }
 
       if (result && !result.success) {
@@ -92,10 +86,6 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
       title: "Reprovar Relatório",
       body: "O relatório será devolvido ao executor para correção. Ele poderá editar e reenviar.",
     },
-    reprovar_equipamento: {
-      title: "Reprovar Equipamento",
-      body: "O equipamento será marcado como reprovado por defeito de fabricação. Esta ação é definitiva.",
-    },
   };
 
   const confirmInfo = currentAction ? confirmMessages[currentAction] : null;
@@ -113,12 +103,10 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
       )}
 
       {/* Rejection reason form */}
-      {(currentAction === "reprovar_relatorio" || currentAction === "reprovar_equipamento") && !showConfirmModal && (
+      {currentAction === "reprovar_relatorio" && !showConfirmModal && (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {currentAction === "reprovar_relatorio"
-              ? "Motivo da reprovação do relatório"
-              : "Motivo da reprovação do equipamento (defeito de fabricação)"}
+            Motivo da reprovação do relatório
           </label>
           <textarea
             value={reason}
@@ -126,11 +114,7 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
               setReason(e.target.value);
               setReasonError(null);
             }}
-            placeholder={
-              currentAction === "reprovar_relatorio"
-                ? "Descreva o problema encontrado no relatório..."
-                : "Descreva o defeito de fabricação encontrado..."
-            }
+            placeholder="Descreva o problema encontrado no relatório..."
             rows={3}
             className={`w-full rounded-lg border px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors resize-none focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none ${
               reasonError ? "border-red-500" : "border-gray-300"
@@ -180,16 +164,6 @@ function ApprovalPanelInner({ inspectionId }: ApprovalPanelProps) {
             data-testid="btn-reprovar-relatorio"
           >
             Reprovar Relatório
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => handleActionClick("reprovar_equipamento")}
-            disabled={loading}
-            size="lg"
-            className="bg-orange-600 hover:bg-orange-700 text-white"
-            data-testid="btn-reprovar-equipamento"
-          >
-            Reprovar Equipamento
           </Button>
         </div>
       )}

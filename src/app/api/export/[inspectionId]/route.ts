@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { getInspectionById } from "@/lib/queries";
+import { RELAY_FIELD_ORDER } from "@/lib/relay-qr-parser";
 
 function escapeCSV(value: string | null | undefined): string {
   if (value == null) return "";
@@ -57,21 +58,38 @@ export async function GET(
 
   // Equipment header
   lines.push(
-    "Código Copel RA,Código Copel Controle,Nº Série Mecanismo,Nº Série Caixa Controle,Nº Série Relé Proteção,Fabricante"
+    "Código Copel RA,Código Copel Controle,Mecanismo (052R),Controle (300),Nº Série Mecanismo,Nº Série Caixa Controle,Nº Série Relé Proteção,Fabricante,Cadastrado"
   );
   lines.push(
     [
       escapeCSV(equipment?.copel_ra_code),
       escapeCSV(equipment?.copel_control_code),
+      escapeCSV(equipment?.numero_052r),
+      escapeCSV(equipment?.numero_300),
       escapeCSV(equipment?.mechanism_serial),
       escapeCSV(equipment?.control_box_serial),
       escapeCSV(equipment?.protection_relay_serial),
       escapeCSV(equipment?.manufacturer),
+      escapeCSV(equipment?.registered ? "Sim" : "Nao"),
     ].join(",")
   );
 
   // Blank line separator
   lines.push("");
+
+  // Relay data section (optional)
+  const relayData = (inspection as { relay_data?: Record<string, string> | null }).relay_data ?? null;
+  const relayRows = relayData
+    ? RELAY_FIELD_ORDER.filter(({ key }) => relayData[key])
+    : [];
+  if (relayRows.length > 0) {
+    lines.push("Dados do Relé de Proteção");
+    lines.push("Campo,Valor");
+    for (const field of relayRows) {
+      lines.push([escapeCSV(field.label), escapeCSV(relayData![field.key])].join(","));
+    }
+    lines.push("");
+  }
 
   // Checklist items header
   lines.push("Item de Inspeção,Resultado,Motivo da Reprovação");

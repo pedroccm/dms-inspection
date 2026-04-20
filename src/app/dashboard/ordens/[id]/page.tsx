@@ -18,11 +18,17 @@ import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
+import { RegisteredToggle } from "./registered-toggle";
+import { BilledButton } from "./billed-button";
+import { getProfile } from "@/lib/auth";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   open: "Aberta",
   in_progress: "Em Andamento",
+  aprovada: "Aprovada",
+  medida: "Medida",
+  faturada: "Faturada",
   completed: "Concluída",
   cancelled: "Cancelada",
 };
@@ -30,6 +36,9 @@ const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
 const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success" | "neutral"> = {
   open: "info",
   in_progress: "warning",
+  aprovada: "success",
+  medida: "success",
+  faturada: "success",
   completed: "success",
   cancelled: "neutral",
 };
@@ -62,6 +71,8 @@ interface OrdemDetailPageProps {
 
 export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) {
   await requireAuth();
+  const profile = await getProfile();
+  const isAdmin = profile?.role === "admin";
 
   const { id } = await params;
 
@@ -208,10 +219,13 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Status</dt>
-            <dd className="mt-1">
+            <dd className="mt-1 flex items-center gap-3 flex-wrap">
               <Badge variant={STATUS_VARIANTS[order.status]}>
                 {STATUS_LABELS[order.status]}
               </Badge>
+              {isAdmin && (order.status === "medida" || order.status === "faturada" || order.status === "aprovada") && (
+                <BilledButton orderId={order.id} status={order.status} />
+              )}
             </dd>
           </div>
           <div>
@@ -264,6 +278,11 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status
                   </th>
+                  {isAdmin && (
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-white">
+                      Cadastrado
+                    </th>
+                  )}
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                     Inspetor
                   </th>
@@ -277,6 +296,7 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                   const statusInfo = getEquipmentStatus(eq.inspections);
                   const latestInspection = eq.inspections?.[eq.inspections.length - 1];
                   const inspectorName = latestInspection?.inspector?.full_name ?? null;
+                  const inspectionApproved = latestInspection?.status === "aprovado";
 
                   // Determine the action link:
                   // - If there's an inspection, go to it
@@ -305,6 +325,16 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                           {statusInfo.label}
                         </Badge>
                       </td>
+                      {isAdmin && (
+                        <td className="px-6 py-4">
+                          <RegisteredToggle
+                            orderId={order.id}
+                            equipmentId={eq.id}
+                            initialRegistered={Boolean(eq.registered)}
+                            enabled={inspectionApproved}
+                          />
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
                         {inspectorName ?? "—"}
                       </td>

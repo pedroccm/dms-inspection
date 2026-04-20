@@ -78,13 +78,16 @@ export async function GET(
 
   // Header
   lines.push(
-    "Código Copel RA,Fabricante,Item,Resultado,Motivo Reprovação,Inspetor,Data"
+    "Código Copel RA,Mecanismo (052R),Controle (300),Fabricante,Cadastrado,Item,Resultado,Motivo Reprovação,Inspetor,Data"
   );
 
   for (const inspection of inspections) {
     const equipment = inspection.equipment as {
       copel_ra_code?: string;
       manufacturer?: string;
+      numero_052r?: string;
+      numero_300?: string;
+      registered?: boolean;
     } | null;
     const inspector = inspection.inspector as {
       full_name?: string;
@@ -106,7 +109,10 @@ export async function GET(
       lines.push(
         [
           escapeCSV(equipment?.copel_ra_code),
+          escapeCSV(equipment?.numero_052r),
+          escapeCSV(equipment?.numero_300),
           escapeCSV(equipment?.manufacturer),
+          escapeCSV(equipment?.registered ? "Sim" : "Nao"),
           escapeCSV(item.item_name),
           escapeCSV(STATUS_LABELS[item.status] ?? item.status),
           escapeCSV(item.rejection_reason),

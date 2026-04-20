@@ -39,6 +39,7 @@ export interface Inspection {
   claimed_by: string | null;
   claimed_at: string | null;
   qr_data: Record<string, string> | null;
+  relay_data: Record<string, string> | null;
   // Joined relations (optional)
   equipment?: Equipment;
   checklist_items?: ChecklistItem[];
@@ -61,7 +62,7 @@ export interface ChecklistItem {
 
 export type PhotoType = string; // Accepts fixed types or dynamic labels like "photo_7", "photo_8", etc.
 
-/** The 6 required default photo types */
+/** The 7 required default photo types */
 export const DEFAULT_PHOTO_TYPES: string[] = [
   "mechanism_front",
   "mechanism_back",
@@ -69,9 +70,10 @@ export const DEFAULT_PHOTO_TYPES: string[] = [
   "control_mirror_closed",
   "relay_front",
   "control_internal",
+  "relay_label",
 ];
 
-export const MIN_PHOTOS = 6;
+export const MIN_PHOTOS = 7;
 export const MAX_PHOTOS = 20;
 
 export interface Photo {
@@ -85,12 +87,13 @@ export interface Photo {
 }
 
 export const PHOTO_TYPE_LABELS: Record<string, string> = {
-  mechanism_front: "Foto Mecanismo Frente",
-  mechanism_back: "Foto Mecanismo Traseira",
-  control_front_closed: "Foto Controle Frente Fechado",
+  mechanism_front: "Foto Placa Mecanismo",
+  mechanism_back: "Foto Mecanismo",
+  control_front_closed: "Foto Placas Controle",
   control_mirror_closed: "Foto Controle Espelho Fechado",
-  relay_front: "Foto Frente Rele",
+  relay_front: "Foto Frente Relé",
   control_internal: "Foto Interna Controle",
+  relay_label: "Foto Etiqueta Relé",
 };
 
 /** Get display label for a photo slot */
@@ -144,7 +147,14 @@ export interface TeamMember {
   user?: Pick<Profile, "id" | "full_name">;
 }
 
-export type ServiceOrderStatus = "open" | "in_progress" | "completed" | "cancelled";
+export type ServiceOrderStatus =
+  | "open"
+  | "in_progress"
+  | "aprovada"
+  | "medida"
+  | "faturada"
+  | "completed"
+  | "cancelled";
 
 export interface ServiceOrder {
   id: string;
@@ -164,6 +174,10 @@ export interface ServiceOrder {
   location_id: string | null;
   equipment_count: number;
   assigned_team_id: string | null;
+  approved_at?: string | null;
+  measured_at?: string | null;
+  billed_at?: string | null;
+  billed_by?: string | null;
   // Joined relations (optional)
   equipment?: Equipment;
   assignee?: Profile;
@@ -197,6 +211,10 @@ export interface Equipment {
   // Ficha identification (052R/300) — now lives on equipment, not inspection
   numero_052r?: string | null;
   numero_300?: string | null;
+  // Master control flag — Cadastrado no sistema do cliente (Copel)
+  registered?: boolean;
+  registered_at?: string | null;
+  registered_by?: string | null;
   // Direct link to the service order that created this equipment
   service_order_id?: string | null;
   // Expanded technical data (from QR Code)

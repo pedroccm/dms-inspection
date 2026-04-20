@@ -77,6 +77,37 @@ export async function claimInspection(inspectionId: string) {
   return { success: true };
 }
 
+export async function saveRelayData(inspectionId: string, relayData: Record<string, string>) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, inspector_id")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  if (inspection.inspector_id !== user.id) {
+    return { success: false, error: "Você não tem permissão para editar esta inspeção." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update({ relay_data: relayData })
+    .eq("id", inspectionId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  revalidatePath(`/dashboard/inspecoes/${inspectionId}`);
+  return { success: true };
+}
+
 export async function saveQrData(inspectionId: string, qrData: Record<string, string>) {
   const user = await requireAuth();
   const supabase = await createClient();

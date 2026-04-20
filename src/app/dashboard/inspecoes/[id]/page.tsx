@@ -13,6 +13,7 @@ import { RejectionBanner } from "./rejection-banner";
 import { AuditLog } from "./audit-log";
 import { ClaimButton } from "./claim-button";
 import { QrDataSection } from "./qr-data-section";
+import { RelayDataSection } from "./relay-data-section";
 import type { InspectionStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -186,6 +187,15 @@ export default async function InspecaoDetailPage({
         <QrDataSection
           inspectionId={inspection.id}
           existingQrData={inspection.qr_data}
+        />
+      )}
+
+      {/* Relay QR Data section (optional, shown to executor while editable and to everyone once filled) */}
+      {!isDisponivel && ((isEditable && isExecutor) || (inspection.relay_data && Object.keys(inspection.relay_data).length > 0)) && (
+        <RelayDataSection
+          inspectionId={inspection.id}
+          existingRelayData={inspection.relay_data}
+          isEditable={isEditable && isExecutor}
         />
       )}
 

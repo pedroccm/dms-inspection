@@ -63,13 +63,12 @@ export function IncludeEquipmentButton({ orderId }: IncludeEquipmentButtonProps)
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Mecanismo<span className="text-red-500 ml-0.5">*</span>
             </label>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-gray-500 shrink-0">052R-</span>
+            <div>
               <input
                 type="text"
                 name="numero_052r"
                 required
-                placeholder="xxxxx"
+                placeholder="052R-XXXXX"
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
               />
             </div>
@@ -79,13 +78,12 @@ export function IncludeEquipmentButton({ orderId }: IncludeEquipmentButtonProps)
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Controle<span className="text-red-500 ml-0.5">*</span>
             </label>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-gray-500 shrink-0">300-</span>
+            <div>
               <input
                 type="text"
                 name="numero_300"
                 required
-                placeholder="xxxxx"
+                placeholder="300-XXXXX"
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-[#F5A623] focus:ring-2 focus:ring-[#F5A623] focus:outline-none"
               />
             </div>

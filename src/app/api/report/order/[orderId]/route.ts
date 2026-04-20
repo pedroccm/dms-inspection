@@ -14,6 +14,16 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   transferred: "Transferida",
 };
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  open: "Aberta",
+  in_progress: "Em Andamento",
+  aprovada: "Aprovada",
+  medida: "Medida",
+  faturada: "Faturada",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
+
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleDateString("pt-BR");
@@ -52,7 +62,7 @@ export async function GET(
   const { data: inspections, error: inspError } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(copel_ra_code, manufacturer), inspector:profiles!inspector_id(full_name)"
+      "*, equipment(copel_ra_code, manufacturer, numero_052r, numero_300, registered), inspector:profiles!inspector_id(full_name)"
     )
     .eq("service_order_id", orderId)
     .order("created_at", { ascending: true });
@@ -96,6 +106,7 @@ export async function GET(
     ["Contrato", order.contract_name ?? "—"],
     ["Local da Inspecao", order.location ?? "—"],
     ["Inspetor Responsavel", assigneeName],
+    ["Status", ORDER_STATUS_LABELS[order.status] ?? order.status],
     ["Data Inicio", formatDate(order.start_date)],
     ["Data Fim", formatDate(order.end_date)],
   ];
@@ -122,18 +133,23 @@ export async function GET(
     const eq = insp.equipment as {
       copel_ra_code?: string;
       manufacturer?: string;
+      numero_052r?: string;
+      numero_300?: string;
+      registered?: boolean;
     } | null;
     return [
-      eq?.copel_ra_code ?? "—",
+      eq?.numero_052r ?? "—",
+      eq?.numero_300 ?? "—",
       eq?.manufacturer ?? "—",
       INSPECTION_STATUS_LABELS[insp.status] ?? insp.status,
+      eq?.registered ? "Sim" : "Nao",
     ];
   });
 
   autoTable(doc, {
     startY: currentY + 14,
-    head: [["Codigo Copel RA", "Fabricante", "Status"]],
-    body: equipmentRows.length > 0 ? equipmentRows : [["—", "—", "—"]],
+    head: [["Mecanismo (052R)", "Controle (300)", "Fabricante", "Status", "Cadastrado"]],
+    body: equipmentRows.length > 0 ? equipmentRows : [["—", "—", "—", "—", "—"]],
     theme: "grid",
     headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
     bodyStyles: { fontSize: 9 },
@@ -153,6 +169,9 @@ export async function GET(
       i.status === "relatorio_reprovado"
   ).length;
   const pendingCount = totalCount - aprovadoCount - reprovadoCount;
+  const cadastradoCount = inspectionList.filter(
+    (i) => (i.equipment as { registered?: boolean } | null)?.registered
+  ).length;
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -164,6 +183,7 @@ export async function GET(
     body: [
       ["Total de Equipamentos", String(totalCount)],
       ["Aprovados / Transferidos", String(aprovadoCount)],
+      ["Cadastrados (Copel)", `${cadastradoCount}/${totalCount}`],
       ["Reprovados", String(reprovadoCount)],
       ["Pendentes / Em Andamento", String(pendingCount)],
     ],

@@ -12,13 +12,11 @@ vi.mock("next/navigation", () => ({
 // Mock server actions
 const mockApproveInspection = vi.fn();
 const mockRejectReport = vi.fn();
-const mockRejectEquipment = vi.fn();
 const mockResumeInspection = vi.fn();
 
 vi.mock("../actions", () => ({
   approveInspection: (...args: unknown[]) => mockApproveInspection(...args),
   rejectReport: (...args: unknown[]) => mockRejectReport(...args),
-  rejectEquipment: (...args: unknown[]) => mockRejectEquipment(...args),
   resumeInspection: (...args: unknown[]) => mockResumeInspection(...args),
 }));
 
@@ -35,22 +33,33 @@ vi.mock("@/contexts/auth-context", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// Mock server profile context (used by AdminOnly wrapper)
+vi.mock("@/contexts/server-profile-context", () => ({
+  useIsAdmin: () => true,
+  useServerProfile: () => ({
+    id: "admin-1",
+    full_name: "Master User",
+    role: "admin",
+    active: true,
+  }),
+  ServerProfileProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockApproveInspection.mockResolvedValue({ success: true });
   mockRejectReport.mockResolvedValue({ success: true });
-  mockRejectEquipment.mockResolvedValue({ success: true });
   mockResumeInspection.mockResolvedValue({ success: true });
 });
 
 describe("ApprovalPanel", () => {
-  it("renders 3 action buttons", async () => {
+  it("renders 2 action buttons (Aprovar and Reprovar Relatório)", async () => {
     const { ApprovalPanel } = await import("../approval-panel");
     render(<ApprovalPanel inspectionId="insp-1" />);
 
     expect(screen.getByTestId("btn-aprovar")).toBeInTheDocument();
     expect(screen.getByTestId("btn-reprovar-relatorio")).toBeInTheDocument();
-    expect(screen.getByTestId("btn-reprovar-equipamento")).toBeInTheDocument();
+    expect(screen.queryByTestId("btn-reprovar-equipamento")).not.toBeInTheDocument();
   });
 
   it("shows confirmation modal when clicking Aprovar", async () => {
@@ -73,38 +82,6 @@ describe("ApprovalPanel", () => {
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/problema encontrado no relat/i)).toBeInTheDocument();
     });
-  });
-
-  it("shows reason textarea when clicking Reprovar Equipamento", async () => {
-    const { ApprovalPanel } = await import("../approval-panel");
-    render(<ApprovalPanel inspectionId="insp-1" />);
-
-    fireEvent.click(screen.getByTestId("btn-reprovar-equipamento"));
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText(/defeito de fabrica/i)).toBeInTheDocument();
-    });
-  });
-
-  it("requires reason for equipment rejection (min 10 chars)", async () => {
-    const { ApprovalPanel } = await import("../approval-panel");
-    render(<ApprovalPanel inspectionId="insp-1" />);
-
-    fireEvent.click(screen.getByTestId("btn-reprovar-equipamento"));
-
-    // Type short reason
-    const textarea = screen.getByPlaceholderText(/defeito de fabrica/i);
-    fireEvent.change(textarea, { target: { value: "short" } });
-
-    // Click confirm
-    fireEvent.click(screen.getByText(/Confirmar Reprova/));
-
-    await waitFor(() => {
-      expect(screen.getByText(/pelo menos 10 caracteres/)).toBeInTheDocument();
-    });
-
-    // Should NOT have called the action
-    expect(mockRejectEquipment).not.toHaveBeenCalled();
   });
 });
 

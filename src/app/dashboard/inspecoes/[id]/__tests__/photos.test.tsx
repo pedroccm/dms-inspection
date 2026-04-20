@@ -84,7 +84,7 @@ describe("PhotoSection - Rendering", () => {
     await renderPhotoSection();
 
     const buttons = screen.getAllByText("Tirar Foto");
-    expect(buttons).toHaveLength(6);
+    expect(buttons).toHaveLength(7);
   });
 
   it("shows progress indicator for required photos when empty", async () => {
@@ -144,7 +144,7 @@ describe("PhotoSection - Photo slots with existing photos", () => {
     await renderPhotoSection(photos);
 
     await waitFor(() => {
-      const img = screen.getByAltText("Foto Mecanismo Frente");
+      const img = screen.getByAltText("Foto Placa Mecanismo");
       expect(img).toBeInTheDocument();
     });
   });
@@ -156,7 +156,7 @@ describe("PhotoSection - Photo slots with existing photos", () => {
 
     await waitFor(() => {
       const buttons = screen.getAllByText("Tirar Foto");
-      expect(buttons).toHaveLength(5);
+      expect(buttons).toHaveLength(6);
     });
   });
 });
@@ -176,7 +176,7 @@ describe("PhotoSection - Read-only mode", () => {
     // Wait for signed URLs to load, then verify buttons are hidden
     await waitFor(() => {
       expect(
-        screen.getByAltText("Foto Mecanismo Frente")
+        screen.getByAltText("Foto Placa Mecanismo")
       ).toBeInTheDocument();
     });
 
@@ -206,7 +206,7 @@ describe("PhotoSection - Dynamic photos (RF-08)", () => {
 
     expect(screen.getByTestId("add-photo-btn")).toBeInTheDocument();
     expect(
-      screen.getByText(`Adicionar Foto (6/${MAX_PHOTOS})`)
+      screen.getByText(`Adicionar Foto (7/${MAX_PHOTOS})`)
     ).toBeInTheDocument();
   });
 
@@ -223,7 +223,7 @@ describe("PhotoSection - Dynamic photos (RF-08)", () => {
 
     expect(screen.getByText("Foto 7")).toBeInTheDocument();
     expect(
-      screen.getByText(`Adicionar Foto (7/${MAX_PHOTOS})`)
+      screen.getByText(`Adicionar Foto (8/${MAX_PHOTOS})`)
     ).toBeInTheDocument();
   });
 
@@ -260,9 +260,9 @@ describe("PhotoSection - Dynamic photos (RF-08)", () => {
   it("marks required slots with asterisk", async () => {
     await renderPhotoSection();
 
-    // 6 required markers for the default slots
+    // 7 required markers for the default slots
     const requiredMarkers = screen.getAllByTitle("Obrigatória");
-    expect(requiredMarkers).toHaveLength(6);
+    expect(requiredMarkers).toHaveLength(7);
   });
 
   it("renders existing dynamic photos from DB", async () => {
@@ -282,7 +282,7 @@ describe("PhotoSection - Dynamic photos (RF-08)", () => {
     expect(screen.getByText("Painel Lateral")).toBeInTheDocument();
   });
 
-  it("shows progress as complete when 6+ photos captured", async () => {
+  it("shows progress as complete when all required photos captured", async () => {
     const photos = DEFAULT_PHOTO_TYPES.map((type, i) =>
       makePhoto({
         id: `p${i}`,
@@ -294,14 +294,16 @@ describe("PhotoSection - Dynamic photos (RF-08)", () => {
     await renderPhotoSection(photos);
 
     expect(
-      screen.getByText("6 fotos capturadas")
+      screen.getByText("7 fotos capturadas")
     ).toBeInTheDocument();
   });
 });
 
 describe("getPhotoLabel", () => {
   it("returns default label for known types", () => {
-    expect(getPhotoLabel("mechanism_front")).toBe("Foto Mecanismo Frente");
+    expect(getPhotoLabel("mechanism_front")).toBe("Foto Placa Mecanismo");
+    expect(getPhotoLabel("mechanism_back")).toBe("Foto Mecanismo");
+    expect(getPhotoLabel("relay_label")).toBe("Foto Etiqueta Relé");
   });
 
   it("returns custom label when provided", () => {
