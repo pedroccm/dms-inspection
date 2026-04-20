@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { compressImage } from "@/lib/image-compress";
 
 interface ExtraPhotoButtonProps {
   inspectionId: string;
@@ -28,14 +29,18 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
     setUploading(true);
 
     try {
-      if (file.size > 10 * 1024 * 1024) {
-        setError(`Imagem muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB, máx 10MB).`);
+      // Compress client-side — mobile camera photos often blow past Netlify's
+      // 6 MB body limit and the request gets rejected before Next.js sees it.
+      const compressed = await compressImage(file);
+
+      if (compressed.size > 10 * 1024 * 1024) {
+        setError(`Imagem muito grande (${(compressed.size / 1024 / 1024).toFixed(1)}MB).`);
         setUploading(false);
         return;
       }
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       formData.append("inspectionId", inspectionId);
       formData.append("photoType", `photo_${Date.now()}`);
       formData.append("label", "Foto Adicional");
@@ -44,10 +49,22 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
         method: "POST",
         body: formData,
       });
-      const result = await res.json();
 
-      if (!res.ok || result.error) {
-        throw new Error(result.error ?? "Erro no upload.");
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = `Falha no upload (HTTP ${res.status}).`;
+        try {
+          const data = JSON.parse(text);
+          if (data?.error) msg = data.error;
+        } catch {
+          if (res.status === 413) msg = "Imagem muito grande para o servidor.";
+        }
+        throw new Error(msg);
+      }
+
+      const result = await res.json();
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       setLastUpload(file.name);

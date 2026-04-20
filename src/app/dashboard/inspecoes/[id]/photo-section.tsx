@@ -9,6 +9,7 @@ import {
   getPhotoLabel,
 } from "@/lib/types";
 import { getPhotoUrl } from "@/lib/storage";
+import { compressImage } from "@/lib/image-compress";
 import { PhotoViewer } from "@/components/photo-viewer";
 import type { PhotoViewerItem } from "@/components/photo-viewer";
 
@@ -184,17 +185,21 @@ export function PhotoSection({
         return;
       }
 
-      // Validate file size (max 10 MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setSlotState(photoKey, {
-          uploading: false, progress: 0, error: `Imagem muito grande: ${(file.size / 1024 / 1024).toFixed(1)}MB (máx 10MB)`,
-        });
-        return;
-      }
-
       setSlotState(photoKey, { uploading: true, progress: 10, error: null });
 
       try {
+        // Compress client-side to stay under Netlify's 6 MB body limit
+        const compressed = await compressImage(file);
+
+        if (compressed.size > 10 * 1024 * 1024) {
+          setSlotState(photoKey, {
+            uploading: false,
+            progress: 0,
+            error: `Imagem muito grande mesmo após compressão: ${(compressed.size / 1024 / 1024).toFixed(1)}MB`,
+          });
+          return;
+        }
+
         // If replacing, delete old photo first via API
         const existing = photos[photoKey];
         if (existing) {
@@ -210,7 +215,7 @@ export function PhotoSection({
         const customLabel = slot && !slot.required ? slot.label : null;
 
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressed);
         formData.append("inspectionId", inspectionId);
         formData.append("photoType", photoKey);
         if (customLabel) formData.append("label", customLabel);
@@ -222,10 +227,22 @@ export function PhotoSection({
           body: formData,
         });
 
-        const result = await res.json();
+        if (!res.ok) {
+          // Netlify / edge errors often return HTML — avoid blowing up on res.json()
+          const text = await res.text();
+          let msg = `Falha no upload (HTTP ${res.status}).`;
+          try {
+            const data = JSON.parse(text);
+            if (data?.error) msg = data.error;
+          } catch {
+            if (res.status === 413) msg = "Imagem muito grande para o servidor.";
+          }
+          throw new Error(msg);
+        }
 
-        if (!res.ok || result.error) {
-          throw new Error(result.error ?? "Erro ao enviar foto.");
+        const result = await res.json();
+        if (result.error) {
+          throw new Error(result.error);
         }
 
         setPhotos((prev) => ({ ...prev, [photoKey]: result.photo }));
