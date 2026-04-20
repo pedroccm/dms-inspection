@@ -96,6 +96,18 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
 
   const { id } = await params;
 
+  // Self-heal any OS that didn't auto-transition before this fix shipped
+  // (or that ended up out of sync for any reason). Safe no-op when already
+  // in the correct state.
+  if (isAdmin) {
+    try {
+      const { syncOrderStatus } = await import("../actions");
+      await syncOrderStatus(id);
+    } catch {
+      // non-critical
+    }
+  }
+
   let order;
   try {
     order = await getServiceOrderById(id);

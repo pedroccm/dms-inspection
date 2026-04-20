@@ -297,7 +297,9 @@ async function allInspectionsApproved(
     const inspections = eq.inspections ?? [];
     if (inspections.length === 0) return false;
     const latest = inspections[inspections.length - 1];
-    if (latest.status !== "aprovado") return false;
+    // "transferred" is a legacy alias for an approved inspection whose equipment
+    // was also marked as Cadastrada — still counts as approved for OS sync.
+    if (latest.status !== "aprovado" && latest.status !== "transferred") return false;
   }
   return true;
 }
@@ -329,7 +331,8 @@ export async function toggleEquipmentRegistered(
   const inspections =
     (equipment as { inspections?: { status: string }[] }).inspections ?? [];
   const latest = inspections[inspections.length - 1];
-  if (next && (!latest || latest.status !== "aprovado")) {
+  const approved = latest?.status === "aprovado" || latest?.status === "transferred";
+  if (next && !approved) {
     return { error: "Só é possível marcar como Cadastrado após a inspeção ser aprovada." };
   }
 
