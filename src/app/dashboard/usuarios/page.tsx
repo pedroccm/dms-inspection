@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Profile } from "@/lib/types";
+import type { Profile, UserRole } from "@/lib/types";
 import { ToggleActiveButton } from "./toggle-active-button";
+import { DeleteUserButton } from "./delete-user-button";
 
 export default async function UsuariosPage() {
-  await requireAdmin();
+  const currentUser = await requireAdmin();
 
   const supabase = createAdminClient();
 
@@ -24,6 +25,16 @@ export default async function UsuariosPage() {
   }
 
   const users = (profiles as Profile[]) ?? [];
+
+  const activeByRole: Record<UserRole, Array<{ id: string; full_name: string }>> = {
+    admin: [],
+    inspector: [],
+  };
+  for (const u of users) {
+    if (u.active) {
+      activeByRole[u.role].push({ id: u.id, full_name: u.full_name });
+    }
+  }
 
   return (
     <div>
@@ -98,7 +109,7 @@ export default async function UsuariosPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           href={`/dashboard/usuarios/${user.id}/editar`}
                           className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
@@ -108,6 +119,15 @@ export default async function UsuariosPage() {
                         <ToggleActiveButton
                           userId={user.id}
                           active={user.active}
+                        />
+                        <DeleteUserButton
+                          userId={user.id}
+                          userName={user.full_name}
+                          userEmail={emailMap.get(user.id) ?? "—"}
+                          eligibleTargets={activeByRole[user.role].filter(
+                            (t) => t.id !== user.id,
+                          )}
+                          isSelf={user.id === currentUser.id}
                         />
                       </div>
                     </td>

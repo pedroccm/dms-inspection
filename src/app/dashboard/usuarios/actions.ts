@@ -8,7 +8,7 @@ import {
   isAllowedEmailDomain,
   ALLOWED_EMAIL_DOMAINS_ERROR,
 } from "@/lib/email-domains";
-import type { UserRole } from "@/lib/types";
+import type { UserRole, UserImpact } from "@/lib/types";
 
 export async function createUser(formData: FormData) {
   await requireAdmin();
@@ -122,4 +122,134 @@ export async function toggleUserActive(id: string) {
   }
 
   revalidatePath("/dashboard/usuarios");
+}
+
+export async function getUserImpact(userId: string): Promise<UserImpact> {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+
+  const [serviceOrders, inspections, equipment, teamMemberships] =
+    await Promise.all([
+      supabase
+        .from("service_orders")
+        .select("id", { count: "exact", head: true })
+        .or(
+          `assigned_to.eq.${userId},created_by.eq.${userId},billed_by.eq.${userId}`,
+        ),
+      supabase
+        .from("inspections")
+        .select("id", { count: "exact", head: true })
+        .or(
+          `inspector_id.eq.${userId},reviewed_by.eq.${userId},claimed_by.eq.${userId}`,
+        ),
+      supabase
+        .from("equipment")
+        .select("id", { count: "exact", head: true })
+        .or(`created_by.eq.${userId},registered_by.eq.${userId}`),
+      supabase
+        .from("team_members")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId),
+    ]);
+
+  return {
+    serviceOrders: serviceOrders.count ?? 0,
+    inspections: inspections.count ?? 0,
+    equipment: equipment.count ?? 0,
+    teamMemberships: teamMemberships.count ?? 0,
+  };
+}
+
+export async function deleteUser(userId: string, transferToId: string) {
+  const currentUser = await requireAdmin();
+
+  if (userId === currentUser.id) {
+    return { error: "Você não pode excluir a si mesmo." };
+  }
+
+  if (!transferToId) {
+    return { error: "Selecione um usuário para transferir o trabalho." };
+  }
+
+  if (userId === transferToId) {
+    return { error: "Não é possível transferir para o próprio usuário a ser excluído." };
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: users, error: usersError } = await supabase
+    .from("profiles")
+    .select("id, role, active")
+    .in("id", [userId, transferToId]);
+
+  if (usersError || !users || users.length !== 2) {
+    return { error: "Usuário de origem ou destino não encontrado." };
+  }
+
+  const source = users.find((u) => u.id === userId);
+  const target = users.find((u) => u.id === transferToId);
+
+  if (!source || !target) {
+    return { error: "Usuário inválido." };
+  }
+
+  if (source.role !== target.role) {
+    return { error: "O usuário de destino deve ter o mesmo papel." };
+  }
+
+  if (!target.active) {
+    return { error: "O usuário de destino deve estar ativo." };
+  }
+
+  const transfers: Array<{
+    table: "service_orders" | "inspections" | "equipment";
+    column: string;
+    label: string;
+  }> = [
+    { table: "service_orders", column: "assigned_to", label: "OS (atribuídas)" },
+    { table: "service_orders", column: "created_by", label: "OS (criadas)" },
+    { table: "service_orders", column: "billed_by", label: "OS (faturadas)" },
+    { table: "inspections", column: "inspector_id", label: "inspeções (executor)" },
+    { table: "inspections", column: "reviewed_by", label: "inspeções (revisor)" },
+    { table: "inspections", column: "claimed_by", label: "inspeções (assumidas)" },
+    { table: "equipment", column: "created_by", label: "equipamentos (criados)" },
+    { table: "equipment", column: "registered_by", label: "equipamentos (cadastrados)" },
+  ];
+
+  for (const { table, column, label } of transfers) {
+    const { error } = await supabase
+      .from(table)
+      .update({ [column]: transferToId })
+      .eq(column, userId);
+    if (error) {
+      return { error: `Erro ao transferir ${label}: ${error.message}` };
+    }
+  }
+
+  // Remove team memberships instead of transferring (avoids duplicates
+  // when the target is already a member of the same team).
+  const { error: teamError } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("user_id", userId);
+  if (teamError) {
+    return { error: `Erro ao remover participações em equipes: ${teamError.message}` };
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("id", userId);
+  if (profileError) {
+    return { error: `Erro ao excluir perfil: ${profileError.message}` };
+  }
+
+  const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+  if (authError) {
+    return { error: `Erro ao excluir usuário de autenticação: ${authError.message}` };
+  }
+
+  revalidatePath("/dashboard/usuarios");
+  return { success: true };
 }

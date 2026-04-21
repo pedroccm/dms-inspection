@@ -297,6 +297,15 @@ export interface FormattedAuditEntry {
   tableName: string;
 }
 
+// ─── User Management ───────────────────────────────────────────
+
+export interface UserImpact {
+  serviceOrders: number;
+  inspections: number;
+  equipment: number;
+  teamMemberships: number;
+}
+
 // ─── Settings ──────────────────────────────────────────────────
 
 export interface Setting {
