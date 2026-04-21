@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import {
+  isAllowedEmailDomain,
+  ALLOWED_EMAIL_DOMAINS_ERROR,
+} from "@/lib/email-domains";
 
 export default function EsqueciSenhaPage() {
   const [email, setEmail] = useState("");
@@ -18,8 +22,8 @@ export default function EsqueciSenhaPage() {
     setLoading(true);
 
     try {
-      if (!email.trim().toLowerCase().endsWith("@dms.eng.br")) {
-        setError("Apenas e-mails com domínio @dms.eng.br são permitidos.");
+      if (!isAllowedEmailDomain(email)) {
+        setError(ALLOWED_EMAIL_DOMAINS_ERROR);
         setLoading(false);
         return;
       }

@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
+import {
+  isAllowedEmailDomain,
+  ALLOWED_EMAIL_DOMAINS_ERROR,
+} from "@/lib/email-domains";
 import type { UserRole } from "@/lib/types";
 
 export async function createUser(formData: FormData) {
@@ -22,9 +26,8 @@ export async function createUser(formData: FormData) {
     return { error: "A senha deve ter no mínimo 6 caracteres." };
   }
 
-  // RF-01: Validar domínio @dms.eng.br
-  if (!email.trim().toLowerCase().endsWith("@dms.eng.br")) {
-    return { error: "Apenas e-mails com domínio @dms.eng.br são permitidos." };
+  if (!isAllowedEmailDomain(email)) {
+    return { error: ALLOWED_EMAIL_DOMAINS_ERROR };
   }
 
   const supabase = createAdminClient();
