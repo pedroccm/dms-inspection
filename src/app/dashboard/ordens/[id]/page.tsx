@@ -18,7 +18,6 @@ import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
-import { RegisteredToggle } from "./registered-toggle";
 import { OrderStatusActions } from "./order-status-actions";
 import { getProfile } from "@/lib/auth";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
@@ -310,11 +309,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white">
                     Status
                   </th>
-                  {isAdmin && (
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                      Cadastrado
-                    </th>
-                  )}
                   <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
                     Inspetor
                   </th>
@@ -328,7 +322,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                   const statusInfo = getEquipmentStatus(eq.inspections, eq.registered);
                   const latestInspection = eq.inspections?.[eq.inspections.length - 1];
                   const inspectorName = latestInspection?.inspector?.full_name ?? null;
-                  const inspectionApproved = latestInspection?.status === "aprovado";
 
                   // Determine the action link:
                   // - If there's an inspection, go to it
@@ -357,16 +350,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                           {statusInfo.label}
                         </Badge>
                       </td>
-                      {isAdmin && (
-                        <td className="px-6 py-4">
-                          <RegisteredToggle
-                            orderId={order.id}
-                            equipmentId={eq.id}
-                            initialRegistered={Boolean(eq.registered)}
-                            enabled={inspectionApproved}
-                          />
-                        </td>
-                      )}
                       <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
                         {inspectorName ?? "—"}
                       </td>

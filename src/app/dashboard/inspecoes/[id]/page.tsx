@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth, getProfile } from "@/lib/auth";
-import { getInspectionById } from "@/lib/queries";
+import {
+  getInspectionById,
+  getServiceOrderById,
+  getEquipmentByServiceOrderId,
+} from "@/lib/queries";
 import { getInspectionAuditLogs } from "@/lib/audit";
 import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
@@ -93,13 +97,35 @@ export default async function InspecaoDetailPage({
   const config =
     statusConfig[inspection.status] ?? statusConfig.draft;
 
+  // Compute inspection number: OS_NUMBER-XX/YY (e.g. 14725-08/10)
+  let inspectionNumber: string | null = null;
+  if (inspection.service_order_id) {
+    try {
+      const [order, equipmentList] = await Promise.all([
+        getServiceOrderById(inspection.service_order_id),
+        getEquipmentByServiceOrderId(inspection.service_order_id),
+      ]);
+      const orderNumber = order?.order_number;
+      const total = equipmentList.length;
+      const index = equipmentList.findIndex(
+        (eq) => eq.id === inspection.equipment_id
+      );
+      if (orderNumber && total > 0 && index >= 0) {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        inspectionNumber = `${orderNumber}-${pad(index + 1)}/${pad(total)}`;
+      }
+    } catch {
+      // Non-critical; fall back to existing title
+    }
+  }
+
   return (
     <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1B2B5E]">
-            Inspeção: {inspection.equipment?.copel_ra_code ?? "Ficha de Inspeção"}
+            Inspeção: {inspectionNumber ?? inspection.equipment?.copel_ra_code ?? "Ficha de Inspeção"}
           </h1>
           {inspection.equipment?.manufacturer && (
             <p className="text-sm text-gray-500 mt-1">
@@ -125,24 +151,22 @@ export default async function InspecaoDetailPage({
         </div>
       </div>
 
-      {/* 052R and 300 Numbers — sourced from equipment or inspection (backwards compat) */}
+      {/* Equipamento — sourced from equipment or inspection (backwards compat) */}
       {(() => {
         const n052r = inspection.equipment?.numero_052r ?? inspection.numero_052r;
         const n300 = inspection.equipment?.numero_300 ?? inspection.numero_300;
         if (!n052r && !n300) return null;
         return (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Números de Identificação</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Equipamento</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {n052r && (
                 <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <span className="text-sm font-medium text-blue-700">052R:</span>
                   <span className="text-lg font-bold text-blue-900">{n052r}</span>
                 </div>
               )}
               {n300 && (
                 <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <span className="text-sm font-medium text-green-700">300:</span>
                   <span className="text-lg font-bold text-green-900">{n300}</span>
                 </div>
               )}
