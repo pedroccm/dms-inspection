@@ -29,7 +29,7 @@ export class InspectionDetailPage {
   }
 
   async getProgress(): Promise<string> {
-    // Progress text is like "X de 19 itens avaliados"
+    // Progress text is like "X de 18 itens avaliados"
     const progressEl = this.page.locator('text=/\\d+ de \\d+ itens avaliados/');
     await expect(progressEl).toBeVisible();
     return (await progressEl.textContent()) ?? '';

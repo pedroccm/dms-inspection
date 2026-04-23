@@ -74,7 +74,7 @@ export async function createInspection(formData: FormData) {
     };
   }
 
-  // Create inspection (DB trigger auto-creates 19 checklist items)
+  // Create inspection (DB trigger auto-creates 18 checklist items)
   const { data: newInspection, error } = await supabase
     .from("inspections")
     .insert({

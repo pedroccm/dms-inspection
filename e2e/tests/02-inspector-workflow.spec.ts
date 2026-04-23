@@ -98,21 +98,21 @@ test.describe.serial('02 - Executor Workflow', () => {
       // After claim, status should change to "Rascunho"
       await expect(page.getByText('Rascunho').first()).toBeVisible({ timeout: 10000 });
 
-      // Checklist should appear with 19 items
-      await expect(page.getByText(/de 19 itens avaliados/).first()).toBeVisible({ timeout: 10000 });
+      // Checklist should appear with 18 items
+      await expect(page.getByText(/de 18 itens avaliados/).first()).toBeVisible({ timeout: 10000 });
 
       await page.screenshot({ path: 'e2e/results/02-executor-checklist-visible.png' });
     });
 
     await test.step('Fill checklist items', async () => {
-      // The 19 checklist items from the DB
+      // The 18 checklist items from the DB
       const ITEMS = [
         'Alimentação VCA e Tomada', 'Alimentação VCC / Bateria', 'Arquivo de Ajustes',
         'Operação Bateria', 'Operação VCA', 'Alavanca Amarela',
         'Medição MT', 'Medição BT Fonte', 'Medição BT Carga', 'Medição PRI Corrente',
         'Op. Mecânica - 25 Op.', 'Resist. de Contato', 'Resist. de Isolamento',
         'Visual de Mont./Pint.', 'Proteção de Fase', 'Proteção de N/SEF',
-        'Comunic. Frontal', 'Comunic. Traseira', 'Linha 19',
+        'Comunic. Frontal', 'Comunic. Traseira',
       ];
 
       // Approve all items first
@@ -128,14 +128,12 @@ test.describe.serial('02 - Executor Workflow', () => {
       await page.locator('button[aria-label="Reprovado - Alavanca Amarela"]').click();
       await page.waitForTimeout(500);
 
-      // Override last 2 items to NA
+      // Override last item to NA
       await page.locator('button[aria-label="NA - Comunic. Traseira"]').click();
       await page.waitForTimeout(300);
-      await page.locator('button[aria-label="NA - Linha 19"]').click();
-      await page.waitForTimeout(300);
 
-      // Verify progress: 19 of 19 items evaluated
-      await expect(page.getByText(/19 de 19 itens avaliados/).first()).toBeVisible({ timeout: 10000 });
+      // Verify progress: 18 of 18 items evaluated
+      await expect(page.getByText(/18 de 18 itens avaliados/).first()).toBeVisible({ timeout: 10000 });
 
       await page.screenshot({ path: 'e2e/results/02-executor-checklist-filled.png' });
     });

@@ -150,7 +150,7 @@ Requisitos antes de começar:
 
 **MVP 3 / MVP 5**
 
-1. Preenche o checklist inteiro (19 itens, todos Aprovado)
+1. Preenche o checklist inteiro (18 itens, todos Aprovado)
 2. Finaliza todas as 7 fotos obrigatórias
 3. Clica **Enviar para Revisão** no fim da inspeção
 4. Sai como inspetor, entra como **master**
@@ -303,7 +303,7 @@ Crie uma nova OS com 2 equipamentos, complete inspeções de ambos e aprove:
 2. **Dados Técnicos** (se preenchidos no QR) — Modelo, Marca, Tipo, Tensão nominal, NBI etc.
 3. **Dados do Relé de Proteção** (se preenchidos) — os 11 campos
 4. **Dados do QR Code (Equipamento)** (se preenchidos) — os 16 campos técnicos
-5. **Resultado do Checklist** — todos os 19 itens
+5. **Resultado do Checklist** — todos os 18 itens
 6. **Observações** (se houver)
 7. **Rodapé** — Inspetor, Data, Status
 8. **Nova página: Fotos da Inspeção**
