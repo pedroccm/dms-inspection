@@ -1,32 +1,10 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { getServiceOrders } from "@/lib/queries";
-import { Badge } from "@/components/ui/badge";
 import { AdminOnly } from "@/components/admin-only";
 import { OrderStatusFilter } from "./status-filter";
+import { OrdersTable, type OrderRow } from "./orders-table";
 import type { ServiceOrderStatus } from "@/lib/types";
-
-const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
-  open: "Aberta",
-  in_progress: "Aberta",
-  aprovada: "Aberta",
-  finalizada: "Finalizada",
-  medida: "Medida",
-  faturada: "Faturada",
-  completed: "Concluída",
-  cancelled: "Cancelada",
-};
-
-const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success" | "neutral"> = {
-  open: "info",
-  in_progress: "info",
-  aprovada: "info",
-  finalizada: "success",
-  medida: "success",
-  faturada: "success",
-  completed: "success",
-  cancelled: "neutral",
-};
 
 interface OrdensPageProps {
   searchParams: Promise<{
@@ -43,6 +21,18 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
   const orders = await getServiceOrders({
     status: statusFilter,
   });
+
+  const rows: OrderRow[] = orders.map((order) => ({
+    id: order.id,
+    orderLabel: order.order_number ?? order.title,
+    location:
+      (order as unknown as { inspection_location?: { name: string } }).inspection_location?.name
+      ?? order.location
+      ?? "—",
+    executor: order.assignee?.full_name ?? "—",
+    status: order.status,
+    startDate: order.start_date,
+  }));
 
   return (
     <div>
@@ -62,97 +52,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
         <OrderStatusFilter currentStatus={statusFilter} />
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-[#1B2B5E]">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  O.S.
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden md:table-cell">
-                  Local da Inspeção
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                  Executor
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Status
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden lg:table-cell">
-                  Início
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-8 text-center text-gray-500"
-                  >
-                    Nenhuma ordem de serviço encontrada.
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {order.order_number ?? order.title}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell">
-                      {(order as unknown as { inspection_location?: { name: string } }).inspection_location?.name
-                        ?? order.location ?? "—"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
-                      {order.assignee?.full_name ?? "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={STATUS_VARIANTS[order.status]}>
-                        {STATUS_LABELS[order.status]}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 hidden lg:table-cell">
-                      {order.start_date
-                        ? new Date(order.start_date).toLocaleDateString("pt-BR")
-                        : "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/dashboard/ordens/${order.id}`}
-                        aria-label="Ver detalhes"
-                        title="Ver detalhes"
-                        className="inline-flex items-center justify-center w-11 h-11 text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-                          />
-                        </svg>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <OrdersTable rows={rows} />
     </div>
   );
 }

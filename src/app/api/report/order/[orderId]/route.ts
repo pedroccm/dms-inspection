@@ -14,6 +14,30 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   transferred: "Cadastrada",
 };
 
+// Derived equipment status matching the UI (5 stages):
+// Pendente → Em Inspeção → Concluído → Relatório Aprovado → Cadastrada
+function getEquipmentStatusLabel(
+  inspectionStatus: string | null | undefined,
+  registered: boolean | undefined
+): string {
+  if (registered) return "Cadastrada";
+  if (!inspectionStatus) return "Pendente";
+  if (inspectionStatus === "transferred") return "Cadastrada";
+  if (inspectionStatus === "aprovado") return "Relatório Aprovado";
+  if (inspectionStatus === "ready_for_review") return "Concluído";
+  if (inspectionStatus === "disponivel") return "Pendente";
+  return "Em Inspeção";
+}
+
+// Ensure the "052R-" / "300-" prefix is present even if the stored value
+// only contains the numeric portion.
+function withPrefix(prefix: string, value: string | null | undefined): string {
+  if (!value) return "—";
+  const v = String(value).trim();
+  if (!v) return "—";
+  return v.toUpperCase().startsWith(prefix.toUpperCase()) ? v : `${prefix}${v}`;
+}
+
 const ORDER_STATUS_LABELS: Record<string, string> = {
   open: "Aberta",
   in_progress: "Aberta",
@@ -26,8 +50,18 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
+  if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("pt-BR");
+}
+
+function formatDateTime(date: Date): string {
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export async function GET(
@@ -47,7 +81,7 @@ export async function GET(
   const { data: order, error: orderError } = await supabase
     .from("service_orders")
     .select(
-      "*, assignee:profiles!assigned_to(full_name)"
+      "*, assignee:profiles!assigned_to(full_name), inspection_location:inspection_locations!location_id(name)"
     )
     .eq("id", orderId)
     .single();
@@ -63,7 +97,7 @@ export async function GET(
   const { data: inspections, error: inspError } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(copel_ra_code, manufacturer, numero_052r, numero_300, registered), inspector:profiles!inspector_id(full_name)"
+      "*, equipment(copel_ra_code, manufacturer, numero_052r, numero_300, registered, marca, numero_serie_tanque, numero_serie_controle), inspector:profiles!inspector_id(full_name)"
     )
     .eq("service_order_id", orderId)
     .order("created_at", { ascending: true });
@@ -77,49 +111,48 @@ export async function GET(
 
   const inspectionList = inspections ?? [];
 
-  // Create PDF
-  const doc = new jsPDF();
+  // Create PDF — landscape to fit the wider equipment summary table
+  const doc = new jsPDF({ orientation: "landscape" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const today = new Date().toLocaleDateString("pt-BR");
+  const now = new Date();
+  const nowText = formatDateTime(now);
 
-  // Header
+  // Header — document title carries the OS number
+  const orderNumber = (order.order_number ?? order.title ?? "").toString();
+  const titleText = `RELATÓRIO DA ORDEM DE SERVIÇO – ${orderNumber}`.toUpperCase();
+
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("DIEN - Relatório da Ordem de Serviço", pageWidth / 2, 20, {
-    align: "center",
-  });
+  doc.text(titleText, pageWidth / 2, 20, { align: "center" });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Data: ${today}`, pageWidth / 2, 28, { align: "center" });
-
-  // Order info
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Dados da Ordem", 14, 40);
+  doc.text(`Data: ${nowText}`, pageWidth / 2, 28, { align: "center" });
 
   const assigneeName =
     (order.assignee as { full_name?: string } | null)?.full_name ?? "—";
 
+  const locationName =
+    (order.inspection_location as { name?: string } | null)?.name
+    ?? order.location
+    ?? "—";
+
   const orderData = [
-    ["Titulo", order.title ?? "—"],
     ["Cliente", order.client_name ?? "—"],
     ["Contrato", order.contract_name ?? "—"],
-    ["Local da Inspecao", order.location ?? "—"],
-    ["Inspetor Responsavel", assigneeName],
+    ["Local da Inspeção", locationName],
+    ["Inspetor Responsável", assigneeName],
     ["Status", ORDER_STATUS_LABELS[order.status] ?? order.status],
-    ["Data Inicio", formatDate(order.start_date)],
-    ["Data Fim", formatDate(order.end_date)],
+    ["Data de início da inspeção", formatDate(order.start_date)],
+    ["Data da finalização do cadastro", formatDate(order.finalized_at ?? null)],
   ];
 
   autoTable(doc, {
-    startY: 44,
-    head: [["Campo", "Valor"]],
+    startY: 36,
     body: orderData,
     theme: "grid",
-    headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
     bodyStyles: { fontSize: 9 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 70 } },
   });
 
   // Equipment summary table
@@ -134,25 +167,40 @@ export async function GET(
     const eq = insp.equipment as {
       copel_ra_code?: string;
       manufacturer?: string;
+      marca?: string;
       numero_052r?: string;
       numero_300?: string;
+      numero_serie_tanque?: string;
+      numero_serie_controle?: string;
       registered?: boolean;
     } | null;
+    const relayData =
+      (insp as { relay_data?: Record<string, string> | null }).relay_data ?? null;
     return [
-      eq?.numero_052r ?? "—",
-      eq?.numero_300 ?? "—",
-      eq?.manufacturer ?? "—",
-      INSPECTION_STATUS_LABELS[insp.status] ?? insp.status,
-      eq?.registered ? "Sim" : "Nao",
+      eq?.marca || eq?.manufacturer || "—",
+      withPrefix("052R-", eq?.numero_052r),
+      withPrefix("300-", eq?.numero_300),
+      eq?.numero_serie_tanque || "—",
+      relayData?.numero_serie || "—",
+      eq?.numero_serie_controle || "—",
+      getEquipmentStatusLabel(insp.status, eq?.registered),
     ];
   });
 
   autoTable(doc, {
     startY: currentY + 14,
-    head: [["Mecanismo (052R)", "Controle (300)", "Fabricante", "Status", "Cadastrado"]],
-    body: equipmentRows.length > 0 ? equipmentRows : [["—", "—", "—", "—", "—"]],
+    head: [[
+      "Fabricante",
+      "Nº Copel do Religador",
+      "Nº Copel do controle",
+      "Nº de série do religador",
+      "Nº de série do relé",
+      "Nº de série do controle",
+      "STATUS",
+    ]],
+    body: equipmentRows.length > 0 ? equipmentRows : [["—", "—", "—", "—", "—", "—", "—"]],
     theme: "grid",
-    headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
+    headStyles: { fillColor: [27, 43, 94], fontSize: 9, halign: "center" },
     bodyStyles: { fontSize: 9 },
   });
 
@@ -183,8 +231,8 @@ export async function GET(
     head: [["Descricao", "Quantidade"]],
     body: [
       ["Total de Equipamentos", String(totalCount)],
-      ["Aprovados / Transferidos", String(aprovadoCount)],
-      ["Cadastrados (Copel)", `${cadastradoCount}/${totalCount}`],
+      ["Aprovados", String(aprovadoCount)],
+      ["Cadastrados", `${cadastradoCount}/${totalCount}`],
       ["Reprovados", String(reprovadoCount)],
       ["Pendentes / Em Andamento", String(pendingCount)],
     ],
@@ -208,7 +256,7 @@ export async function GET(
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(`Gerado em: ${today}`, 14, currentY + 18);
+  doc.text(`Gerado em: ${nowText}`, 14, currentY + 18);
 
   // Generate PDF buffer
   const pdfBuffer = Buffer.from(doc.output("arraybuffer"));

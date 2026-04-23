@@ -14,11 +14,10 @@ import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
 import { DeleteOrderButton } from "./delete-order-button";
 import { AdminOnly } from "@/components/admin-only";
-import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { IncludeEquipmentButton } from "./include-equipment-button";
 import { EditOrderButton } from "./edit-order-button";
-import { RemoveEquipmentButton } from "./remove-equipment-button";
 import { OrderStatusActions } from "./order-status-actions";
+import { OrderEquipmentTable, type OrderEquipmentRow } from "./order-equipment-table";
 import { getProfile } from "@/lib/auth";
 import type { ServiceOrderStatus, InspectionStatus } from "@/lib/types";
 
@@ -293,94 +292,26 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             Nenhum equipamento cadastrado para esta ordem.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 bg-[#1B2B5E]">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    #
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Mecanismo
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Controle
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Status
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white hidden sm:table-cell">
-                    Inspetor
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-white">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipmentList.map((eq, idx) => {
-                  const statusInfo = getEquipmentStatus(eq.inspections, eq.registered);
-                  const latestInspection = eq.inspections?.[eq.inspections.length - 1];
-                  const inspectorName = latestInspection?.inspector?.full_name ?? null;
-
-                  // Determine the action link:
-                  // - If there's an inspection, go to it
-                  // - If not, go to the equipment detail (where they can start inspection)
-                  const actionHref = latestInspection
-                    ? `/dashboard/inspecoes/${latestInspection.id}`
-                    : `/dashboard/equipamentos/${eq.id}`;
-                  const actionLabel = latestInspection ? "Ver Inspeção" : "Iniciar";
-
-                  return (
-                    <tr
-                      key={eq.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {idx + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {eq.numero_052r ?? "—"}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {eq.numero_300 ?? "—"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={statusInfo.variant}>
-                          {statusInfo.label}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">
-                        {inspectorName ?? "—"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Link
-                            href={actionHref}
-                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#F5A623] bg-[#FFF4E0] rounded-lg hover:bg-[#FFE8C0] transition-colors min-h-[44px]"
-                          >
-                            {actionLabel}
-                          </Link>
-                          <EditEquipmentNumbers
-                            equipmentId={eq.id}
-                            orderId={order.id}
-                            currentNumero052r={eq.numero_052r ?? null}
-                            currentNumero300={eq.numero_300 ?? null}
-                          />
-                          <AdminOnly>
-                            <RemoveEquipmentButton
-                              orderId={order.id}
-                              equipmentId={eq.id}
-                            />
-                          </AdminOnly>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <OrderEquipmentTable
+            orderId={order.id}
+            rows={equipmentList.map((eq, idx): OrderEquipmentRow => {
+              const statusInfo = getEquipmentStatus(eq.inspections, eq.registered);
+              const latestInspection = eq.inspections?.[eq.inspections.length - 1];
+              return {
+                id: eq.id,
+                originalIndex: idx + 1,
+                numero052r: eq.numero_052r ?? null,
+                numero300: eq.numero_300 ?? null,
+                statusLabel: statusInfo.label,
+                statusVariant: statusInfo.variant,
+                inspectorName: latestInspection?.inspector?.full_name ?? null,
+                actionHref: latestInspection
+                  ? `/dashboard/inspecoes/${latestInspection.id}`
+                  : `/dashboard/equipamentos/${eq.id}`,
+                actionLabel: latestInspection ? "Ver Inspeção" : "Iniciar",
+              };
+            })}
+          />
         )}
       </div>
 

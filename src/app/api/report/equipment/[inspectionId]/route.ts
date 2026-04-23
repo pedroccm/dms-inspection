@@ -256,21 +256,17 @@ export async function GET(
     photoY += 10;
 
     const pageHeight = doc.internal.pageSize.getHeight();
-    const imgWidth = pageWidth - 28;
-    const imgHeight = 100;
+    // Bounding box the image must fit inside (keeps aspect ratio).
+    // Image is scaled down to fit; never stretched beyond natural ratio.
+    const maxImgWidth = pageWidth - 28;
+    const maxImgHeight = 100;
+    // Estimated height used when the image fails to load (text fallback).
+    const fallbackHeight = 12;
 
     for (const photo of photos) {
-      // New page if it won't fit
-      if (photoY + imgHeight + 12 > pageHeight - 14) {
-        doc.addPage();
-        photoY = 20;
-      }
-
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       const label = getPhotoLabel(photo.photo_type, photo.label);
-      doc.text(label, 14, photoY);
-      photoY += 4;
 
       try {
         const { data: blob } = await supabase.storage
@@ -283,19 +279,54 @@ export async function GET(
           const contentType = blob.type || "image/jpeg";
           const format = contentType.includes("png") ? "PNG" : "JPEG";
           const dataUrl = `data:${contentType};base64,${base64}`;
-          doc.addImage(dataUrl, format, 14, photoY, imgWidth, imgHeight, undefined, "FAST");
+
+          // Measure natural dimensions so we scale proportionally.
+          // jsPDF reports width/height in pixels; the ratio is what we need.
+          const props = doc.getImageProperties(dataUrl);
+          const scale = Math.min(
+            maxImgWidth / props.width,
+            maxImgHeight / props.height
+          );
+          const drawW = props.width * scale;
+          const drawH = props.height * scale;
+
+          // New page if the label + scaled image won't fit
+          if (photoY + 4 + drawH + 8 > pageHeight - 14) {
+            doc.addPage();
+            photoY = 20;
+          }
+
+          doc.text(label, 14, photoY);
+          photoY += 4;
+
+          // Center horizontally within the content area
+          const xOffset = 14 + (maxImgWidth - drawW) / 2;
+          doc.addImage(dataUrl, format, xOffset, photoY, drawW, drawH, undefined, "FAST");
+          photoY += drawH + 8;
         } else {
+          if (photoY + 4 + fallbackHeight + 8 > pageHeight - 14) {
+            doc.addPage();
+            photoY = 20;
+          }
+          doc.text(label, 14, photoY);
+          photoY += 4;
           doc.setFontSize(9);
           doc.setFont("helvetica", "italic");
           doc.text("(não foi possível carregar a imagem)", 14, photoY + 10);
+          photoY += fallbackHeight + 8;
         }
       } catch {
+        if (photoY + 4 + fallbackHeight + 8 > pageHeight - 14) {
+          doc.addPage();
+          photoY = 20;
+        }
+        doc.text(label, 14, photoY);
+        photoY += 4;
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
         doc.text("(erro ao carregar imagem)", 14, photoY + 10);
+        photoY += fallbackHeight + 8;
       }
-
-      photoY += imgHeight + 8;
     }
     currentY = photoY;
   }
