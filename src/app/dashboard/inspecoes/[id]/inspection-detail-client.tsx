@@ -15,6 +15,8 @@ interface InspectionDetailClientProps {
   isEditable: boolean;
   serverPhotoUrls?: Record<string, string>;
   serviceOrderId?: string | null;
+  numero052r?: string | null;
+  numero300?: string | null;
 }
 
 export function InspectionDetailClient({
@@ -26,6 +28,8 @@ export function InspectionDetailClient({
   isEditable,
   serverPhotoUrls,
   serviceOrderId,
+  numero052r,
+  numero300,
 }: InspectionDetailClientProps) {
   const [photoCount, setPhotoCount] = useState(photos.length);
 
@@ -51,6 +55,8 @@ export function InspectionDetailClient({
         isEditable={isEditable}
         serverPhotoUrls={serverPhotoUrls}
         onPhotoCountChange={setPhotoCount}
+        numero052r={numero052r}
+        numero300={numero300}
       />
     </>
   );

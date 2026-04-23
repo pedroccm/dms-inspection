@@ -106,6 +106,35 @@ export function getPhotoLabel(photoType: string, customLabel?: string | null): s
   return photoType;
 }
 
+/**
+ * Build the download filename for an inspection photo.
+ * Example: "placa_mecanismo_052R-TESTE5_300-TESTE55555.jpg"
+ */
+export function getPhotoDownloadName(
+  photoType: string,
+  customLabel: string | null | undefined,
+  storagePath: string,
+  numero052r?: string | null,
+  numero300?: string | null
+): string {
+  const label = getPhotoLabel(photoType, customLabel);
+  const slug = label
+    .replace(/^Foto\s+/i, "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s_-]/g, "")
+    .trim()
+    .replace(/\s+/g, "_");
+
+  const parts: string[] = [slug || "foto"];
+  if (numero052r) parts.push(`052R-${numero052r}`);
+  if (numero300) parts.push(`300-${numero300}`);
+
+  const ext = storagePath.split(".").pop()?.toLowerCase() || "jpg";
+  return `${parts.join("_")}.${ext}`;
+}
+
 // ─── Clients ────────────────────────────────────────────────────
 
 export interface Client {

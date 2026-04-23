@@ -7,6 +7,7 @@ import {
   MIN_PHOTOS,
   MAX_PHOTOS,
   getPhotoLabel,
+  getPhotoDownloadName,
 } from "@/lib/types";
 import { getPhotoUrl } from "@/lib/storage";
 import { compressImage } from "@/lib/image-compress";
@@ -21,6 +22,8 @@ interface PhotoSectionProps {
   isEditable: boolean;
   serverPhotoUrls?: Record<string, string>;
   onPhotoCountChange?: (count: number) => void;
+  numero052r?: string | null;
+  numero300?: string | null;
 }
 
 interface PhotoSlot {
@@ -83,6 +86,8 @@ export function PhotoSection({
   isEditable,
   serverPhotoUrls,
   onPhotoCountChange,
+  numero052r,
+  numero300,
 }: PhotoSectionProps) {
   const [slots, setSlots] = useState<PhotoSlot[]>(() =>
     buildInitialSlots(existingPhotos)
@@ -121,9 +126,20 @@ export function PhotoSection({
 
   const viewerPhotos: PhotoViewerItem[] = availablePhotos.map((key) => {
     const slot = slots.find((s) => s.key === key);
+    const photo = photos[key];
+    const customLabel = slot && !slot.required ? slot.label : null;
     return {
       url: signedUrls[key],
       label: slot?.label ?? key,
+      downloadName: photo
+        ? getPhotoDownloadName(
+            photo.photo_type,
+            customLabel,
+            photo.storage_path,
+            numero052r,
+            numero300
+          )
+        : undefined,
     };
   });
 

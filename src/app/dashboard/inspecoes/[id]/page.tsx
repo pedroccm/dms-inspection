@@ -260,6 +260,8 @@ export default async function InspecaoDetailPage({
           isEditable={isEditable}
           serverPhotoUrls={photoUrls}
           serviceOrderId={inspection.service_order_id}
+          numero052r={inspection.equipment?.numero_052r ?? inspection.numero_052r}
+          numero300={inspection.equipment?.numero_300 ?? inspection.numero_300}
         />
       )}
 

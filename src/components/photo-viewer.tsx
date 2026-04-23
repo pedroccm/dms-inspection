@@ -7,6 +7,8 @@ import { useEffect, useRef, useCallback } from "react";
 export interface PhotoViewerItem {
   url: string;
   label: string;
+  /** Custom filename used when the user clicks the download button */
+  downloadName?: string;
 }
 
 interface PhotoViewerProps {
@@ -80,6 +82,27 @@ export function PhotoViewer({
     [goNext, goPrev]
   );
 
+  const handleDownload = useCallback(async () => {
+    if (!current) return;
+    const fallback = (current.url.split("/").pop() ?? "foto").split("?")[0];
+    const filename = current.downloadName ?? fallback;
+    try {
+      const res = await fetch(current.url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // Fallback: open in a new tab so the user can save manually
+      window.open(current.url, "_blank", "noopener,noreferrer");
+    }
+  }, [current]);
+
   if (!current) return null;
 
   return (
@@ -110,6 +133,32 @@ export function PhotoViewer({
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      {/* Download button */}
+      <button
+        type="button"
+        onClick={handleDownload}
+        className="absolute top-4 right-20 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        style={{ minHeight: 48, minWidth: 48 }}
+        aria-label="Baixar foto"
+        title="Baixar foto"
+        data-testid="photo-viewer-download"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
           />
         </svg>
       </button>
