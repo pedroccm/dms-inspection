@@ -93,18 +93,21 @@ export async function GET(
     );
   }
 
-  // Fetch all inspections for this service order
+  // Fetch all inspections for this service order.
+  // Uses equipment(*) so the query survives schema evolution — any new
+  // column added to the equipment table is automatically available.
   const { data: inspections, error: inspError } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(copel_ra_code, manufacturer, numero_052r, numero_300, registered, marca, numero_serie_tanque, numero_serie_controle), inspector:profiles!inspector_id(full_name)"
+      "*, equipment(*), inspector:profiles!inspector_id(full_name)"
     )
     .eq("service_order_id", orderId)
     .order("created_at", { ascending: true });
 
   if (inspError) {
+    console.error("[report/order] Erro ao buscar inspeções:", inspError);
     return NextResponse.json(
-      { error: "Erro ao buscar inspecoes" },
+      { error: `Erro ao buscar inspeções: ${inspError.message}` },
       { status: 500 }
     );
   }
