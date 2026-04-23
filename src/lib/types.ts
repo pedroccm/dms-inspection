@@ -118,8 +118,12 @@ export function getPhotoDownloadName(
   numero300?: string | null
 ): string {
   const label = getPhotoLabel(photoType, customLabel);
-  const slug = label
-    .replace(/^Foto\s+/i, "")
+  // Strip the leading "Foto " prefix only when something descriptive remains.
+  // For dynamic slots named just "Foto 7", keep it so the filename reads "foto_7".
+  const stripped = /^Foto\s+\d+$/i.test(label)
+    ? label
+    : label.replace(/^Foto\s+/i, "");
+  const slug = stripped
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
