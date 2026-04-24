@@ -77,6 +77,20 @@ export async function claimInspection(inspectionId: string) {
   return { success: true };
 }
 
+async function canEditInspection(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  inspectorId: string | null
+): Promise<boolean> {
+  if (inspectorId === userId) return true;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return profile?.role === "admin";
+}
+
 export async function saveRelayData(inspectionId: string, relayData: Record<string, string>) {
   const user = await requireAuth();
   const supabase = await createClient();
@@ -91,7 +105,7 @@ export async function saveRelayData(inspectionId: string, relayData: Record<stri
     return { success: false, error: "Inspeção não encontrada." };
   }
 
-  if (inspection.inspector_id !== user.id) {
+  if (!(await canEditInspection(supabase, user.id, inspection.inspector_id))) {
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 
@@ -122,7 +136,7 @@ export async function saveQrData(inspectionId: string, qrData: Record<string, st
     return { success: false, error: "Inspeção não encontrada." };
   }
 
-  if (inspection.inspector_id !== user.id) {
+  if (!(await canEditInspection(supabase, user.id, inspection.inspector_id))) {
     return { success: false, error: "Você não tem permissão para editar esta inspeção." };
   }
 

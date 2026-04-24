@@ -94,6 +94,16 @@ export default async function InspecaoDetailPage({
     inspection.status !== "ready_for_review" &&
     inspection.status !== "relatorio_reprovado";
 
+  // Admins can edit QR/relay even on ready_for_review fichas (to unblock
+  // reports sent to review without QR data).
+  const canEditQrRelay =
+    isEditable ||
+    (isAdmin &&
+      inspection.status !== "disponivel" &&
+      inspection.status !== "aprovado" &&
+      inspection.status !== "equipamento_reprovado" &&
+      inspection.status !== "transferred");
+
   const config =
     statusConfig[inspection.status] ?? statusConfig.draft;
 
@@ -202,20 +212,21 @@ export default async function InspecaoDetailPage({
         </div>
       )}
 
-      {/* QR Data input section (for executor after claiming, before completing) */}
-      {!isDisponivel && isEditable && isExecutor && (
+      {/* QR Data input section (executor while editable; admin may also edit
+          to unblock fichas sent to review without QR data) */}
+      {!isDisponivel && canEditQrRelay && (
         <QrDataSection
           inspectionId={inspection.id}
           existingQrData={inspection.qr_data}
         />
       )}
 
-      {/* Relay QR Data section (optional, shown to executor while editable and to everyone once filled) */}
-      {!isDisponivel && ((isEditable && isExecutor) || (inspection.relay_data && Object.keys(inspection.relay_data).length > 0)) && (
+      {/* Relay QR Data section (optional, shown while editable and to everyone once filled) */}
+      {!isDisponivel && (canEditQrRelay || (inspection.relay_data && Object.keys(inspection.relay_data).length > 0)) && (
         <RelayDataSection
           inspectionId={inspection.id}
           existingRelayData={inspection.relay_data}
-          isEditable={isEditable && isExecutor}
+          isEditable={canEditQrRelay}
         />
       )}
 
