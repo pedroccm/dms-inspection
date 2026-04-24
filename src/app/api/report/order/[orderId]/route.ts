@@ -177,15 +177,20 @@ export async function GET(
       numero_serie_controle?: string;
       registered?: boolean;
     } | null;
-    const relayData =
+    // QR data is saved on the inspection row (not synced to equipment columns),
+    // so that's the primary source for marca / serials; equipment fields act
+    // as fallback (filled only when an equipment is created manually).
+    const qr =
+      (insp as { qr_data?: Record<string, string> | null }).qr_data ?? null;
+    const relay =
       (insp as { relay_data?: Record<string, string> | null }).relay_data ?? null;
     return [
-      eq?.marca || eq?.manufacturer || "—",
+      qr?.marca || eq?.marca || eq?.manufacturer || "—",
       withPrefix("052R-", eq?.numero_052r),
       withPrefix("300-", eq?.numero_300),
-      eq?.numero_serie_tanque || "—",
-      relayData?.numero_serie || "—",
-      eq?.numero_serie_controle || "—",
+      qr?.numero_serie_tanque || eq?.numero_serie_tanque || "—",
+      relay?.numero_serie || "—",
+      qr?.numero_serie_controle || eq?.numero_serie_controle || "—",
       getEquipmentStatusLabel(insp.status, eq?.registered),
     ];
   });
