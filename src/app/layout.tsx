@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -33,7 +34,10 @@ export default function RootLayout({
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <PostHogProvider />
+        {children}
+      </body>
     </html>
   );
 }
