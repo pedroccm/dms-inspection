@@ -65,7 +65,7 @@ posthog.init('${key}', {
   capture_pageview: true,
   capture_pageleave: true,
   session_recording: {
-    maskAllInputs: true,
+    maskAllInputs: false,
     maskInputOptions: { password: true }
   }
 });
