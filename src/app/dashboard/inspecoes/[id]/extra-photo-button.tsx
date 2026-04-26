@@ -42,8 +42,9 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
       const formData = new FormData();
       formData.append("file", compressed);
       formData.append("inspectionId", inspectionId);
-      formData.append("photoType", `photo_${Date.now()}`);
-      formData.append("label", "Foto Adicional");
+      // "auto" tells the server to assign the next sequential photo_N, so
+      // photos added here share the same numbering as the main photo grid.
+      formData.append("photoType", "auto");
 
       const res = await fetch("/api/photos/upload", {
         method: "POST",
