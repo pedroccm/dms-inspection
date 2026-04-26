@@ -98,26 +98,60 @@ export async function GET(
     );
   }
 
-  // Fetch all inspections for this service order.
-  // Uses equipment(*) so the query survives schema evolution — any new
-  // column added to the equipment table is automatically available.
-  const { data: inspections, error: inspError } = await supabase
-    .from("inspections")
+  // Fetch ALL equipment for this OS (including those not inspected yet),
+  // joined with their inspection(s). This way the report lists every
+  // equipment the OS was created with, with blank inspection fields for
+  // the ones still pending.
+  const { data: equipmentRowsRaw, error: equipError } = await supabase
+    .from("equipment")
     .select(
-      "*, equipment(*), inspector:profiles!inspector_id(full_name)"
+      "*, inspections(*, inspector:profiles!inspector_id(full_name))"
     )
     .eq("service_order_id", orderId)
     .order("created_at", { ascending: true });
 
-  if (inspError) {
-    console.error("[report/order] Erro ao buscar inspeções:", inspError);
+  if (equipError) {
+    console.error("[report/order] Erro ao buscar equipamentos:", equipError);
     return NextResponse.json(
-      { error: `Erro ao buscar inspeções: ${inspError.message}` },
+      { error: `Erro ao buscar equipamentos: ${equipError.message}` },
       { status: 500 }
     );
   }
 
-  const inspectionList = inspections ?? [];
+  type InspRow = {
+    id: string;
+    status: string;
+    qr_data?: Record<string, string> | null;
+    relay_data?: Record<string, string> | null;
+    created_at?: string;
+    inspector?: { full_name?: string } | null;
+  };
+  type EqRow = {
+    id: string;
+    copel_ra_code?: string;
+    manufacturer?: string;
+    marca?: string;
+    numero_052r?: string;
+    numero_300?: string;
+    numero_serie_tanque?: string;
+    numero_serie_controle?: string;
+    registered?: boolean;
+    inspections?: InspRow[];
+  };
+
+  const equipmentList = (equipmentRowsRaw ?? []) as EqRow[];
+
+  // Pick the most recent inspection per equipment (if any).
+  function pickInspection(eq: EqRow): InspRow | null {
+    const list = eq.inspections ?? [];
+    if (list.length === 0) return null;
+    return list.reduce((acc, cur) => {
+      if (!acc) return cur;
+      const a = acc.created_at ? new Date(acc.created_at).getTime() : 0;
+      const c = cur.created_at ? new Date(cur.created_at).getTime() : 0;
+      return c > a ? cur : acc;
+    }, null as InspRow | null);
+  }
 
   // Create PDF — landscape to fit the wider equipment summary table
   const doc = new jsPDF({ orientation: "landscape" });
@@ -146,8 +180,8 @@ export async function GET(
     ?? "—";
 
   const orderData = [
-    ["Cliente", order.client_name ?? "—"],
-    ["Contrato", order.contract_name ?? "—"],
+    ["Cliente", order.client_name || "—"],
+    ["Contrato", order.contract_name || "—"],
     ["Local da Inspeção", locationName],
     ["Inspetor Responsável", assigneeName],
     ["Status", ORDER_STATUS_LABELS[order.status] ?? order.status],
@@ -171,32 +205,21 @@ export async function GET(
   doc.setFont("helvetica", "bold");
   doc.text("Equipamentos", 14, currentY + 10);
 
-  const equipmentRows = inspectionList.map((insp) => {
-    const eq = insp.equipment as {
-      copel_ra_code?: string;
-      manufacturer?: string;
-      marca?: string;
-      numero_052r?: string;
-      numero_300?: string;
-      numero_serie_tanque?: string;
-      numero_serie_controle?: string;
-      registered?: boolean;
-    } | null;
+  const equipmentRows = equipmentList.map((eq) => {
+    const insp = pickInspection(eq);
     // QR data is saved on the inspection row (not synced to equipment columns),
     // so that's the primary source for marca / serials; equipment fields act
     // as fallback (filled only when an equipment is created manually).
-    const qr =
-      (insp as { qr_data?: Record<string, string> | null }).qr_data ?? null;
-    const relay =
-      (insp as { relay_data?: Record<string, string> | null }).relay_data ?? null;
+    const qr = insp?.qr_data ?? null;
+    const relay = insp?.relay_data ?? null;
     return [
-      qr?.marca || eq?.marca || eq?.manufacturer || "—",
-      withPrefix("052R-", eq?.numero_052r),
-      withPrefix("300-", eq?.numero_300),
-      qr?.numero_serie_tanque || eq?.numero_serie_tanque || "—",
+      qr?.marca || eq.marca || eq.manufacturer || "—",
+      withPrefix("052R-", eq.numero_052r),
+      withPrefix("300-", eq.numero_300),
+      qr?.numero_serie_tanque || eq.numero_serie_tanque || "—",
       relay?.numero_serie || "—",
-      qr?.numero_serie_controle || eq?.numero_serie_controle || "—",
-      getEquipmentStatusLabel(insp.status, eq?.registered),
+      qr?.numero_serie_controle || eq.numero_serie_controle || "—",
+      getEquipmentStatusLabel(insp?.status, eq.registered),
     ];
   });
 
@@ -221,19 +244,19 @@ export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentY = (doc as any).lastAutoTable?.finalY ?? 160;
 
-  const totalCount = inspectionList.length;
-  const aprovadoCount = inspectionList.filter(
-    (i) => i.status === "aprovado" || i.status === "transferred"
-  ).length;
-  const reprovadoCount = inspectionList.filter(
-    (i) =>
-      i.status === "equipamento_reprovado" ||
-      i.status === "relatorio_reprovado"
-  ).length;
+  // Summary now considers all OS equipment (including those without an
+  // inspection yet). Equipment with no inspection is counted as "pending".
+  const totalCount = equipmentList.length;
+  const aprovadoCount = equipmentList.filter((eq) => {
+    const s = pickInspection(eq)?.status;
+    return s === "aprovado" || s === "transferred";
+  }).length;
+  const reprovadoCount = equipmentList.filter((eq) => {
+    const s = pickInspection(eq)?.status;
+    return s === "equipamento_reprovado" || s === "relatorio_reprovado";
+  }).length;
   const pendingCount = totalCount - aprovadoCount - reprovadoCount;
-  const cadastradoCount = inspectionList.filter(
-    (i) => (i.equipment as { registered?: boolean } | null)?.registered
-  ).length;
+  const cadastradoCount = equipmentList.filter((eq) => eq.registered).length;
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
