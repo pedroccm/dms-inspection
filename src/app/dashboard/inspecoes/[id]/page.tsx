@@ -188,7 +188,7 @@ export default async function InspecaoDetailPage({
       {/* QR Data Display */}
       {inspection.qr_data && Object.keys(inspection.qr_data).length > 0 && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados do QR Code</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados do Equipamento</h2>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
             {Object.entries(inspection.qr_data).map(([key, value]) => (
               <div key={key}>

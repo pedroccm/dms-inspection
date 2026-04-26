@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { getInspectionById } from "@/lib/queries";
+import {
+  getEquipmentByServiceOrderId,
+  getInspectionById,
+  getServiceOrderById,
+} from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,9 +29,15 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   transferred: "Cadastrada",
 };
 
-function formatDate(dateStr: string | null): string {
+function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
+  const d = new Date(dateStr);
+  const date = d.toLocaleDateString("pt-BR");
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${date} ${time}`;
 }
 
 export async function GET(
@@ -61,122 +71,160 @@ export async function GET(
 
   const equipment = inspection.equipment;
   const checklistItems = inspection.checklist_items ?? [];
+  // QR data is saved on the inspection row (not synced to equipment columns),
+  // so it's the primary source for marca / serials; equipment fields act as
+  // fallback (filled only when an equipment is created manually).
+  const qrData =
+    (inspection as { qr_data?: Record<string, string> | null }).qr_data ?? null;
+  const relayData =
+    (inspection as { relay_data?: Record<string, string> | null }).relay_data ??
+    null;
   const inspectorName =
     (inspection.inspector as { full_name?: string } | undefined)?.full_name ??
-    "";
-  const dateStr = formatDate(inspection.submitted_at ?? inspection.created_at);
+    "—";
+  const dateTimeStr = formatDateTime(
+    inspection.submitted_at ?? inspection.created_at
+  );
+  const statusLabel =
+    INSPECTION_STATUS_LABELS[inspection.status] ?? inspection.status;
+
+  // Compute inspection reference (OS_NUMBER-XX/YY) for title and filename.
+  let inspectionRef: string | null = null;
+  let orderNumber: string | null = null;
+  let positionIndex = 0;
+  let positionTotal = 0;
+  if (inspection.service_order_id) {
+    try {
+      const [order, equipmentList] = await Promise.all([
+        getServiceOrderById(inspection.service_order_id),
+        getEquipmentByServiceOrderId(inspection.service_order_id),
+      ]);
+      orderNumber = order?.order_number ?? null;
+      positionTotal = equipmentList.length;
+      const idx = equipmentList.findIndex(
+        (eq) => eq.id === inspection.equipment_id
+      );
+      positionIndex = idx >= 0 ? idx + 1 : 0;
+      if (orderNumber && positionTotal > 0 && positionIndex > 0) {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        inspectionRef = `${orderNumber}-${pad(positionIndex)}/${pad(positionTotal)}`;
+      }
+    } catch {
+      // Non-critical
+    }
+  }
 
   // Create PDF
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Header
-  doc.setFontSize(16);
+  // Header — uppercase title with OS number / equipment position
+  const titleBase = "RELATÓRIO DE INSPEÇÃO DO EQUIPAMENTO";
+  const titleText = inspectionRef ? `${titleBase} ${inspectionRef}` : titleBase;
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("DIEN - Relatório de Inspeção", pageWidth / 2, 20, {
-    align: "center",
-  });
+  doc.text(titleText, pageWidth / 2, 20, { align: "center" });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Data: ${dateStr}`, pageWidth / 2, 28, { align: "center" });
+  doc.text(`Data: ${dateTimeStr}`, pageWidth / 2, 28, { align: "center" });
 
-  // Equipment data
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Dados do Equipamento", 14, 40);
+  // Equipment info table — no header row, no Campo/Valor.
+  // 052R is the "Nº COPEL RELIGADOR"; 300 is the "Nº COPEL DO CONTROLE".
+  const numero052r = equipment?.numero_052r || equipment?.copel_ra_code || "—";
+  const numero300 =
+    equipment?.numero_300 || equipment?.copel_control_code || "—";
+  const marca =
+    qrData?.marca || equipment?.marca || equipment?.manufacturer || "—";
+  const modelo = qrData?.modelo || equipment?.modelo || "—";
+  const fabricanteRele = relayData?.fabricante || "—";
+  const modeloRele = relayData?.modelo || "—";
+  const serieMecanismo =
+    qrData?.numero_serie_tanque ||
+    equipment?.numero_serie_tanque ||
+    equipment?.mechanism_serial ||
+    "—";
+  const serieControle =
+    qrData?.numero_serie_controle ||
+    equipment?.numero_serie_controle ||
+    equipment?.control_box_serial ||
+    "—";
+  const serieRele =
+    relayData?.numero_serie || equipment?.protection_relay_serial || "—";
 
-  const equipmentData = [
-    ["Codigo Copel RA", equipment?.copel_ra_code ?? "—"],
-    ["Codigo Copel Controle", equipment?.copel_control_code ?? "—"],
-    ["Mecanismo (052R)", equipment?.numero_052r ?? "—"],
-    ["Controle (300)", equipment?.numero_300 ?? "—"],
-    ["N. Serie Mecanismo", equipment?.mechanism_serial ?? "—"],
-    ["N. Serie Caixa Controle", equipment?.control_box_serial ?? "—"],
-    ["N. Serie Rele Protecao", equipment?.protection_relay_serial ?? "—"],
-    ["Fabricante", equipment?.manufacturer ?? "—"],
-    ["Cadastrado", equipment?.registered ? "Sim" : "Nao"],
+  const equipmentRows: [string, string][] = [
+    ["Nº Copel Religador", numero052r],
+    ["Nº Copel do Controle", numero300],
+    ["Marca", marca],
+    ["Modelo", modelo],
+    ["Fabricante do Relé", fabricanteRele],
+    ["Modelo do Relé", modeloRele],
+    ["Nº Série Mecanismo", serieMecanismo],
+    ["Nº Série Caixa Controle", serieControle],
+    ["Nº Série Relé Proteção", serieRele],
+    ["Inspetor", inspectorName],
+    ["Status", statusLabel],
   ];
 
   autoTable(doc, {
-    startY: 44,
-    head: [["Campo", "Valor"]],
-    body: equipmentData,
+    startY: 36,
+    body: equipmentRows,
     theme: "grid",
-    headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
     bodyStyles: { fontSize: 9 },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
   });
 
-  // Technical data (from QR code) - only if available
-  const technicalFields: [string, string | undefined][] = [
-    ["Modelo", equipment?.modelo],
-    ["Marca", equipment?.marca],
-    ["Tipo", equipment?.tipo],
-    ["Tensao Nominal", equipment?.tensao_nominal],
-    ["NBI", equipment?.nbi],
-    ["Frequencia Nominal", equipment?.frequencia_nominal],
-    ["Corrente Nominal", equipment?.corrente_nominal],
-    ["Capacidade Interrupcao", equipment?.capacidade_interrupcao],
-    ["Numero de Fases", equipment?.numero_fases],
-    ["Tipo Controle", equipment?.tipo_controle],
-    ["Modelo Controle", equipment?.modelo_controle],
-    ["Meio Interrupcao", equipment?.meio_interrupcao],
-    ["Norma Aplicavel", equipment?.norma_aplicavel],
-  ];
+  // Equipment data (formerly "Dados do QR Code (Equipamento)") — comes BEFORE relay data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let currentY = (doc as any).lastAutoTable?.finalY ?? 80;
 
-  const availableTechnical = technicalFields.filter(([, v]) => v);
-
-  if (availableTechnical.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const lastY = (doc as any).lastAutoTable?.finalY ?? 90;
-
+  const qrRows = qrData
+    ? QR_FIELD_ORDER.map(
+        (field) => [field.label, qrData[field.key] ?? ""] as [string, string]
+      ).filter(([, v]) => v)
+    : [];
+  if (qrRows.length > 0) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Dados Tecnicos", 14, lastY + 10);
+    doc.text("Dados do Equipamento", 14, currentY + 10);
 
     autoTable(doc, {
-      startY: lastY + 14,
-      head: [["Campo", "Valor"]],
-      body: availableTechnical.map(([k, v]) => [k, v ?? ""]),
+      startY: currentY + 14,
+      body: qrRows,
       theme: "grid",
-      headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
       bodyStyles: { fontSize: 9 },
       columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentY = (doc as any).lastAutoTable?.finalY ?? currentY + 14;
   }
 
-  // Relay data (from relay QR code) - only if present
-  const relayData = (inspection as { relay_data?: Record<string, string> | null }).relay_data ?? null;
+  // Relay data — only if present
   const relayRows = relayData
-    ? RELAY_FIELD_ORDER.map((field) => [field.label, relayData[field.key] ?? ""]).filter(
-        ([, v]) => v
-      )
+    ? RELAY_FIELD_ORDER.map(
+        (field) =>
+          [field.label, relayData[field.key] ?? ""] as [string, string]
+      ).filter(([, v]) => v)
     : [];
 
   if (relayRows.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const lastRelayY = (doc as any).lastAutoTable?.finalY ?? 120;
-
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Dados do Rele de Protecao", 14, lastRelayY + 10);
+    doc.text("Dados do Relé de Proteção", 14, currentY + 10);
 
     autoTable(doc, {
-      startY: lastRelayY + 14,
-      head: [["Campo", "Valor"]],
+      startY: currentY + 14,
       body: relayRows,
       theme: "grid",
-      headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
       bodyStyles: { fontSize: 9 },
       columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentY = (doc as any).lastAutoTable?.finalY ?? currentY + 14;
   }
 
   // Checklist results
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let currentY = (doc as any).lastAutoTable?.finalY ?? 120;
-
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Resultado do Checklist", 14, currentY + 10);
@@ -189,7 +237,7 @@ export async function GET(
 
   autoTable(doc, {
     startY: currentY + 14,
-    head: [["Item", "Status", "Motivo Reprovacao"]],
+    head: [["Item", "Status", "Motivo Reprovação"]],
     body: checklistData.length > 0 ? checklistData : [["—", "—", "—"]],
     theme: "grid",
     headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
@@ -199,40 +247,14 @@ export async function GET(
       1: { cellWidth: 30 },
     },
   });
-
-  // QR code data (from first QR scan) — optional
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  currentY = (doc as any).lastAutoTable?.finalY ?? 180;
-
-  const qrData = (inspection as { qr_data?: Record<string, string> | null }).qr_data ?? null;
-  const qrRows = qrData
-    ? QR_FIELD_ORDER.map((field) => [field.label, qrData[field.key] ?? ""]).filter(
-        ([, v]) => v
-      )
-    : [];
-  if (qrRows.length > 0) {
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Dados do QR Code (Equipamento)", 14, currentY + 10);
-
-    autoTable(doc, {
-      startY: currentY + 14,
-      head: [["Campo", "Valor"]],
-      body: qrRows,
-      theme: "grid",
-      headStyles: { fillColor: [27, 43, 94], fontSize: 9 },
-      bodyStyles: { fontSize: 9 },
-      columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    currentY = (doc as any).lastAutoTable?.finalY ?? currentY + 14;
-  }
+  currentY = (doc as any).lastAutoTable?.finalY ?? currentY + 14;
 
   // Observations
   if (inspection.observations) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Observacoes", 14, currentY + 10);
+    doc.text("Observações", 14, currentY + 10);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
@@ -255,12 +277,8 @@ export async function GET(
     doc.text("Fotos da Inspeção", pageWidth / 2, photoY, { align: "center" });
     photoY += 10;
 
-    const pageHeight = doc.internal.pageSize.getHeight();
-    // Bounding box the image must fit inside (keeps aspect ratio).
-    // Image is scaled down to fit; never stretched beyond natural ratio.
     const maxImgWidth = pageWidth - 28;
     const maxImgHeight = 100;
-    // Estimated height used when the image fails to load (text fallback).
     const fallbackHeight = 12;
 
     for (const photo of photos) {
@@ -280,8 +298,6 @@ export async function GET(
           const format = contentType.includes("png") ? "PNG" : "JPEG";
           const dataUrl = `data:${contentType};base64,${base64}`;
 
-          // Measure natural dimensions so we scale proportionally.
-          // jsPDF reports width/height in pixels; the ratio is what we need.
           const props = doc.getImageProperties(dataUrl);
           const scale = Math.min(
             maxImgWidth / props.width,
@@ -290,7 +306,6 @@ export async function GET(
           const drawW = props.width * scale;
           const drawH = props.height * scale;
 
-          // New page if the label + scaled image won't fit
           if (photoY + 4 + drawH + 8 > pageHeight - 14) {
             doc.addPage();
             photoY = 20;
@@ -299,9 +314,17 @@ export async function GET(
           doc.text(label, 14, photoY);
           photoY += 4;
 
-          // Center horizontally within the content area
           const xOffset = 14 + (maxImgWidth - drawW) / 2;
-          doc.addImage(dataUrl, format, xOffset, photoY, drawW, drawH, undefined, "FAST");
+          doc.addImage(
+            dataUrl,
+            format,
+            xOffset,
+            photoY,
+            drawW,
+            drawH,
+            undefined,
+            "FAST"
+          );
           photoY += drawH + 8;
         } else {
           if (photoY + 4 + fallbackHeight + 8 > pageHeight - 14) {
@@ -328,43 +351,40 @@ export async function GET(
         photoY += fallbackHeight + 8;
       }
     }
-    currentY = photoY;
   }
 
-  // Footer
-  const footerY = currentY + 15;
-
-  // Check if we need a new page for footer
-  if (footerY > doc.internal.pageSize.getHeight() - 20) {
-    doc.addPage();
-    currentY = 20;
+  // Page numbers — added last, after total page count is known.
+  const totalPages = doc.getNumberOfPages();
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `${pad2(i)}/${pad2(totalPages)}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: "center" }
+    );
   }
-
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, currentY + 10, pageWidth - 14, currentY + 10);
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Inspetor: ${inspectorName}`, 14, currentY + 18);
-  doc.text(`Data: ${dateStr}`, 14, currentY + 24);
-  doc.text(
-    `Status: ${INSPECTION_STATUS_LABELS[inspection.status] ?? inspection.status}`,
-    14,
-    currentY + 30
-  );
+  doc.setTextColor(0, 0, 0);
 
   // Generate PDF buffer
   const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
 
-  const copelCode = equipment?.copel_ra_code ?? "sem-codigo";
+  const refForFilename =
+    (orderNumber && positionIndex > 0 && positionTotal > 0
+      ? `${orderNumber}-${pad2(positionIndex)}-${pad2(positionTotal)}`
+      : null) ??
+    equipment?.copel_ra_code ??
+    "sem-codigo";
   const fileDate = (inspection.submitted_at ?? inspection.created_at)
-    ? new Date(
-        inspection.submitted_at ?? inspection.created_at
-      )
+    ? new Date(inspection.submitted_at ?? inspection.created_at)
         .toISOString()
         .split("T")[0]
     : new Date().toISOString().split("T")[0];
-  const filename = `relatorio_${copelCode}_${fileDate}.pdf`;
+  const filename = `relatorio_${refForFilename}_${fileDate}.pdf`;
 
   return new NextResponse(pdfBuffer, {
     status: 200,

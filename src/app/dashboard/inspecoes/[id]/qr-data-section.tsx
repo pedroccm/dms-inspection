@@ -108,7 +108,7 @@ export function QrDataSection({ inspectionId, existingQrData }: QrDataSectionPro
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="text-lg font-semibold text-gray-900">Dados do QR Code</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Dados do Equipamento</h2>
         <SaveIndicator status={status} error={error} onRetry={handleRetry} />
       </div>
 
