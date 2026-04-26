@@ -49,13 +49,18 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelada",
 };
 
+// Server runs in UTC on Netlify/Vercel, so we explicitly set the timezone
+// to Brasília for any user-facing date/time string.
+const TZ = "America/Sao_Paulo";
+
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
+  return new Date(dateStr).toLocaleDateString("pt-BR", { timeZone: TZ });
 }
 
 function formatDateTime(date: Date): string {
   return date.toLocaleString("pt-BR", {
+    timeZone: TZ,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

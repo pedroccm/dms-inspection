@@ -29,11 +29,16 @@ const INSPECTION_STATUS_LABELS: Record<string, string> = {
   transferred: "Cadastrada",
 };
 
+// Server runs in UTC on Netlify/Vercel, so we explicitly set the timezone
+// to Brasília for any user-facing date/time string.
+const TZ = "America/Sao_Paulo";
+
 function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  const date = d.toLocaleDateString("pt-BR");
+  const date = d.toLocaleDateString("pt-BR", { timeZone: TZ });
   const time = d.toLocaleTimeString("pt-BR", {
+    timeZone: TZ,
     hour: "2-digit",
     minute: "2-digit",
   });
