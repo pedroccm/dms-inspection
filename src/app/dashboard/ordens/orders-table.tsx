@@ -43,6 +43,15 @@ function compareStrings(a: string, b: string): number {
   return a.localeCompare(b, "pt-BR", { numeric: true, sensitivity: "base" });
 }
 
+// Format a date-only ISO string (YYYY-MM-DD or YYYY-MM-DDT...) as dd/MM/yyyy
+// without going through `new Date()`, so we don't shift the day across timezones.
+function formatDateOnly(iso: string | null): string {
+  if (!iso) return "—";
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return iso;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
 function getValue(row: OrderRow, field: SortField): string | number {
   switch (field) {
     case "orderLabel":
@@ -173,9 +182,7 @@ export function OrdersTable({ rows }: OrdersTableProps) {
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 hidden lg:table-cell">
-                    {order.startDate
-                      ? new Date(order.startDate).toLocaleDateString("pt-BR")
-                      : "—"}
+                    {formatDateOnly(order.startDate)}
                   </td>
                   <td className="px-6 py-4">
                     <Link

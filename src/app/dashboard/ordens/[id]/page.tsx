@@ -43,6 +43,15 @@ const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success"
   cancelled: "neutral",
 };
 
+// Format a date-only ISO string (YYYY-MM-DD or YYYY-MM-DDT...) as dd/MM/yyyy
+// without going through `new Date()`, so we don't shift the day across timezones.
+function formatDateOnly(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return iso;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
 /**
  * Derive equipment status from its latest inspection + registered flag.
  * Stages (from the DMS process):
@@ -261,17 +270,13 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           <div>
             <dt className="text-sm font-medium text-gray-500">Data Início</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {order.start_date
-                ? new Date(order.start_date).toLocaleDateString("pt-BR")
-                : "—"}
+              {formatDateOnly(order.start_date)}
             </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Data Solicitação Cliente</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {order.client_request_date
-                ? new Date(order.client_request_date).toLocaleDateString("pt-BR")
-                : "—"}
+              {formatDateOnly(order.client_request_date)}
             </dd>
           </div>
         </dl>
