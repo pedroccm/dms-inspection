@@ -44,7 +44,7 @@ export async function getInspectionById(id: string) {
   const { data, error } = await supabase
     .from("inspections")
     .select(
-      "*, equipment(*), checklist_items(*), photos(*)"
+      "*, equipment(*), checklist_items(*), photos(*), inspector:profiles!inspector_id(full_name)"
     )
     .eq("id", id)
     .single();
