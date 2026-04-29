@@ -142,11 +142,18 @@ export function getPhotoDownloadName(
   }
 
   const parts: string[] = [base];
-  if (numero052r) parts.push(`052R-${numero052r}`);
-  if (numero300) parts.push(`300-${numero300}`);
+  const cleaned052r = stripPrefix(numero052r, /^052R[-\s]?/i);
+  const cleaned300 = stripPrefix(numero300, /^300[-\s]?/i);
+  if (cleaned052r) parts.push(`052R-${cleaned052r}`);
+  if (cleaned300) parts.push(`300-${cleaned300}`);
 
   const ext = storagePath.split(".").pop()?.toLowerCase() || "jpg";
   return `${parts.join("_")}.${ext}`;
+}
+
+function stripPrefix(value: string | null | undefined, prefix: RegExp): string {
+  if (!value) return "";
+  return value.trim().replace(prefix, "").trim();
 }
 
 // ─── Clients ────────────────────────────────────────────────────
