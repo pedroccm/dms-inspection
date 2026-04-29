@@ -104,6 +104,8 @@ export function PhotoSection({
   const [slotStates, setSlotStates] = useState<Record<string, SlotState>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>(serverPhotoUrls ?? {});
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
+  const [zipDownloading, setZipDownloading] = useState(false);
+  const [zipError, setZipError] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const capturedCount = Object.keys(photos).length;
@@ -397,6 +399,39 @@ export function PhotoSection({
     []
   );
 
+  const handleDownloadAllZip = useCallback(async () => {
+    if (zipDownloading || capturedCount === 0) return;
+    setZipDownloading(true);
+    setZipError(null);
+    try {
+      const res = await fetch(`/api/photos/zip/${inspectionId}`);
+      if (!res.ok) {
+        let msg = `Falha ao gerar ZIP (HTTP ${res.status}).`;
+        try {
+          const data = await res.json();
+          if (data?.error) msg = data.error;
+        } catch {}
+        throw new Error(msg);
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="?([^"]+)"?/i);
+      const filename = match?.[1] ?? "fotos.zip";
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      setZipError(err instanceof Error ? err.message : "Erro ao gerar ZIP.");
+    } finally {
+      setZipDownloading(false);
+    }
+  }, [inspectionId, zipDownloading, capturedCount]);
+
   const handleLabelBlur = useCallback(
     (photoKey: string) => {
       setEditingLabel(null);
@@ -427,14 +462,75 @@ export function PhotoSection({
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <h2 className="text-lg font-semibold text-gray-900">
           Coleta de Imagens do Equipamento
         </h2>
-        <span className="text-sm font-medium text-gray-500">
-          {progressLabel}
-        </span>
+        <div className="flex items-center gap-3">
+          {capturedCount > 0 && (
+            <button
+              type="button"
+              onClick={handleDownloadAllZip}
+              disabled={zipDownloading}
+              className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#1B2B5E] bg-white border border-[#1B2B5E] rounded-lg hover:bg-[#1B2B5E] hover:text-white disabled:opacity-50 transition-colors"
+              data-testid="download-all-photos-btn"
+              title="Baixar todas as fotos em um arquivo ZIP"
+            >
+              {zipDownloading ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Gerando ZIP...
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                    />
+                  </svg>
+                  Baixar todas (ZIP)
+                </>
+              )}
+            </button>
+          )}
+          <span className="text-sm font-medium text-gray-500">
+            {progressLabel}
+          </span>
+        </div>
       </div>
+      {zipError && (
+        <p className="mb-3 text-xs text-red-600" role="alert">
+          {zipError}
+        </p>
+      )}
 
       {/* Progress bar */}
       <div className="w-full bg-gray-200 rounded-full h-2 mb-6">

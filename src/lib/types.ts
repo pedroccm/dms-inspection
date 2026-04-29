@@ -106,9 +106,24 @@ export function getPhotoLabel(photoType: string, customLabel?: string | null): s
   return photoType;
 }
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s_-]/g, "")
+    .trim()
+    .replace(/\s+/g, "_");
+}
+
 /**
  * Build the download filename for an inspection photo.
- * Example: "placa_mecanismo_052R-TESTE5_300-TESTE55555.jpg"
+ * Format: "<photo_type>_052R-<numero>_300-<numero>.<ext>"
+ * Example: "mechanism_front_052R-12345_300-9876.jpg"
+ *
+ * - Default slots use their English photo_type key (e.g. "mechanism_front").
+ * - Dynamic slots with a custom label use the slugified label.
+ * - Dynamic slots without a custom label use "photo_N".
  */
 export function getPhotoDownloadName(
   photoType: string,
@@ -117,21 +132,16 @@ export function getPhotoDownloadName(
   numero052r?: string | null,
   numero300?: string | null
 ): string {
-  const label = getPhotoLabel(photoType, customLabel);
-  // Strip the leading "Foto " prefix only when something descriptive remains.
-  // For dynamic slots named just "Foto 7", keep it so the filename reads "foto_7".
-  const stripped = /^Foto\s+\d+$/i.test(label)
-    ? label
-    : label.replace(/^Foto\s+/i, "");
-  const slug = stripped
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9\s_-]/g, "")
-    .trim()
-    .replace(/\s+/g, "_");
+  let base: string;
+  if (DEFAULT_PHOTO_TYPES.includes(photoType)) {
+    base = photoType;
+  } else if (customLabel && customLabel.trim()) {
+    base = slugify(customLabel) || photoType;
+  } else {
+    base = photoType;
+  }
 
-  const parts: string[] = [slug || "foto"];
+  const parts: string[] = [base];
   if (numero052r) parts.push(`052R-${numero052r}`);
   if (numero300) parts.push(`300-${numero300}`);
 
