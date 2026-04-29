@@ -102,8 +102,10 @@ export async function GET(
 
   const equipment = inspection.equipment;
   const refParts: string[] = ["fotos"];
-  if (numero052r) refParts.push(`052R-${numero052r}`);
-  if (numero300) refParts.push(`300-${numero300}`);
+  const clean052r = (numero052r ?? "").trim().replace(/^052R[-\s]?/i, "").trim();
+  const clean300 = (numero300 ?? "").trim().replace(/^300[-\s]?/i, "").trim();
+  if (clean052r) refParts.push(`052R-${clean052r}`);
+  if (clean300) refParts.push(`300-${clean300}`);
   if (refParts.length === 1 && equipment?.copel_ra_code) {
     refParts.push(equipment.copel_ra_code);
   }
