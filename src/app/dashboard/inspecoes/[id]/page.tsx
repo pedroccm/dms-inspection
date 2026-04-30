@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { InspectionDetailClient } from "./inspection-detail-client";
 import { PdfButton } from "./pdf-button";
 import { TransferButton } from "./transfer-button";
+import { DeleteInspectionButton } from "./delete-inspection-button";
 import { ApprovalPanel } from "./approval-panel";
 import { RejectionBanner } from "./rejection-banner";
 import { AuditLog } from "./audit-log";
@@ -151,6 +152,7 @@ export default async function InspecaoDetailPage({
           {inspection.status === "aprovado" && (
             <TransferButton inspectionId={inspection.id} />
           )}
+          <DeleteInspectionButton inspectionId={inspection.id} />
           <Badge variant={config.variant}>{config.label}</Badge>
           <Link
             href={inspection.service_order_id ? `/dashboard/ordens/${inspection.service_order_id}` : "/dashboard/ordens"}

@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import type { ChecklistItemStatus } from "@/lib/types";
@@ -434,4 +436,69 @@ export async function resumeInspection(inspectionId: string) {
   }
 
   return { success: true };
+}
+
+export async function deleteInspection(inspectionId: string) {
+  const { error: authError, supabase } = await requireAdminUser();
+  if (authError || !supabase) {
+    return { success: false, error: authError ?? "Erro de autenticação." };
+  }
+
+  const { data: inspection, error: inspError } = await supabase
+    .from("inspections")
+    .select("id, service_order_id")
+    .eq("id", inspectionId)
+    .single();
+
+  if (inspError || !inspection) {
+    return { success: false, error: "Inspeção não encontrada." };
+  }
+
+  // Delete checklist items
+  await supabase
+    .from("checklist_items")
+    .delete()
+    .eq("inspection_id", inspectionId);
+
+  // Collect photo storage paths, then delete DB rows + storage objects
+  const { data: photos } = await supabase
+    .from("photos")
+    .select("storage_path")
+    .eq("inspection_id", inspectionId);
+
+  await supabase.from("photos").delete().eq("inspection_id", inspectionId);
+
+  if (photos && photos.length > 0) {
+    const paths = photos.map((p) => p.storage_path).filter(Boolean);
+    if (paths.length > 0) {
+      await supabase.storage.from("inspection-photos").remove(paths);
+    }
+  }
+
+  // Delete form locks
+  await supabase
+    .from("form_locks")
+    .delete()
+    .eq("inspection_id", inspectionId);
+
+  // Delete the inspection itself
+  const { error: deleteError } = await supabase
+    .from("inspections")
+    .delete()
+    .eq("id", inspectionId);
+
+  if (deleteError) {
+    return { success: false, error: `Erro ao excluir inspeção: ${deleteError.message}` };
+  }
+
+  if (inspection.service_order_id) {
+    revalidatePath(`/dashboard/ordens/${inspection.service_order_id}`);
+  }
+  revalidatePath("/dashboard/inspecoes");
+
+  redirect(
+    inspection.service_order_id
+      ? `/dashboard/ordens/${inspection.service_order_id}`
+      : "/dashboard/inspecoes"
+  );
 }

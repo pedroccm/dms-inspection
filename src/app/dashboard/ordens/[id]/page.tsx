@@ -10,7 +10,6 @@ import {
   getInspectors,
 } from "@/lib/queries";
 import { Badge } from "@/components/ui/badge";
-import { ExportOrderButton } from "./export-order-button";
 import { PdfOrderButton } from "./pdf-order-button";
 import { DeleteOrderButton } from "./delete-order-button";
 import { AdminOnly } from "@/components/admin-only";
@@ -203,7 +202,6 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
           </AdminOnly>
           <div className="flex items-center gap-2">
             <PdfOrderButton orderId={order.id} />
-            <ExportOrderButton orderId={order.id} />
           </div>
         </div>
       </div>
