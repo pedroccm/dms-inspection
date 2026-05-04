@@ -142,10 +142,9 @@ export default async function DashboardPage() {
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {equipmentStats.map((stat) => (
-            <Link
+            <div
               key={stat.label}
-              href="/dashboard/equipamentos"
-              className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#F5A623] hover:shadow-md transition-all"
+              className="bg-white rounded-xl border border-gray-200 p-5"
             >
               <div className="flex items-center gap-2">
                 <span
@@ -166,7 +165,7 @@ export default async function DashboardPage() {
                   ? `${Math.round((stat.value / totalEquipments) * 100)}%`
                   : "0%"}
               </span>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
