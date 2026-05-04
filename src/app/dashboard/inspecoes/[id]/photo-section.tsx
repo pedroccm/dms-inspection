@@ -106,7 +106,9 @@ export function PhotoSection({
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const [zipDownloading, setZipDownloading] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
+  const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const slotElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const capturedCount = Object.keys(photos).length;
 
@@ -158,6 +160,55 @@ export function PhotoSection({
   const closeGallery = useCallback(() => {
     setGallery({ open: false, currentIndex: 0 });
   }, []);
+
+  // Listen for photos uploaded from outside (e.g. ExtraPhotoButton under
+  // Observations). Inject the photo into local state so the grid updates
+  // without needing a router.refresh, then scroll-and-flash the new slot
+  // so the operator can visually confirm the upload landed.
+  useEffect(() => {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent<{
+        inspectionId: string;
+        photo: Photo;
+        signedUrl: string;
+      }>).detail;
+      if (!detail || detail.inspectionId !== inspectionId) return;
+      const { photo, signedUrl } = detail;
+      const key = photo.photo_type;
+
+      setSlots((prev) =>
+        prev.find((s) => s.key === key)
+          ? prev
+          : [
+              ...prev,
+              {
+                key,
+                label: getPhotoLabel(key, photo.label),
+                required: false,
+              },
+            ]
+      );
+      setPhotos((prev) => ({ ...prev, [key]: photo }));
+      if (signedUrl) {
+        setSignedUrls((prev) => ({ ...prev, [key]: signedUrl }));
+      }
+
+      // Wait a frame so the new slot is in the DOM before scrolling.
+      requestAnimationFrame(() => {
+        const el = slotElementRefs.current[key];
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        setHighlightedSlot(key);
+        window.setTimeout(() => {
+          setHighlightedSlot((curr) => (curr === key ? null : curr));
+        }, 2000);
+      });
+    }
+
+    window.addEventListener("photo:added", handler);
+    return () => window.removeEventListener("photo:added", handler);
+  }, [inspectionId]);
 
   // Load signed URLs for existing photos
   useEffect(() => {
@@ -433,16 +484,42 @@ export function PhotoSection({
   }, [inspectionId, zipDownloading, capturedCount]);
 
   const handleLabelBlur = useCallback(
-    (photoKey: string) => {
+    async (photoKey: string) => {
       setEditingLabel(null);
-      // If the label is empty, reset to default
+
       const slot = slots.find((s) => s.key === photoKey);
-      if (slot && !slot.label.trim()) {
+      if (!slot) return;
+
+      // If the label is empty, reset to default
+      let finalLabel = slot.label;
+      if (!finalLabel.trim()) {
         const num = photoKey.replace("photo_", "");
-        handleLabelChange(photoKey, `Foto ${num}`);
+        finalLabel = `Foto ${num}`;
+        handleLabelChange(photoKey, finalLabel);
+      }
+
+      // If a photo is already uploaded, persist the label change so it
+      // survives reloads and is reflected in the ZIP / download filenames.
+      const photo = photos[photoKey];
+      if (!photo || photo.label === finalLabel) return;
+
+      try {
+        const res = await fetch("/api/photos/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photoId: photo.id, label: finalLabel }),
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (result.photo) {
+          setPhotos((prev) => ({ ...prev, [photoKey]: result.photo }));
+        }
+      } catch {
+        // Network failure: keep the local label change for the session;
+        // the user can edit again to retry persisting.
       }
     },
-    [slots, handleLabelChange]
+    [slots, photos, handleLabelChange]
   );
 
   // ─── Progress ────────────────────────────────────────────
@@ -548,8 +625,21 @@ export function PhotoSection({
           const signedUrl = signedUrls[slot.key];
           const isEditingThisLabel = editingLabel === slot.key;
 
+          const isHighlighted = highlightedSlot === slot.key;
+
           return (
-            <div key={slot.key} className="flex flex-col gap-2">
+            <div
+              key={slot.key}
+              ref={(el) => {
+                slotElementRefs.current[slot.key] = el;
+              }}
+              data-photo-slot={slot.key}
+              className={`flex flex-col gap-2 rounded-lg p-1 transition-shadow ${
+                isHighlighted
+                  ? "ring-4 ring-amber-400 animate-pulse"
+                  : ""
+              }`}
+            >
               {/* Label - editable for dynamic slots */}
               <div className="flex items-center gap-2">
                 {!slot.required && isEditable && isEditingThisLabel ? (

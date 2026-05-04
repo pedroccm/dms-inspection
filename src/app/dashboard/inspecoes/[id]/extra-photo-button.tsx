@@ -1,41 +1,72 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { compressImage } from "@/lib/image-compress";
 
 interface ExtraPhotoButtonProps {
   inspectionId: string;
 }
 
+type UploadStatus = "uploading" | "success" | "error";
+
+interface UploadEntry {
+  id: string;
+  fileName: string;
+  localUrl: string;
+  status: UploadStatus;
+  errorMsg?: string;
+  photoId?: string;
+  storagePath?: string;
+}
+
 /**
  * Shortcut button under the Observations block. Lets the inspector capture
  * an extra photo right where they're writing notes, without scrolling up to
- * the photo section. Uploads with a unique dynamic key so the photo appears
- * in the main photo grid after the page refresh.
+ * the photo section. Shows an inline thumbnail preview (instant, from the
+ * local file) with upload status, click-to-view full size, and a remove
+ * button. Dispatches a "photo:added" event so the main photo grid can pick
+ * up the new photo, scroll to it and flash a highlight.
  */
 export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpload, setLastUpload] = useState<string | null>(null);
+  const [uploads, setUploads] = useState<UploadEntry[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Revoke object URLs on unmount to avoid leaks
+  useEffect(() => {
+    return () => {
+      uploads.forEach((u) => URL.revokeObjectURL(u.localUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function updateEntry(id: string, patch: Partial<UploadEntry>) {
+    setUploads((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, ...patch } : u))
+    );
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    if (e.target) e.target.value = "";
     if (!file) return;
 
-    setError(null);
-    setUploading(true);
+    const id = crypto.randomUUID();
+    const localUrl = URL.createObjectURL(file);
+
+    setUploads((prev) => [
+      ...prev,
+      { id, fileName: file.name, localUrl, status: "uploading" },
+    ]);
 
     try {
-      // Compress client-side — mobile camera photos often blow past Netlify's
-      // 6 MB body limit and the request gets rejected before Next.js sees it.
       const compressed = await compressImage(file);
 
       if (compressed.size > 10 * 1024 * 1024) {
-        setError(`Imagem muito grande (${(compressed.size / 1024 / 1024).toFixed(1)}MB).`);
-        setUploading(false);
+        updateEntry(id, {
+          status: "error",
+          errorMsg: `Imagem muito grande (${(compressed.size / 1024 / 1024).toFixed(1)}MB).`,
+        });
         return;
       }
 
@@ -68,19 +99,61 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
         throw new Error(result.error);
       }
 
-      setLastUpload(file.name);
-      setTimeout(() => setLastUpload(null), 4000);
-      router.refresh();
+      updateEntry(id, {
+        status: "success",
+        photoId: result.photo?.id,
+        storagePath: result.photo?.storage_path,
+      });
+
+      // Notify the main photo grid so it adds the slot, scrolls to it, and
+      // flashes a highlight. Avoids a router.refresh round-trip.
+      window.dispatchEvent(
+        new CustomEvent("photo:added", {
+          detail: {
+            inspectionId,
+            photo: result.photo,
+            signedUrl: result.signedUrl,
+          },
+        })
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao enviar foto.");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      updateEntry(id, {
+        status: "error",
+        errorMsg: err instanceof Error ? err.message : "Erro ao enviar foto.",
+      });
     }
   }
 
+  async function handleRemoveEntry(entry: UploadEntry) {
+    // If still uploading, just drop the local entry (the network request will
+    // finish in the background — there's no easy way to abort mid-flight here).
+    if (entry.status === "success" && entry.photoId && entry.storagePath) {
+      try {
+        await fetch("/api/photos/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            photoId: entry.photoId,
+            storagePath: entry.storagePath,
+          }),
+        });
+        window.dispatchEvent(
+          new CustomEvent("photo:removed", {
+            detail: { inspectionId, photoId: entry.photoId },
+          })
+        );
+      } catch {
+        // Best effort — still remove from UI
+      }
+    }
+    URL.revokeObjectURL(entry.localUrl);
+    setUploads((prev) => prev.filter((u) => u.id !== entry.id));
+  }
+
+  const uploading = uploads.some((u) => u.status === "uploading");
+
   return (
-    <div className="mt-3 flex flex-col gap-2">
+    <div className="mt-3 flex flex-col gap-3">
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
@@ -108,12 +181,98 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
         </svg>
         {uploading ? "Enviando..." : "Adicionar foto à observação"}
       </button>
-      {lastUpload && (
-        <span className="text-xs text-green-600">
-          Foto enviada: {lastUpload}
-        </span>
+
+      {uploads.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {uploads.map((u) => (
+            <div
+              key={u.id}
+              className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group"
+            >
+              <img
+                src={u.localUrl}
+                alt={u.fileName}
+                className="w-full h-full object-cover cursor-zoom-in"
+                onClick={() => setPreviewUrl(u.localUrl)}
+              />
+
+              {u.status === "uploading" && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white">
+                  <svg
+                    className="animate-spin h-6 w-6 mb-1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                  <span className="text-[10px] font-medium">Enviando...</span>
+                </div>
+              )}
+
+              {u.status === "success" && (
+                <div className="absolute top-1 left-1 bg-green-600 text-white rounded-full p-0.5 shadow">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {u.status === "error" && (
+                <div
+                  className="absolute inset-0 bg-red-600/80 flex items-center justify-center text-white text-[10px] text-center px-2"
+                  title={u.errorMsg ?? "Erro"}
+                >
+                  {u.errorMsg ?? "Erro"}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleRemoveEntry(u)}
+                aria-label="Remover"
+                title="Remover"
+                className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
       )}
-      {error && <span className="text-xs text-red-600">{error}</span>}
+
       <input
         ref={fileInputRef}
         type="file"
@@ -122,6 +281,19 @@ export function ExtraPhotoButton({ inspectionId }: ExtraPhotoButtonProps) {
         className="hidden"
         onChange={handleFile}
       />
+
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <img
+            src={previewUrl}
+            alt="Pré-visualização"
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }
