@@ -158,6 +158,12 @@ export async function GET(
   const serieRele =
     relayData?.numero_serie || equipment?.protection_relay_serial || "—";
 
+  // Date the inspection was submitted (em inspeção → concluída). Falls back
+  // to "—" when null, e.g. legacy rows where submitted_at was never set.
+  const inspectionDateStr = inspection.submitted_at
+    ? formatDateTime(inspection.submitted_at)
+    : "—";
+
   const equipmentRows: [string, string][] = [
     ["Nº Copel Religador", numero052r],
     ["Nº Copel do Controle", numero300],
@@ -169,6 +175,7 @@ export async function GET(
     ["Nº Série Caixa Controle", serieControle],
     ["Nº Série Relé Proteção", serieRele],
     ["Inspetor", inspectorName],
+    ["Data da Inspeção", inspectionDateStr],
     ["Status", statusLabel],
   ];
 

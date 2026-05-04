@@ -189,11 +189,13 @@ export async function completeInspectionEvaluation(inspectionId: string) {
     };
   }
 
+  const nowIso = new Date().toISOString();
   const { error: updateError } = await supabase
     .from("inspections")
     .update({
       status: "ready_for_review",
-      updated_at: new Date().toISOString(),
+      submitted_at: nowIso,
+      updated_at: nowIso,
     })
     .eq("id", inspectionId);
 
