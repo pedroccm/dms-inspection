@@ -4,40 +4,30 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
-import type { ServiceOrderStatus } from "@/lib/types";
-
-const STATUS_LABELS: Record<ServiceOrderStatus, string> = {
-  open: "Aberta",
-  in_progress: "Aberta",
-  aprovada: "Aberta",
-  finalizada: "Finalizada",
-  medida: "Medida",
-  faturada: "Faturada",
-  completed: "Concluída",
-  cancelled: "Cancelada",
-};
-
-const STATUS_VARIANTS: Record<ServiceOrderStatus, "info" | "warning" | "success" | "neutral"> = {
-  open: "info",
-  in_progress: "info",
-  aprovada: "info",
-  finalizada: "success",
-  medida: "success",
-  faturada: "success",
-  completed: "success",
-  cancelled: "neutral",
-};
+import {
+  ORDER_DISPLAY_LABELS,
+  ORDER_DISPLAY_VARIANTS,
+  type OrderDisplayStatus,
+} from "@/lib/order-status";
 
 export interface OrderRow {
   id: string;
   orderLabel: string; // order_number ?? title
   location: string; // fallback "—"
   executor: string; // fallback "—"
-  status: ServiceOrderStatus;
+  displayStatus: OrderDisplayStatus;
+  equipmentTotal: number;
+  equipmentConcluded: number;
   startDate: string | null; // ISO string
 }
 
-type SortField = "orderLabel" | "location" | "executor" | "status" | "startDate";
+type SortField =
+  | "orderLabel"
+  | "location"
+  | "executor"
+  | "displayStatus"
+  | "equipment"
+  | "startDate";
 
 function compareStrings(a: string, b: string): number {
   return a.localeCompare(b, "pt-BR", { numeric: true, sensitivity: "base" });
@@ -60,8 +50,13 @@ function getValue(row: OrderRow, field: SortField): string | number {
       return row.location;
     case "executor":
       return row.executor;
-    case "status":
-      return STATUS_LABELS[row.status];
+    case "displayStatus":
+      return ORDER_DISPLAY_LABELS[row.displayStatus];
+    case "equipment":
+      // Sort by completion ratio (concluded/total), with empty totals last.
+      return row.equipmentTotal === 0
+        ? -1
+        : row.equipmentConcluded / row.equipmentTotal;
     case "startDate":
       return row.startDate ? new Date(row.startDate).getTime() : 0;
   }
@@ -132,11 +127,19 @@ export function OrdersTable({ rows }: OrdersTableProps) {
                 className="hidden sm:table-cell"
               />
               <SortableHeader
-                field="status"
+                field="displayStatus"
                 label="Status"
                 sortField={sortField}
                 sortDir={sortDir}
                 onSort={handleSort}
+              />
+              <SortableHeader
+                field="equipment"
+                label="Equipamentos"
+                sortField={sortField}
+                sortDir={sortDir}
+                onSort={handleSort}
+                className="hidden sm:table-cell"
               />
               <SortableHeader
                 field="startDate"
@@ -155,7 +158,7 @@ export function OrdersTable({ rows }: OrdersTableProps) {
             {sorted.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-6 py-8 text-center text-gray-500"
                 >
                   Nenhuma ordem de serviço encontrada.
@@ -177,9 +180,22 @@ export function OrdersTable({ rows }: OrdersTableProps) {
                     {order.executor}
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant={STATUS_VARIANTS[order.status]}>
-                      {STATUS_LABELS[order.status]}
+                    <Badge variant={ORDER_DISPLAY_VARIANTS[order.displayStatus]}>
+                      {ORDER_DISPLAY_LABELS[order.displayStatus]}
                     </Badge>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 hidden sm:table-cell tabular-nums">
+                    {order.equipmentTotal === 0 ? (
+                      <span className="text-gray-400">—</span>
+                    ) : (
+                      <span>
+                        <span className="font-semibold">
+                          {order.equipmentConcluded}
+                        </span>
+                        <span className="text-gray-400"> / </span>
+                        <span>{order.equipmentTotal}</span>
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 hidden lg:table-cell">
                     {formatDateOnly(order.startDate)}

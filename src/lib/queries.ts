@@ -83,6 +83,11 @@ export async function getLockedInspectionIds(): Promise<Set<string>> {
 
 // ─── Service Orders ─────────────────────────────────────────
 
+export type ServiceOrderWithCounts = ServiceOrder & {
+  equipment_total: number;
+  equipment_concluded: number;
+};
+
 export async function getServiceOrders(filters?: ServiceOrderFilters) {
   const supabase = await createClient();
 
@@ -106,7 +111,58 @@ export async function getServiceOrders(filters?: ServiceOrderFilters) {
   const { data, error } = await query;
 
   if (error) throw error;
-  return (data ?? []) as ServiceOrder[];
+  const orders = (data ?? []) as ServiceOrder[];
+
+  if (orders.length === 0) return [] as ServiceOrderWithCounts[];
+
+  // Single follow-up query: pull equipment + their inspections for every
+  // listed OS, then fold per-order totals in memory. Avoids N+1 and keeps
+  // the count rule in sync with EquipmentStatus derivation.
+  const orderIds = orders.map((o) => o.id);
+  const { data: equipRows } = await supabase
+    .from("equipment")
+    .select("id, service_order_id, registered, inspections(status, created_at)")
+    .in("service_order_id", orderIds);
+
+  type EquipRow = {
+    id: string;
+    service_order_id: string;
+    registered: boolean | null;
+    inspections: { status: InspectionStatus; created_at: string }[] | null;
+  };
+
+  const totals = new Map<string, { total: number; concluded: number }>();
+  for (const id of orderIds) totals.set(id, { total: 0, concluded: 0 });
+
+  for (const eq of (equipRows ?? []) as EquipRow[]) {
+    const bucket = totals.get(eq.service_order_id);
+    if (!bucket) continue;
+    bucket.total++;
+
+    if (eq.registered) {
+      bucket.concluded++;
+      continue;
+    }
+    const inspections = eq.inspections ?? [];
+    if (inspections.length === 0) continue;
+    const latest = [...inspections].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )[inspections.length - 1];
+    if (
+      latest.status === "ready_for_review" ||
+      latest.status === "aprovado" ||
+      latest.status === "transferred"
+    ) {
+      bucket.concluded++;
+    }
+  }
+
+  return orders.map((o) => ({
+    ...o,
+    equipment_total: totals.get(o.id)?.total ?? 0,
+    equipment_concluded: totals.get(o.id)?.concluded ?? 0,
+  })) as ServiceOrderWithCounts[];
 }
 
 export async function getServiceOrderById(id: string) {

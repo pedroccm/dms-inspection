@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { ServiceOrderStatus } from "@/lib/types";
+import type { OrderDisplayStatus } from "@/lib/order-status";
 
 const statusOptions: { value: string; label: string }[] = [
   { value: "", label: "Todos os status" },
   { value: "open", label: "Aberta" },
+  { value: "inspection_started", label: "Inspeção Iniciada" },
+  { value: "inspection_finished", label: "Inspeção Finalizada" },
   { value: "finalizada", label: "Finalizada" },
   { value: "medida", label: "Medida" },
   { value: "faturada", label: "Faturada" },
@@ -13,7 +15,7 @@ const statusOptions: { value: string; label: string }[] = [
 ];
 
 interface OrderStatusFilterProps {
-  currentStatus?: ServiceOrderStatus;
+  currentStatus?: OrderDisplayStatus;
 }
 
 export function OrderStatusFilter({ currentStatus }: OrderStatusFilterProps) {

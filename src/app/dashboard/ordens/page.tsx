@@ -5,10 +5,14 @@ import { AdminOnly } from "@/components/admin-only";
 import { OrderStatusFilter } from "./status-filter";
 import { OrdersTable, type OrderRow } from "./orders-table";
 import type { ServiceOrderStatus } from "@/lib/types";
+import {
+  deriveOrderDisplayStatus,
+  type OrderDisplayStatus,
+} from "@/lib/order-status";
 
 interface OrdensPageProps {
   searchParams: Promise<{
-    status?: ServiceOrderStatus;
+    status?: OrderDisplayStatus;
   }>;
 }
 
@@ -16,13 +20,23 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
   await requireAuth();
 
   const params = await searchParams;
-  const statusFilter = params.status || undefined;
+  const filterParam = params.status || undefined;
+
+  // The display-only filters ("inspection_started" / "inspection_finished")
+  // map to the same DB cluster as "open" — we then narrow in memory below.
+  const isVirtualFilter =
+    filterParam === "inspection_started" ||
+    filterParam === "inspection_finished";
+
+  const dbStatusFilter: ServiceOrderStatus | undefined = isVirtualFilter
+    ? "open"
+    : (filterParam as ServiceOrderStatus | undefined);
 
   const orders = await getServiceOrders({
-    status: statusFilter,
+    status: dbStatusFilter,
   });
 
-  const rows: OrderRow[] = orders.map((order) => ({
+  const allRows: OrderRow[] = orders.map((order) => ({
     id: order.id,
     orderLabel: order.order_number ?? order.title,
     location:
@@ -30,9 +44,19 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
       ?? order.location
       ?? "—",
     executor: order.assignee?.full_name ?? "—",
-    status: order.status,
+    displayStatus: deriveOrderDisplayStatus(
+      order.status,
+      order.equipment_total,
+      order.equipment_concluded
+    ),
+    equipmentTotal: order.equipment_total,
+    equipmentConcluded: order.equipment_concluded,
     startDate: order.start_date,
   }));
+
+  const rows = isVirtualFilter
+    ? allRows.filter((r) => r.displayStatus === filterParam)
+    : allRows;
 
   return (
     <div>
@@ -49,7 +73,7 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
       </div>
 
       <div className="mb-6">
-        <OrderStatusFilter currentStatus={statusFilter} />
+        <OrderStatusFilter currentStatus={filterParam} />
       </div>
 
       <OrdersTable rows={rows} />
