@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Inspection,
   InspectionFilters,
+  InspectionStatus,
   Profile,
   ServiceOrder,
   ServiceOrderFilters,
@@ -291,6 +292,64 @@ export async function getDashboardCounts() {
     equipmentCount: equipmentCount.count ?? 0,
     pendingReviews: pendingReviews.count ?? 0,
   };
+}
+
+// Equipment status counts — replicates the 5-stage derivation used in
+// /dashboard/ordens/[id]/page.tsx so the painel stays in sync.
+export async function getEquipmentStatusCounts() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("id, registered, inspections(id, status, created_at)");
+
+  if (error) throw error;
+
+  const counts = {
+    pendente: 0,
+    emInspecao: 0,
+    concluido: 0,
+    relatorioAprovado: 0,
+    cadastrada: 0,
+  };
+
+  type Row = {
+    id: string;
+    registered: boolean | null;
+    inspections: { id: string; status: InspectionStatus; created_at: string }[] | null;
+  };
+
+  for (const eq of (data ?? []) as Row[]) {
+    if (eq.registered) {
+      counts.cadastrada++;
+      continue;
+    }
+
+    const inspections = eq.inspections ?? [];
+    if (inspections.length === 0) {
+      counts.pendente++;
+      continue;
+    }
+
+    const latest = [...inspections].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )[inspections.length - 1];
+
+    if (latest.status === "transferred") {
+      counts.cadastrada++;
+    } else if (latest.status === "aprovado") {
+      counts.relatorioAprovado++;
+    } else if (latest.status === "ready_for_review") {
+      counts.concluido++;
+    } else if (latest.status === "disponivel") {
+      counts.pendente++;
+    } else {
+      counts.emInspecao++;
+    }
+  }
+
+  return counts;
 }
 
 // ─── Clients ──────────────────────────────────────────────
