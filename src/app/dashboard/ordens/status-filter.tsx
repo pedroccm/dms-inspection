@@ -8,7 +8,7 @@ const statusOptions: { value: string; label: string }[] = [
   { value: "open", label: "Aberta" },
   { value: "inspection_started", label: "Inspeção Iniciada" },
   { value: "inspection_finished", label: "Inspeção Finalizada" },
-  { value: "finalizada", label: "Finalizada" },
+  { value: "finalizada", label: "Cadastrada" },
   { value: "medida", label: "Medida" },
   { value: "faturada", label: "Faturada" },
   { value: "cancelled", label: "Cancelada" },

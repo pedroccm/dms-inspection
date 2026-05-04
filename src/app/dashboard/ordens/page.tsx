@@ -22,9 +22,12 @@ export default async function OrdensPage({ searchParams }: OrdensPageProps) {
   const params = await searchParams;
   const filterParam = params.status || undefined;
 
-  // The display-only filters ("inspection_started" / "inspection_finished")
-  // map to the same DB cluster as "open" — we then narrow in memory below.
+  // "open", "inspection_started" and "inspection_finished" all share the
+  // same DB cluster (open/in_progress/aprovada). They differ only in the
+  // derived displayStatus, so we filter the DB by the cluster and then
+  // narrow in memory by the requested displayStatus below.
   const isVirtualFilter =
+    filterParam === "open" ||
     filterParam === "inspection_started" ||
     filterParam === "inspection_finished";
 

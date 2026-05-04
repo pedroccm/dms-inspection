@@ -38,7 +38,7 @@ describe("OrderStatusFilter", () => {
     expect(screen.getByText("Aberta")).toBeInTheDocument();
     expect(screen.getByText("Inspeção Iniciada")).toBeInTheDocument();
     expect(screen.getByText("Inspeção Finalizada")).toBeInTheDocument();
-    expect(screen.getByText("Finalizada")).toBeInTheDocument();
+    expect(screen.getByText("Cadastrada")).toBeInTheDocument();
     expect(screen.getByText("Medida")).toBeInTheDocument();
     expect(screen.getByText("Faturada")).toBeInTheDocument();
     expect(screen.getByText("Cancelada")).toBeInTheDocument();

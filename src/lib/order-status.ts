@@ -15,7 +15,7 @@ export const ORDER_DISPLAY_LABELS: Record<OrderDisplayStatus, string> = {
   aprovada: "Aberta",
   inspection_started: "Inspeção Iniciada",
   inspection_finished: "Inspeção Finalizada",
-  finalizada: "Finalizada",
+  finalizada: "Cadastrada",
   medida: "Medida",
   faturada: "Faturada",
   completed: "Concluída",
