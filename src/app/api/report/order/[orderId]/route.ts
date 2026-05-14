@@ -58,6 +58,16 @@ function formatDate(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString("pt-BR", { timeZone: TZ });
 }
 
+// For DATE columns (date-only, no time component). Parsing with new Date()
+// treats them as UTC midnight and would shift one day back in BRT — render
+// the YYYY-MM-DD parts directly instead.
+function formatDateOnly(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return dateStr;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
 function formatDateTime(date: Date): string {
   return date.toLocaleString("pt-BR", {
     timeZone: TZ,
@@ -124,6 +134,7 @@ export async function GET(
     qr_data?: Record<string, string> | null;
     relay_data?: Record<string, string> | null;
     created_at?: string;
+    submitted_at?: string | null;
     inspector?: { full_name?: string } | null;
   };
   type EqRow = {
@@ -179,13 +190,20 @@ export async function GET(
     ?? order.location
     ?? "—";
 
+  // "Data de finalização da inspeção" = submitted_at of the LAST equipment
+  // in the OS (last in the created_at ordering returned by the query above).
+  const lastEquipment = equipmentList[equipmentList.length - 1];
+  const lastEquipmentInspection = lastEquipment ? pickInspection(lastEquipment) : null;
+  const inspectionEndStr = formatDate(lastEquipmentInspection?.submitted_at ?? null);
+
   const orderData = [
     ["Cliente", order.client_name || "—"],
     ["Contrato", order.contract_name || "—"],
     ["Local da Inspeção", locationName],
     ["Inspetor Responsável", assigneeName],
     ["Status", ORDER_STATUS_LABELS[order.status] ?? order.status],
-    ["Data de início da inspeção", formatDate(order.start_date)],
+    ["Data de início da inspeção", formatDateOnly(order.start_date)],
+    ["Data de finalização da inspeção", inspectionEndStr],
     ["Data da finalização do cadastro", formatDate(order.finalized_at ?? null)],
   ];
 

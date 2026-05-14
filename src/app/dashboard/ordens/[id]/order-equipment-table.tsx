@@ -7,6 +7,7 @@ import { AdminOnly } from "@/components/admin-only";
 import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
 import { EditEquipmentNumbers } from "./edit-equipment-numbers";
 import { RemoveEquipmentButton } from "./remove-equipment-button";
+import { MarkRegisteredButton } from "./mark-registered-button";
 
 type StatusVariant = "neutral" | "info" | "warning" | "success";
 
@@ -30,6 +31,10 @@ export interface OrderEquipmentRow {
   inspectorName: string | null;
   actionHref: string;
   actionLabel: string;
+  /** Latest inspection id, used by the "Cadastrada" button. */
+  latestInspectionId: string | null;
+  /** True when latest inspection is approved but equipment is not yet registered. */
+  canMarkRegistered: boolean;
 }
 
 type SortField = "index" | "numero052r" | "numero300" | "status" | "inspector";
@@ -164,6 +169,11 @@ export function OrderEquipmentTable({ rows, orderId }: OrderEquipmentTableProps)
                   >
                     {eq.actionLabel}
                   </Link>
+                  {eq.canMarkRegistered && eq.latestInspectionId && (
+                    <AdminOnly>
+                      <MarkRegisteredButton inspectionId={eq.latestInspectionId} />
+                    </AdminOnly>
+                  )}
                   <EditEquipmentNumbers
                     equipmentId={eq.id}
                     orderId={orderId}

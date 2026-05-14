@@ -300,6 +300,8 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
             rows={equipmentList.map((eq, idx): OrderEquipmentRow => {
               const statusInfo = getEquipmentStatus(eq.inspections, eq.registered);
               const latestInspection = eq.inspections?.[eq.inspections.length - 1];
+              const canMarkRegistered =
+                !eq.registered && latestInspection?.status === "aprovado";
               return {
                 id: eq.id,
                 originalIndex: idx + 1,
@@ -312,6 +314,8 @@ export default async function OrdemDetailPage({ params }: OrdemDetailPageProps) 
                   ? `/dashboard/inspecoes/${latestInspection.id}`
                   : `/dashboard/equipamentos/${eq.id}`,
                 actionLabel: latestInspection ? "Ver Inspeção" : "Iniciar",
+                latestInspectionId: latestInspection?.id ?? null,
+                canMarkRegistered,
               };
             })}
           />
