@@ -232,8 +232,12 @@ export default async function InspecaoDetailPage({
         />
       )}
 
-      {/* Rejection banner for executor when report is rejected */}
-      {isExecutor && inspection.status === "relatorio_reprovado" && (
+      {/* Rejection banner — shown to whoever owns the ficha (executor or a
+          Master acting as inspector). Matches resumeInspection's permission
+          check (inspector_id === user.id), so a ficha rejected while its
+          inspector is a Master no longer gets stuck with no way to resume. */}
+      {inspection.status === "relatorio_reprovado" &&
+        inspection.inspector_id === profile?.id && (
         <RejectionBanner
           inspectionId={inspection.id}
           rejectionReason={inspection.rejection_reason}
